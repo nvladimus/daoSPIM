@@ -1,9 +1,21 @@
+"""
+Optimizer of deformable mirror shape, with GUI frontend.
+by @nvladimus
+"""
+
 import numpy as np
 import time
 import scipy
 from scipy.ndimage.filters import gaussian_filter
 import scipy.optimize as opt
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
+
+class SpgdOptimizer(QtCore.QObject):
+    def __init__(self, camera, def_mirror):
+        self.camera = camera
+        self.def_mirror = def_mirror
 
 def normL2(x):
     """L2 norm of array"""
