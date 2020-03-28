@@ -44,10 +44,7 @@ stages = {
     'x_accel': 0.2  # m/s2
 }
 # deformable mirror
-dm = {
-    'flat_file': 'C:/Users/Nikita/Documents/GitHub/AO-toolkit/python/flat/FLAT_MIRAO_0274-01.mro',
-    'diameter_mm': 15
-}
+dm = {'diameter_mm': 15.0}
 
 saving = {
     'root_folder': 'C:/Users/Nikita/Pictures/Water/SPGD-beads-water'

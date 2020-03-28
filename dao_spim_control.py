@@ -4,6 +4,7 @@ Main program for daoSPIM control.
 import sys
 sys.path.append('./src')
 sys.path.append('./config')
+import config
 import os
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui, QtCore
@@ -18,9 +19,8 @@ from collections import deque
 import hamamatsu_camera as cam
 import npy2bdv
 import lsgeneration as ls
-import Mirao52_utils_temp as dm_utils
+import deformable_mirror_Mirao52e as def_mirror
 import serial
-import config
 import etl_controller_Optotune as etl
 import scipy.optimize as opt
 
@@ -179,11 +179,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_etl = QtWidgets.QWidget()
 
         # deformable mirror widgets
-        self.button_dm_ini = QtWidgets.QPushButton("Initialize DM")
-        self.button_dm_load_cmd = QtWidgets.QPushButton("Load command")
-        self.button_dm_apply_flat = QtWidgets.QPushButton("Apply flat-shape cmd")
-        self.button_dm_apply_cmd = QtWidgets.QPushButton("Apply loaded command")
-        self.button_dm_close = QtWidgets.QPushButton("Close DM session")
+        self.dev_dm = def_mirror.DmController()
 
         # light-sheet widgets
         self.spinbox_ls_duration = QtWidgets.QDoubleSpinBox()
@@ -276,7 +272,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_camera.layout = QtWidgets.QGridLayout()
         self.tab_stage.layout = QtWidgets.QFormLayout()
         self.tab_lightsheet.layout = QtWidgets.QFormLayout()
-        self.tab_defm.layout = QtWidgets.QGridLayout()
+        self.tab_defm.layout = QtWidgets.QFormLayout()
         self.tab_etl.layout = QtWidgets.QFormLayout()
         self.initUI()
 
@@ -298,8 +294,6 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_exposure_ms = config.camera['exposure_ms']
         self.cam_last_image = None
         self.daqmx_task_AO_ls = None
-        self.dm = None  # deformable mirror
-        self.dm_command = None
         self.ls_active = False
         # Set up threads and signals
         # Live mode image display worker+thread:
@@ -329,19 +323,8 @@ class MainWindow(QtWidgets.QWidget):
         self.tabs.addTab(self.tab_etl, "ETL")
 
         # DEFORMABLE Mirror tab
-        self.button_dm_ini.setCheckable(True)
-        self.button_dm_ini.setFixedWidth(160)
-        self.button_dm_load_cmd.setFixedWidth(160)
-        self.button_dm_apply_flat.setFixedWidth(160)
-        self.button_dm_apply_cmd.setFixedWidth(160)
-        self.button_dm_close.setFixedWidth(160)
-
-        self.tab_defm.layout.addWidget(self.button_dm_ini, 0, 0)
-        self.tab_defm.layout.addWidget(self.button_dm_apply_flat, 1, 0)
-        self.tab_defm.layout.addWidget(self.button_dm_load_cmd, 2, 0)
-        self.tab_defm.layout.addWidget(self.button_dm_apply_cmd, 3, 0)
-        self.tab_defm.layout.addWidget(self.button_dm_close, 4, 0)
-        self.tab_defm.layout.setColumnStretch(1, 5)
+        self.tab_defm.layout.addWidget(self.dev_dm.gui)
+        self.dev_dm.gui.setFixedWidth(300)
         self.tab_defm.setLayout(self.tab_defm.layout)
 
         # ETL tab
@@ -704,13 +687,6 @@ class MainWindow(QtWidgets.QWidget):
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
         self.checkbox_ls_switch_automatically.stateChanged.connect(self.set_ls_switching)
 
-        # Signals DM control
-        self.button_dm_ini.clicked.connect(self.dm_initialize)
-        self.button_dm_apply_flat.clicked.connect(self.dm_apply_flat)
-        self.button_dm_apply_cmd.clicked.connect(self.dm_apply_cmd)
-        self.button_dm_load_cmd.clicked.connect(self.dm_load_cmd)
-        self.button_dm_close.clicked.connect(self.dm_close)
-
         # gray-out currently inactive options
         self.activate_input_trig_options(self.combobox_input_trig_source.currentText())
         self.activate_output_trig_options(self.combobox_output_trig_kind.currentText())
@@ -943,60 +919,6 @@ class MainWindow(QtWidgets.QWidget):
             self.button_ls_activate.setText("Activate light sheet")
             self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
 
-
-    def dm_initialize(self):
-        """Open deformable mirror session"""
-        dll_path = 'C:/Users/Nikita/Documents/GitHub/AO-toolkit/python/lib/x64/mirao52e.dll'
-        dm_status = ctypes.c_int32()
-        self.dm = ctypes.windll.LoadLibrary(dll_path)
-        self.dm.mro_open(ctypes.byref(dm_status))
-        self.log_update("Loaded DLL from " + dll_path + "\n")
-        self.log_update("DM open: " + dm_utils.errors[dm_status.value] + "\n")
-
-    def dm_apply_flat(self):
-        """Apply factory-calibrated flat command"""
-        flat_path = config.dm['flat_file']
-        dm_trigger = ctypes.c_int32()
-        dm_trigger.value = 0
-        dm_status = ctypes.c_int32()
-        if self.dm is not None:
-            dm_cmd_flat = dm_utils.read_Mirao_commandFile(flat_path, self.dm)
-            self.dm.mro_applySmoothCommand(dm_cmd_flat.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                           dm_trigger, ctypes.byref(dm_status))
-            self.log_update("Flat-cmd file: " + flat_path + " applied, " + dm_utils.errors[dm_status.value] + "\n")
-        else:
-            self.log_update("Error: DM is not initialized\n")
-
-    def dm_load_cmd(self):
-        """Load a command from NPY file"""
-        filename, _filter = QtWidgets.QFileDialog.getOpenFileName(self, "Open command file", "./", "Numpy files (*.npy)")
-        if filename:
-            self.dm_command = np.load(filename)
-            self.log_update("Loaded cmd from: " + filename + "\n")
-        else:
-            pass
-
-    def dm_apply_cmd(self):
-        """Apply loaded command"""
-        dm_trigger = ctypes.c_int32()
-        dm_trigger.value = 0
-        dm_status = ctypes.c_int32()
-        if (self.dm_command is not None) and (self.dm is not None):
-            self.dm.mro_applySmoothCommand(self.dm_command.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                           dm_trigger, ctypes.byref(dm_status))
-            self.log_update("DM cmd applied: " + dm_utils.errors[dm_status.value] + "\n")
-        else:
-            self.log_update("DM command empty, or DM is not opened\n")
-
-    def dm_close(self):
-        """Close deformable mirror session"""
-        dm_status = ctypes.c_int32()
-        if self.dm is not None:
-            self.dm.mro_close(ctypes.byref(dm_status))
-            self.log_update("DM closed: " + dm_utils.errors[dm_status.value] + "\n")
-        else:
-            self.log_update("Error: DM is not initialized\n")
-
     def create_daqmx_task(self):
         """Create the DAQmx task, but don't start it yet."""
         self.daqmx_task_AO_ls = pd.Task()
@@ -1120,9 +1042,8 @@ class MainWindow(QtWidgets.QWidget):
     def button_exit_clicked(self):
         if self.cam_handle is not None:
             self.cam_handle.shutdown()
-        if self.dm is not None:
-            dm_status = ctypes.c_int32()
-            self.dm.mro_close(ctypes.byref(dm_status))
+        if self.dev_dm.dev_handle is not None:
+            self.dev_dm.disconnect()
         if self.serial_ls is not None:
             self.serial_ls.close()
         if self.serial_stage is not None:
