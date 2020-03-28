@@ -3,7 +3,7 @@ Interface for abstraction of several PyQt widgets, to speed up GUI development i
 Copyright Nikita Vladimirov, @nvladimus 2020
 """
 
-from PyQt5.QtWidgets import (QGroupBox, QLineEdit, QPushButton, QTabWidget,
+from PyQt5.QtWidgets import (QGroupBox, QLineEdit, QPushButton, QTabWidget, QCheckBox,
                              QVBoxLayout, QWidget, QDoubleSpinBox, QFormLayout)
 
 
@@ -125,6 +125,27 @@ class widget(QWidget):
         assert title not in self.inputs, "Button name already exists: " + title + "\n"
         self.inputs[title] = QPushButton(title)
         self.inputs[title].clicked.connect(func)
+        self.layouts[parent].addRow(self.inputs[title])
+
+    def add_checkbox(self, title, parent, value=False, enabled=True, func=None):
+        """Add a checkbox to a parent container widget (groupbox or tab).
+            Parameters
+            :param title: str
+                Name of the checkbox. Also, serves as system name of the widget. Beware of typos!
+            :param parent: str
+                Name of the parent container.
+            :param value: Boolean
+            :param: enabled: Boolean
+            :param: func: function reference
+                Name of the function that is executed on button click.
+        """
+        assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
+        assert title not in self.inputs, "Button name already exists: " + title + "\n"
+        self.inputs[title] = QCheckBox(title)
+        self.inputs[title].setChecked(value)
+        self.inputs[title].setEnabled(enabled)
+        if enabled and func is not None:
+            self.inputs[title].stateChanged.connect(lambda: func(self.inputs[title].isChecked()))
         self.layouts[parent].addRow(self.inputs[title])
 
     def update_numeric_field(self, title, value):

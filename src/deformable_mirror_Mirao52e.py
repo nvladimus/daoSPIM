@@ -39,7 +39,6 @@ class DmController(QtCore.QObject):
         self.command = np.zeros(self.n_actuators)
         self._status = ctypes.c_int64()  # possibly c_int32() in some versions, Todo: test
         self._trigger = ctypes.c_int64()
-        self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
         self.check_files()

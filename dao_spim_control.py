@@ -215,10 +215,8 @@ class MainWindow(QtWidgets.QWidget):
         self.serial_stage = None
 
         # camera widgets
-        self.button_cam_initialize = QtWidgets.QPushButton('Initialize camera')
         self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        self.button_cam_disconnect = QtWidgets.QPushButton('Disconnect camera')
-        self.label_cam_readout_time = QtWidgets.QLabel("Readout time, ms: ")
+        self.dev_cam = cam.CamController()
 
         # ETL widget
         self.dev_etl = etl.ETL_controller(config.etl['port'])
@@ -227,32 +225,11 @@ class MainWindow(QtWidgets.QWidget):
         self.text_log = QtWidgets.QTextEdit(self)
         self.button_exit = QtWidgets.QPushButton('Exit')
 
-        # camera, acquisition
+        # acquisition
         self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
-        self.spinbox_exposure_ms = QtWidgets.QDoubleSpinBox()
         self.spinbox_n_timepoints = QtWidgets.QSpinBox()
         self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
         self.spinbox_nangles = QtWidgets.QSpinBox()
-        self.button_cam_set_roi = QtWidgets.QPushButton('Set camera ROI height')
-        self.spinbox_vsize = QtWidgets.QSpinBox()
-
-        # Triggers IN
-        self.groupbox_triggering = QtWidgets.QGroupBox("Triggering")
-        self.checkbox_triggers_in = QtWidgets.QCheckBox("Triggers IN")
-        self.combobox_input_trig_mode = QtWidgets.QComboBox()
-        self.combobox_input_trig_type = QtWidgets.QComboBox()
-        self.combobox_mpulse_source = QtWidgets.QComboBox()
-        self.combobox_input_trig_source = QtWidgets.QComboBox()
-        self.combobox_mpulse_mode = QtWidgets.QComboBox()
-        self.lineedit_mpulse_nbursts = QtWidgets.QLineEdit("10")
-        self.lineedit_mpulse_interval = QtWidgets.QLineEdit("10")
-
-        # Triggers OUT
-        self.checkbox_triggers_out = QtWidgets.QCheckBox("Triggers OUT")
-        self.combobox_output_trig_kind = QtWidgets.QComboBox()
-        self.lineedit_output_trig_period = QtWidgets.QLineEdit("1")
-        self.combobox_output_trig_polarity = QtWidgets.QComboBox()
-        self.combobox_output_trig_source = QtWidgets.QComboBox()
 
         # saving
         self.groupbox_saving = QtWidgets.QGroupBox("Saving")
@@ -262,14 +239,9 @@ class MainWindow(QtWidgets.QWidget):
         self.combobox_file_format = QtWidgets.QComboBox()
         self.checkbox_simulation = QtWidgets.QCheckBox("Simulation mode")
 
-        # pixel calibration metadata
-        self.spinbox_pixel_xy_um = QtWidgets.QDoubleSpinBox()
-        self.spinbox_pixel_z_um = QtWidgets.QDoubleSpinBox()
-        self.checkbox_pixel_unshear_z = QtWidgets.QCheckBox("Unshear (stage +)")
-
         # GUI layouts
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.tab_camera.layout = QtWidgets.QGridLayout()
+        self.tab_camera.layout = QtWidgets.QFormLayout()
         self.tab_stage.layout = QtWidgets.QFormLayout()
         self.tab_lightsheet.layout = QtWidgets.QFormLayout()
         self.tab_defm.layout = QtWidgets.QFormLayout()
@@ -277,22 +249,16 @@ class MainWindow(QtWidgets.QWidget):
         self.initUI()
 
         # Internal parameters
-        self.param_init = None
-        self.cam_handle = None
-        self.cam_running = False
         self.n_frames_per_stack = None
         self.n_stacks_to_grab = None
         self.n_frames_to_grab = None
         self.n_angles = None
         self.file_save_running = False
         self.abort_pressed = False
-        self.simulation_mode = False
         self.root_folder = config.saving['root_folder']
         self.dir_path = None
         self.file_path = None
         self.file_format = "HDF5"
-        self.cam_exposure_ms = config.camera['exposure_ms']
-        self.cam_last_image = None
         self.daqmx_task_AO_ls = None
         self.ls_active = False
         # Set up threads and signals
@@ -467,7 +433,6 @@ class MainWindow(QtWidgets.QWidget):
 
         # CAMERA window
         self.cam_window = CameraWindow()
-        self.cam_last_image = np.random.randint(100, 110, size=self.cam_window.cam_image_dims, dtype='uint16')
         self.cam_window.show()
 
         # log window
@@ -476,14 +441,7 @@ class MainWindow(QtWidgets.QWidget):
         self.text_log.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
                                                           QtWidgets.QSizePolicy.Minimum))
         # acquisition params
-        self.button_cam_initialize.setFixedWidth(160)
-        self.button_cam_acquire.setFixedWidth(160)
-        self.button_cam_disconnect.setFixedWidth(160)
-        self.button_cam_set_roi.setFixedWidth(160)
-        self.spinbox_exposure_ms.setValue(config.camera['exposure_ms'])
-        self.spinbox_exposure_ms.setFixedWidth(60)
-        self.spinbox_exposure_ms.setSingleStep(0.1)
-        self.spinbox_exposure_ms.setDecimals(1)
+        self.groupbox_acq_params.setFixedWidth(300)
 
         self.spinbox_n_timepoints.setValue(1)
         self.spinbox_n_timepoints.setFixedWidth(60)
@@ -498,40 +456,14 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_nangles.setMinimum(1)
         self.spinbox_nangles.setFixedWidth(60)
 
-        self.spinbox_vsize.setMaximum(self.cam_window.cam_sensor_dims[0])
-        self.spinbox_vsize.setValue(400)
-        self.spinbox_vsize.setMinimum(64)
-        self.spinbox_vsize.setSingleStep(4)
-        self.spinbox_vsize.setFixedWidth(60)
-
-        self.label_cam_readout_time.setText("Readout time, ms: "
-                                            + "{:2.1f}".format(self.cam_get_readout_time(self.spinbox_vsize.value())))
-
-        layout_acquisition_col0 = QtWidgets.QFormLayout()
-        layout_acquisition_col0.addRow("Exposure, ms:", self.spinbox_exposure_ms)
-        layout_acquisition_col0.addRow("Images per stack:", self.spinbox_frames_per_stack)
-        layout_acquisition_col0.addRow("Time points:", self.spinbox_n_timepoints)
-        layout_acquisition_col0.addRow("n(angles):", self.spinbox_nangles)
-
-        layout_acquisition_col1 = QtWidgets.QFormLayout()
-        layout_acquisition_col1.addRow(self.button_cam_set_roi)
-        layout_acquisition_col1.addRow("ROI vertical size", self.spinbox_vsize)
-        layout_acquisition_col1.addRow(self.label_cam_readout_time)
-
-        layout_acquisition = QtWidgets.QGridLayout()
-        layout_acquisition.addLayout(layout_acquisition_col0, 0, 0)
-        layout_acquisition.addLayout(layout_acquisition_col1, 0, 1)
+        layout_acquisition = QtWidgets.QFormLayout()
+        layout_acquisition.addRow("Images per stack:", self.spinbox_frames_per_stack)
+        layout_acquisition.addRow("Time points:", self.spinbox_n_timepoints)
+        layout_acquisition.addRow("n(angles):", self.spinbox_nangles)
         self.groupbox_acq_params.setLayout(layout_acquisition)
 
         # saving, layouts
-        layout_saving = QtWidgets.QGridLayout()
-        layout_files = QtWidgets.QFormLayout()
-        layout_pixel_meta = QtWidgets.QFormLayout()
-        layout_saving.addLayout(layout_files, 0, 0)
-        layout_saving.addLayout(layout_pixel_meta, 0, 1)
-        self.groupbox_saving.setLayout(layout_saving)
-
-        # saving, widgets
+        self.groupbox_saving.setFixedWidth(300)
         self.button_saveto.setFixedWidth(80)
         self.lineedit_experimentID.setAlignment(QtCore.Qt.AlignRight)
         self.lineedit_file_prefix.setAlignment(QtCore.Qt.AlignRight)
@@ -539,118 +471,20 @@ class MainWindow(QtWidgets.QWidget):
         self.combobox_file_format.addItem("HDF5")
         self.combobox_file_format.addItem("TIFF")
 
+        layout_files = QtWidgets.QFormLayout()
         layout_files.addRow("Root folder:", self.button_saveto)
         layout_files.addRow("Expt ID (subfolder)", self.lineedit_experimentID)
         layout_files.addRow("File prefix", self.lineedit_file_prefix)
         layout_files.addRow("Format", self.combobox_file_format)
+        self.groupbox_saving.setLayout(layout_files)
 
-        # pixel metadata
-        self.spinbox_pixel_xy_um.setDecimals(5)
-        self.spinbox_pixel_xy_um.setValue(config.microscope['pixel_size_um'])
-        self.spinbox_pixel_z_um.setEnabled(False)
-        self.spinbox_pixel_z_um.setDecimals(5)
-        self.checkbox_pixel_unshear_z.setChecked(True)
-
-        layout_pixel_meta.addRow("Pixel size (x,y), um", self.spinbox_pixel_xy_um)
-        layout_pixel_meta.addRow("Step (z) from stage, um", self.spinbox_pixel_z_um)
-        layout_pixel_meta.addRow(self.checkbox_pixel_unshear_z)
-
-        # trigger IN
-        self.checkbox_triggers_in.setChecked(config.camera['trig_in'])
-        self.combobox_input_trig_mode.addItem("Normal", 1)
-        self.combobox_input_trig_mode.addItem("Start", 6)
-        self.combobox_input_trig_mode.setCurrentText(config.camera['trig_in_mode'])
-
-        self.combobox_input_trig_source.addItem("internal")
-        self.combobox_input_trig_source.addItem("external")
-        self.combobox_input_trig_source.addItem("software")
-        self.combobox_input_trig_source.addItem("master pulse")
-        self.combobox_input_trig_source.setCurrentText(config.camera['trig_in_source'])
-
-        self.combobox_input_trig_type.addItem("EDGE", 1)
-        self.combobox_input_trig_type.addItem("LEVEL", 2)
-        self.combobox_input_trig_type.addItem("SYNCREADOUT", 3)
-        self.combobox_input_trig_type.setCurrentText(config.camera['trig_in_type'])
-
-        self.combobox_mpulse_source.addItem("external")
-        self.combobox_mpulse_source.addItem("software")
-        self.combobox_mpulse_source.setCurrentIndex(0)
-        self.combobox_mpulse_source.setEnabled(False)
-
-        self.combobox_mpulse_mode.addItem("CONTINUOUS")
-        self.combobox_mpulse_mode.addItem("START")
-        self.combobox_mpulse_mode.addItem("BURST")
-        self.combobox_mpulse_mode.setCurrentIndex(2)
-        self.combobox_mpulse_mode.setEnabled(False)
-
-        self.lineedit_mpulse_nbursts.setValidator(QtGui.QIntValidator())
-        self.lineedit_mpulse_nbursts.setFixedWidth(100)
-        self.lineedit_mpulse_nbursts.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit_mpulse_nbursts.setEnabled(False)
-
-        self.lineedit_mpulse_interval.setValidator(QtGui.QIntValidator())
-        self.lineedit_mpulse_interval.setFixedWidth(100)
-        self.lineedit_mpulse_interval.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit_mpulse_interval.setEnabled(False)
-
-        layout_triggering_in = QtWidgets.QFormLayout()
-        layout_triggering_in.addRow(self.checkbox_triggers_in)
-        layout_triggering_in.addRow("Trigger mode", self.combobox_input_trig_mode)
-        layout_triggering_in.addRow("Trigger source", self.combobox_input_trig_source)
-        layout_triggering_in.addRow("Trigger type", self.combobox_input_trig_type)
-        layout_triggering_in.addRow("M.pulse source", self.combobox_mpulse_source)
-        layout_triggering_in.addRow("M.pulse mode", self.combobox_mpulse_mode)
-        layout_triggering_in.addRow("M.pulse bursts", self.lineedit_mpulse_nbursts)
-        layout_triggering_in.addRow("M.pulse interval, ms", self.lineedit_mpulse_interval)
-
-        # trigger OUT
-        self.checkbox_triggers_out.setChecked(config.camera['trig_out'])
-        self.combobox_output_trig_kind.addItem("LOW")
-        self.combobox_output_trig_kind.addItem("EXPOSURE")
-        self.combobox_output_trig_kind.addItem("PROGRAMMABLE")
-        self.combobox_output_trig_kind.addItem("TRIGGER READY")
-        self.combobox_output_trig_kind.addItem("HIGH")
-        self.combobox_output_trig_kind.setCurrentText(config.camera['trig_out_kind'])
-
-        self.lineedit_output_trig_period.setValidator(QtGui.QDoubleValidator())
-        self.lineedit_output_trig_period.setFixedWidth(80)
-        self.lineedit_output_trig_period.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit_output_trig_period.setEnabled(False)
-
-        self.combobox_output_trig_polarity.addItem("NEGATIVE")
-        self.combobox_output_trig_polarity.addItem("POSITIVE")
-        self.combobox_output_trig_polarity.setCurrentText("POSITIVE")
-
-        self.combobox_output_trig_source.addItem("READOUT END", 2)
-        self.combobox_output_trig_source.addItem("VSYNC", 3)
-        self.combobox_output_trig_source.addItem("Master pulse", 6)
-        self.combobox_output_trig_source.setCurrentText("Master pulse")
-        self.combobox_output_trig_source.setEnabled(False)
-
-        layout_triggering_out = QtWidgets.QFormLayout()
-        layout_triggering_out.addRow(self.checkbox_triggers_out)
-        layout_triggering_out.addRow("Trigger kind", self.combobox_output_trig_kind)
-        layout_triggering_out.addRow("Trigger source", self.combobox_output_trig_source)
-        layout_triggering_out.addRow("Trig. period, ms", self.lineedit_output_trig_period)
-        layout_triggering_out.addRow("Trigger polarity", self.combobox_output_trig_polarity)
-
-        layout_triggering = QtWidgets.QGridLayout()
-        layout_triggering.addLayout(layout_triggering_in, 0, 0)
-        layout_triggering.addLayout(layout_triggering_out, 0, 1)
-        self.groupbox_triggering.setLayout(layout_triggering)
-
-        # simulation?
-        self.checkbox_simulation.setChecked(False)
-
-        # global layout, first column
-        self.tab_camera.layout.addWidget(self.checkbox_simulation, 0, 0)
-        self.tab_camera.layout.addWidget(self.button_cam_initialize, 1, 0)
-        self.tab_camera.layout.addWidget(self.button_cam_acquire, 2, 0)
-        self.tab_camera.layout.addWidget(self.button_cam_disconnect, 3, 0)
-        self.tab_camera.layout.addWidget(self.groupbox_acq_params, 4, 0)
-        self.tab_camera.layout.addWidget(self.groupbox_triggering, 5, 0)
-        self.tab_camera.layout.addWidget(self.groupbox_saving, 6, 0)
-        # second column
+        # Camera controls layout
+        self.dev_cam.gui.setFixedWidth(300)
+        self.button_cam_acquire.setFixedWidth(300)
+        self.tab_camera.layout.addWidget(self.dev_cam.gui)
+        self.tab_camera.layout.addWidget(self.groupbox_acq_params)
+        self.tab_camera.layout.addWidget(self.button_cam_acquire)
+        self.tab_camera.layout.addWidget(self.groupbox_saving)
         self.tab_camera.setLayout(self.tab_camera.layout)
 
         # global layout
@@ -661,19 +495,11 @@ class MainWindow(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         # Signals Camera control
-        self.button_cam_initialize.clicked.connect(self.cam_initialize)
-        self.button_exit.clicked.connect(self.button_exit_clicked)
         self.cam_window.button_cam_snap.clicked.connect(self.button_snap_clicked)
         self.cam_window.button_cam_live.clicked.connect(self.button_live_clicked)
         self.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
-        self.button_cam_disconnect.clicked.connect(self.cam_disconnect)
-        self.button_cam_set_roi.clicked.connect(self.cam_set_roi)
-        self.spinbox_vsize.valueChanged.connect(self.cam_update_readout_time)
-        self.checkbox_simulation.stateChanged.connect(self.checkbox_simulation_changed)
         self.button_saveto.clicked.connect(self.button_saveto_clicked)
         self.combobox_file_format.currentTextChanged.connect(self.set_file_format)
-        self.combobox_input_trig_source.currentTextChanged.connect(self.activate_input_trig_options)
-        self.combobox_output_trig_kind.currentTextChanged.connect(self.activate_output_trig_options)
 
         # Signals Stage control
         self.button_stage_connect.clicked.connect(self.activate_stage)
@@ -687,14 +513,9 @@ class MainWindow(QtWidgets.QWidget):
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
         self.checkbox_ls_switch_automatically.stateChanged.connect(self.set_ls_switching)
 
-        # gray-out currently inactive options
-        self.activate_input_trig_options(self.combobox_input_trig_source.currentText())
-        self.activate_output_trig_options(self.combobox_output_trig_kind.currentText())
-
         self.update_calculator()
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
-        self.spinbox_exposure_ms.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def stage_start_scan_thread(self):
@@ -828,46 +649,6 @@ class MainWindow(QtWidgets.QWidget):
             except Exception as e:
                 self.log_update("Failed to disconnect stage:" + str(e) + "\n")
 
-    def cam_update_readout_time(self):
-        self.label_cam_readout_time.setText("Readout time, ms: "
-                                            + "{:2.1f}".format(self.cam_get_readout_time(self.spinbox_vsize.value())))
-
-    def cam_get_readout_time(self, vsize):
-        """Compute the ROI readout time based on vertical extent of ROI
-        (Hamamatsu Orca Flash 4.3).
-        Assuming triggered Sync Readout mode.
-        Parameters:
-            vsize: int
-                Number of rows in the ROI.
-        Return:
-            double, ROI readout time, ms.
-        """
-        h1 = 9.74436E-3  # 1-row readout time, ms
-        return ((vsize / 2.0) + 5) * h1
-
-    def cam_set_roi(self):
-        if self.cam_handle is not None:
-            self.cam_handle.setPropertyValue("subarray_mode", 2)  # 1 / OFF; 2 / ON
-            cam_roi_h = self.spinbox_vsize.value()
-            cam_voffset = int((self.cam_window.cam_sensor_dims[0] - cam_roi_h) / 2.0)
-            img_voffset = int((self.cam_window.cam_image_dims[0] - cam_roi_h) / 2.0)
-            self.cam_handle.setPropertyValue("subarray_vsize", cam_roi_h)
-            self.cam_handle.setPropertyValue("subarray_vpos", cam_voffset)
-            self.cam_window.cam_image_dims = (self.cam_handle.getPropertyValue("image_height")[0],
-                                              self.cam_handle.getPropertyValue("image_width")[0])
-            if (img_voffset >= 0) and (img_voffset + cam_roi_h < self.cam_last_image.shape[0]):
-                new_image = self.cam_last_image[img_voffset:(img_voffset + cam_roi_h), :]
-            else:
-                new_image = np.random.randint(100, 110,
-                                              size=(cam_roi_h, self.cam_window.cam_image_dims[1]),
-                                              dtype='uint16')
-            self.display_image(new_image, position=(0, cam_voffset))
-            self.log_update("New image dimensions: " + str(self.cam_window.cam_image_dims) + ' \n')
-            self.log_update("New vpos offset: " +
-                            str(self.cam_handle.getPropertyValue("subarray_vpos")[0]) + ' \n')
-        else:
-            self.log_update("Camera is not initialized\n")
-
     def set_ls_switching(self):
         if self.checkbox_ls_switch_automatically.isChecked():
             self.combobox_ls_side.setEnabled(False)
@@ -885,15 +666,6 @@ class MainWindow(QtWidgets.QWidget):
             except (OSError, serial.SerialException):
                 pass
         return ports_available
-
-    def cam_disconnect(self):
-        """Close the connection to camera"""
-        if self.cam_handle is not None:
-            self.cam_handle.shutdown()
-            self.cam_handle = None
-            self.log_update("Camera disconnected\n")
-        else:
-            self.log_update("Camera already disconnected\n")
 
     def activate_lightsheet(self):
         """Create and start DAQmx stask for cam-triggered light-sheet"""
@@ -973,75 +745,32 @@ class MainWindow(QtWidgets.QWidget):
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
-        if self.spinbox_exposure_ms.value() != 0:
-            stage_speed_x = self.spinbox_stage_step_x.value() / self.spinbox_exposure_ms.value()
+        if self.dev_cam.exposure_ms != 0:
+            stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.spinbox_stage_speed_x.setValue(stage_speed_x)
 
         if self.spinbox_n_timepoints.value() != 0:
             self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
 
-        stage_step_x = self.spinbox_stage_speed_x.value() * self.spinbox_exposure_ms.value()
+        stage_step_x = self.spinbox_stage_speed_x.value() * self.dev_cam.exposure_ms
         self.spinbox_stage_step_x.setValue(stage_step_x)
 
         if self.spinbox_stage_speed_x.value() != 0:
             exposure_ms = self.spinbox_stage_step_x.value() / self.spinbox_stage_speed_x.value()
-            self.spinbox_exposure_ms.setValue(exposure_ms)
+            self.dev_cam.set_exposure(exposure_ms)
 
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
         if self.spinbox_stage_step_x.value() != 0:
             n_triggers = int(self.spinbox_stage_range_x.value() / self.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
-            self.spinbox_pixel_z_um.setValue(self.spinbox_stage_step_x.value() / np.sqrt(2))
 
     def log_update(self, message):
         self.text_log.insertPlainText(message)
         self.text_log.moveCursor(QtGui.QTextCursor.End)
 
-    def cam_initialize(self):
-        if self.simulation_mode:
-            self.log_update("connected to Camera 0, model: BestCameraEver\n")
-        else:
-            if self.cam_handle is None:
-                self.param_init = cam.DCAMAPI_INIT(0, 0, 0, 0, None, None)
-                self.param_init.size = ctypes.sizeof(self.param_init)
-                error_code = cam.dcam.dcamapi_init(cam.ctypes.byref(self.param_init))
-                if error_code != cam.DCAMERR_NOERROR:
-                    raise cam.DCAMException("DCAM initialization failed with error code " + str(error_code))
-                n_cameras = self.param_init.iDeviceCount
-                if n_cameras > 0:
-                    self.cam_handle = cam.HamamatsuCamera(camera_id=0)
-                    self.log_update("connected to Camera 0, model: "
-                                    + str(self.cam_handle.getModelInfo(0)) + "\n")
-                    self.setup_camera()
-            else:
-                self.log_update("Camera already initialized! \n")
-
-    def checkbox_simulation_changed(self):
-        if self.checkbox_simulation.checkState():
-            self.simulation_mode = True
-            self.log_update("camera in simulation mode\n")
-        else:
-            self.simulation_mode = False
-
-    def setup_camera(self, debug_mode=False):
-        self.cam_exposure_ms = self.spinbox_exposure_ms.value()
-        if (not self.simulation_mode) and (self.cam_handle is not None):
-            min_exposure_time = self.cam_handle.getPropertyValue("timing_readout_time")[0]
-            if min_exposure_time <= self.cam_exposure_ms/1000.:
-                self.cam_handle.setPropertyValue("exposure_time", self.cam_exposure_ms/1000.)
-                self.cam_handle.setPropertyValue("readout_speed", 2)
-                if debug_mode:
-                    self.log_update("Camera exposure time, ms: " + str(self.cam_exposure_ms) + '\n')
-                self.setup_triggers()
-            else:
-                self.abort_pressed = True
-                self.log_update("Error: camera exposure time smaller than readout time, check values.\n")
-        else:
-            self.log_update("Camera handle empty\n")
-
     def button_exit_clicked(self):
-        if self.cam_handle is not None:
-            self.cam_handle.shutdown()
+        if self.dev_cam.dev_handle is not None:
+            self.dev_cam.dev_handle.shutdown()
         if self.dev_dm.dev_handle is not None:
             self.dev_dm.disconnect()
         if self.serial_ls is not None:
@@ -1052,25 +781,8 @@ class MainWindow(QtWidgets.QWidget):
         self.close()
 
     def button_snap_clicked(self):
-        self.setup_camera()
-        if self.simulation_mode:
-            self.cam_last_image = np.random.randint(100, 200,
-                                                    size=self.cam_window.cam_image_dims,
-                                                    dtype='uint16')
-        elif self.cam_handle is not None:
-            self.cam_handle.setACQMode("fixed_length", number_frames=1)
-            self.cam_handle.startAcquisition()
-            [frames, dims] = self.cam_handle.getFrames()
-            self.cam_handle.stopAcquisition()
-            if len(frames) > 0:
-                self.cam_last_image = np.reshape(frames[0].getData().astype(np.uint16), dims)
-            else:
-                self.log_update("Camera buffer empty. ")
-                self.cam_last_image = np.zeros(self.cam_window.cam_image_dims)
-        else:
-            self.log_update("Camera is not initialized\n")
-            self.cam_last_image = np.random.randint(100, 200, size=self.cam_window.cam_image_dims, dtype='uint16')
-        self.display_image(self.cam_last_image)
+        self.dev_cam.snap()
+        self.display_image(self.dev_cam.last_image)
 
     def display_image(self, image, position=None, text_update=False):
         """
@@ -1087,13 +799,13 @@ class MainWindow(QtWidgets.QWidget):
             self.log_update("(min, max): (" + str(image.min()) + "," + str(image.max()) + ")\n")
 
     def button_live_clicked(self):
-        if not self.cam_running:
-            self.cam_running = True
+        if not self.dev_cam.status == 'Running':
+            self.dev_cam.status == 'Running'
             self.thread_live_mode.start()
             self.cam_window.button_cam_live.setText("Stop")
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: red;}')
         else:
-            self.cam_running = False
+            self.dev_cam.status == 'Idle'
             #self.thread_live_mode.wait()
             self.cam_window.button_cam_live.setText("Live")
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: black;}')
@@ -1105,15 +817,15 @@ class MainWindow(QtWidgets.QWidget):
         self.check_path_valid()
         self.check_cam_initialized()
         # start acquisition
-        if not self.abort_pressed and not self.cam_running and not self.file_save_running:
-            self.cam_running = True
+        if (not self.abort_pressed) and (self.dev_cam.status != 'Running') and (not self.file_save_running):
+            self.dev_cam.status = 'Running'
             self.button_acquire_reset()
             self.n_frames_per_stack = int(self.spinbox_frames_per_stack.value())
             self.n_stacks_to_grab = int(self.spinbox_n_timepoints.value() * self.spinbox_nangles.value())
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
             self.n_angles = int(self.spinbox_nangles.value())
 
-            self.setup_camera()
+            self.dev_cam.setup()
             if self.ls_active:
                 self.setup_lightsheet()
             self.thread_frame_grabbing.setup(self.n_frames_to_grab)
@@ -1122,11 +834,11 @@ class MainWindow(QtWidgets.QWidget):
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
 
-            if not self.simulation_mode:
-                self.cam_handle.setACQMode("run_till_abort")
+            if not self.dev_cam.config['simulation']:
+                self.dev_cam.dev_handle.setACQMode("run_till_abort")
         # If pressed DURING acquisition, abort acquisition and saving
-        if self.cam_running and self.file_save_running:
-            self.cam_running = False
+        if self.dev_cam.status == 'Running' and self.file_save_running:
+            self.dev_cam.status != 'Idle'
             self.abort_pressed = True
             self.button_acquire_reset()
             self.thread_frame_grabbing.wait()
@@ -1196,72 +908,6 @@ class MainWindow(QtWidgets.QWidget):
         self.combobox_output_trig_source.setEnabled(prog_enabled)
         self.lineedit_output_trig_period.setEnabled(prog_enabled)
 
-    def setup_triggers(self):
-        """Orca-Flash4 specific triggering functions"""
-        # Trigger IN
-        if self.checkbox_triggers_in.isChecked():
-            current_ind = self.combobox_input_trig_mode.currentIndex()
-            # 1 - NORMAL, 6 - START
-            self.cam_handle.setPropertyValue("trigger_mode",
-                                             int(self.combobox_input_trig_mode.itemData(current_ind)))
-
-            # 1 external, 2 software
-            self.cam_handle.setPropertyValue("master_pulse_trigger_source",
-                                         1 + self.combobox_mpulse_source.currentIndex())
-
-            # 1 internal, 2 external, 3 software, 4 master pulse
-            self.cam_handle.setPropertyValue("trigger_source",
-                                             1 + self.combobox_input_trig_source.currentIndex())
-
-            # 1 EDGE, 2 LEVEL, 3 SYNCREADOUT
-            current_ind = self.combobox_input_trig_type.currentIndex()
-            self.cam_handle.setPropertyValue("trigger_active", int(self.combobox_input_trig_type.itemData(current_ind)))
-
-            # Master pulse, if necessary
-            self.cam_handle.setPropertyValue("master_pulse_mode",
-                                             1 + self.combobox_mpulse_mode.currentIndex())
-                                            # 1 CONTINUOUS, 2 START, 3 BURST
-            self.cam_handle.setPropertyValue("master_pulse_burst_times",
-                                             int(self.lineedit_mpulse_nbursts.text()))
-            self.cam_handle.setPropertyValue("master_pulse_interval",
-                                             int(self.lineedit_mpulse_interval.text())/1000.)
-            # self.log_update("IN trigger set. ")
-        else:
-            # reset to default values
-            self.cam_handle.setPropertyValue("trigger_mode", 1)  # NORMAL / 1
-            self.cam_handle.setPropertyValue("master_pulse_trigger_source", 2)  # SOFTWARE
-            self.cam_handle.setPropertyValue("trigger_source", 1)  # INTERNAL
-            self.cam_handle.setPropertyValue("trigger_active", 1)  # EDGE / 1
-            self.cam_handle.setPropertyValue("master_pulse_mode", 1)  # CONTINUOUS /1
-            self.cam_handle.setPropertyValue("master_pulse_burst_times", 1)
-            self.cam_handle.setPropertyValue("master_pulse_interval", 0.1)
-            # self.log_update("IN trigger default. ")
-
-        # Trigger OUT
-        if self.checkbox_triggers_out.isChecked():
-            self.cam_handle.setPropertyValue("output_trigger_kind[0]",
-                                             1 + self.combobox_output_trig_kind.currentIndex())
-                                            # 1 LOW, 2 EXPOSURE, 3 PROGRAMABLE, 4 TRIGGER READY, 5 HIGH
-
-            current_ind = self.combobox_output_trig_source.currentIndex()
-            # 2 READOUT END, 3 VSYNC, 6 (master) TRIGGER
-            self.cam_handle.setPropertyValue("output_trigger_source[0]",
-                                             int(self.combobox_output_trig_source.itemData(current_ind)))
-            # trigger duraion, s
-            self.cam_handle.setPropertyValue("output_trigger_period[0]",
-                                             int(self.lineedit_output_trig_period.text())/1000.)
-
-            # 1 NEGATIVE, 2 POSITIVE
-            self.cam_handle.setPropertyValue("output_trigger_polarity[0]",
-                                             1 + self.combobox_output_trig_polarity.currentIndex())
-
-        else:
-            self.cam_handle.setPropertyValue("output_trigger_kind[0]", 2)
-            self.cam_handle.setPropertyValue("output_trigger_source[0]", 2)
-            self.cam_handle.setPropertyValue("output_trigger_period[0]", 0.001)
-            self.cam_handle.setPropertyValue("output_trigger_polarity[0]", 2)
-            # self.log_update("OUT trigger default.")
-
 
 class LiveImagingWorker(QtCore.QObject):
     """
@@ -1275,7 +921,7 @@ class LiveImagingWorker(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def update(self):
-        while self.main_window.cam_running:
+        while self.main_window.dev_cam.status == 'Running':
             self.main_window.button_snap_clicked()
         self.sig_finished.emit()
 
@@ -1374,6 +1020,7 @@ class StageScanningWorker(QtCore.QObject):
         else:
             self.signal_log.emit("Please activate stage first\n")
         self.finished.emit()
+
 
 class CameraFrameGrabbingThread(QThread):
     """
@@ -1503,14 +1150,12 @@ class SavingStacksThread(QThread):
                 # print("queue length:" + str(len(self.frameQueue)))
                 self.signal_log.emit(".")
                 if self.main_window.file_format == "HDF5":
-                    z_anisotropy = self.main_window.spinbox_pixel_z_um.value() / \
-                                   self.main_window.spinbox_pixel_xy_um.value()
+                    z_voxel_size = self.main_window.spinbox_stage_step_x.value() / np.sqrt(2)
+                    z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
                     affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
                                               (0.0, 1.0, -z_anisotropy, 0.0),
                                               (0.0, 0.0, 1.0, 0.0)))
-                    voxel_size = (config.microscope['pixel_size_um'],
-                                  config.microscope['pixel_size_um'],
-                                  self.main_window.spinbox_pixel_z_um.value())
+                    voxel_size = (config.microscope['pixel_size_um'], config.microscope['pixel_size_um'], z_voxel_size)
                     self.bdv_writer.append_view(self.stack,
                                                 time=int(self.stack_counter / self.n_angles),
                                                 angle=self.angle_counter,
@@ -1518,7 +1163,7 @@ class SavingStacksThread(QThread):
                                                 name_affine="unshearing transformation",
                                                 calibration=(1, 1, 1),
                                                 voxel_size_xyz=voxel_size,
-                                                exposure_time=self.main_window.cam_exposure_ms
+                                                exposure_time=self.main_window.dev_cam.exposure_ms
                                                 )
                 elif self.main_window.file_format == "TIFF":
                     file_name = self.main_window.file_path + \

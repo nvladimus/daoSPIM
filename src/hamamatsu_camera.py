@@ -6,9 +6,35 @@ The documentation is a little confusing to me on this subject..
 I used c_int32 when this is explicitly specified, otherwise I use c_int.
 Hazen 10/13
 George 11/17 - Updated for SDK4 and to allow fixed length acquisition
-
 Updated for Win7/Win10 usage by Fabian Voigt, June 14th, 2018
+A wrapper with GUI added by @nvladimus, 03/2020
 """
+
+config = {
+    'simulation': True,
+    'image_shape': (2048, 2048),  # (Y,X)
+    'sensor_shape': (2048, 2048),  # (Y,X)
+    'exposure_ms': 20,
+    # triggers in block
+    'trigger_in': False,
+    'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
+    'trig_in_source': 'EXTERNAL',  # 'INTERNAL', 'EXTERNAL', 'SOFTWARE', 'MASTER_PULSE'
+    'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'
+    # next 4 settings matter only if 'trig_in_source': 'MASTER_PULSE'
+    'master_pulse_source': 'external', # 'external', 'software'
+    'master_pulse_mode': 'continuos', # 'continuos', 'start', 'burst'
+    'master_pulse_burst_times': 1,
+    'master_pulse_interval_s': 0.1,
+    # end of trigger_in block
+    # triggers out block
+    'trigger_out': True,
+    'trig_out_kind': 'EXPOSURE',  # 'LOW', 'EXPOSURE', 'PROGRAMMABLE', 'TRIGGER READY', 'HIGH'
+    # next 2 settings matter only if 'trig_out_kind': 'PROGRAMMABLE'
+    'trig_out_source':  'MASTER_PULSE', # 'READOUT_END', 'VSYNC', 'MASTER_PULSE'.
+    'trig_out_duration_s': 0.001,
+    'trig_out_polarity': 'POSITIVE',  # 'POSITIVE', 'NEGATIVE'
+    # end of trigger_out block
+}
 
 import ctypes
 import ctypes.util
@@ -668,10 +694,10 @@ class HamamatsuCamera(object):
 
         # Check that the property is within range.
         [pv_min, pv_max] = self.getPropertyRange(property_name)
-        if (property_value < pv_min):
+        if property_value < pv_min:
             print(" set property value", property_value, "is less than minimum of", pv_min, property_name, "setting to minimum")
             property_value = pv_min
-        if (property_value > pv_max):
+        if property_value > pv_max:
             print(" set property value", property_value, "is greater than maximum of", pv_max, property_name, "setting to maximum")
             property_value = pv_max
 
@@ -695,7 +721,7 @@ class HamamatsuCamera(object):
         roi_h = self.getPropertyValue("subarray_vsize")[0]
 
         # If the ROI is smaller than the entire frame turn on subarray mode
-        if ((roi_w == self.max_width) and (roi_h == self.max_height)):
+        if (roi_w == self.max_width) and (roi_h == self.max_height):
             self.setPropertyValue("subarray_mode", "OFF")
         else:
             self.setPropertyValue("subarray_mode", "ON")
@@ -909,6 +935,263 @@ class HamamatsuCameraMR(HamamatsuCamera):
             print("max camera backlog was:", self.max_backlog)
         self.max_backlog = 0
 
+import widget as wd
+import numpy as np
+import logging
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import pyqtSignal
+logging.basicConfig()
+
+
+class CamController(QtCore.QObject):
+    sig_update_gui = pyqtSignal()
+
+    def __init__(self, dev_name='Hamamatsu Orca Flash4.3', gui_on=True, logger_name='Orca', simulation=False):
+        """High-level camera control with optional GUI frontend. By @nvladimus"""
+        super().__init__()
+        self.dev_handle = None
+        self.config = config
+        self.exposure_ms = self.config['exposure_ms']
+        self.status = 'Not_connected'  # 'Not_connected', 'Connected', 'Idle', 'Running'
+        self.abort = False
+        self.last_image = None
+        self.frame_height_px = self.config['image_shape'][1]
+        self.frame_readout_ms = 10.0
+        self.logger = logging.getLogger(logger_name)
+        self.logger.setLevel(logging.DEBUG)
+        # GUI setup
+        self.gui_on = gui_on
+        if self.gui_on:
+            self.logger.info("GUI activated")
+            self.gui = wd.widget(dev_name)
+            self._setup_gui()
+            self.sig_update_gui.connect(self._update_gui)
+
+    def initialize(self):
+        if self.config['simulation']:
+            self.logger.debug("connected to Camera 0, model: BestCameraEver")
+        else:
+            if self.dev_handle is None:
+                param_init = DCAMAPI_INIT(0, 0, 0, 0, None, None)
+                param_init.size = ctypes.sizeof(param_init)
+                error_code = dcam.dcamapi_init(ctypes.byref(param_init))
+                if error_code != DCAMERR_NOERROR:
+                    self.logger.fatal(f"DCAM initialization failed with error code {error_code}")
+                n_cameras = param_init.iDeviceCount
+                if n_cameras > 0:
+                    self.dev_handle = HamamatsuCamera(camera_id=0)
+                    self.logger.info(f"Connected to Camera 0, model {self.dev_handle.getModelInfo(0)}")
+                    self.status = 'Connected'
+                    self.setup()
+            else:
+                self.logger.error("Camera already initialized!")
+
+    def setup(self):
+        if self.config['simulation']:
+            pass
+        elif self.dev_handle is not None:
+            min_exposure_time = self.dev_handle.getPropertyValue("timing_readout_time")[0]
+            if min_exposure_time <= self.exposure_ms/1000.:
+                self.dev_handle.setPropertyValue("exposure_time", self.exposure_ms/1000.)
+                self.dev_handle.setPropertyValue("readout_speed", 2)
+                self.logger.debug(f"Camera exposure time, ms: {self.exposure_ms}")
+                self.setup_triggers()
+            else:
+                self.abort = True
+                self.logger.error("Camera exposure time smaller than readout time")
+        else:
+            self.logger.error("Camera handle empty")
+
+    def set_exposure(self, exposure_ms):
+        self.exposure_ms = exposure_ms
+        self.setup()
+        if self.gui_on:
+            self.sig_update_gui.emit()
+
+    def setup_triggers(self):
+        if self.config['trigger_in']:
+            dicti = {'NORMAL': 1, 'START': 6}
+            self._set_property_from_dict('trig_in_mode', dicti)
+
+            dicti = {'EXTERNAL': 1, 'SOFTWARE': 2}
+            self._set_property_from_dict("master_pulse_trigger_source", dicti)
+
+            dicti = {'INTERNAL': 1, 'EXTERNAL': 2, 'SOFTWARE': 3, 'MASTER_PULSE': 4}
+            self._set_property_from_dict("trigger_source", dicti)
+
+            dicti = {'EDGE': 1, 'LEVEL': 2, 'SYNCREADOUT': 3}
+            self._set_property_from_dict('trig_in_type', dicti)
+
+            if self.config['trig_in_source'] == 'MASTER_PULSE':
+                dicti = {'continuous': 1, 'start': 2, 'burst': 3}
+                self._set_property_from_dict('master_pulse_mode', dicti)
+                self.dev_handle.setPropertyValue("master_pulse_burst_times", self.config['master_pulse_burst_times'])
+                self.dev_handle.setPropertyValue("master_pulse_interval", self.config['master_pulse_interval_s'])
+        else:  # reset trigger_in to default values
+            self.dev_handle.setPropertyValue("trigger_mode", 1)  # NORMAL / 1
+            self.dev_handle.setPropertyValue("master_pulse_trigger_source", 2)  # SOFTWARE
+            self.dev_handle.setPropertyValue("trigger_source", 1)  # INTERNAL
+            self.dev_handle.setPropertyValue("trigger_active", 1)  # EDGE / 1
+            self.dev_handle.setPropertyValue("master_pulse_mode", 1)  # CONTINUOUS /1
+            self.dev_handle.setPropertyValue("master_pulse_burst_times", 1)
+            self.dev_handle.setPropertyValue("master_pulse_interval", 0.1)
+
+        # Trigger OUT
+        if self.config['trigger_out']:
+            dicti = {'LOW': 1, 'EXPOSURE': 2, 'PROGRAMMABLE': 3, 'TRIGGER READY': 4, 'HIGH': 5}
+            self._set_property_from_dict('trig_out_kind', dicti)
+
+            if self.config['trig_out_kind'] == 'PROGRAMMABLE':
+                dicti = {'READOUT_END': 2, 'VSYNC': 3, 'MASTER_PULSE': 6}
+                self._set_property_from_dict('trig_out_source', dicti)
+
+            self.dev_handle.setPropertyValue("output_trigger_period[0]", self.config['trig_out_duration_s'])
+
+            dicti = {'POSITIVE': 1, 'NEGATIVE': 2}
+            self.dev_handle.setPropertyValue('trig_out_polarity', dicti)
+        else:  # defaults
+            self.dev_handle.setPropertyValue("output_trigger_kind[0]", 2)
+            self.dev_handle.setPropertyValue("output_trigger_source[0]", 2)
+            self.dev_handle.setPropertyValue("output_trigger_period[0]", 0.001)
+            self.dev_handle.setPropertyValue("output_trigger_polarity[0]", 2)
+
+    def _set_property_from_dict(self, prop_name, prop_dict):
+        """Search the dictionary keys for property name. If found, set corresponding
+        camera property to dictionary value. Otherwise, throw an error."""
+        if self.config[prop_name] in prop_dict.keys():
+            # rename some properties to camera's native key words (sometimes oddly named)
+            if prop_name == 'trig_in_mode':
+                dev_prop_name = "trigger_mode"
+            elif prop_name == 'trig_in_type':
+                dev_prop_name = "trigger_active"
+            elif prop_name == 'master_pulse_source':
+                prop_name = 'master_pulse_trigger_source'
+            elif prop_name == 'trig_out_kind':
+                dev_prop_name = 'output_trigger_kind[0]'
+            elif prop_name == 'trig_out_source':
+                dev_prop_name = "output_trigger_source[0]"
+            elif prop_name == 'trig_out_polarity':
+                dev_prop_name = "output_trigger_polarity[0]"
+            else:
+                dev_prop_name = prop_name
+            self.dev_handle.setPropertyValue(dev_prop_name, prop_dict[prop_name])
+        else:
+            self.logger.error(f"{prop_name} mode unknown: {self.config[prop_name]}")
+
+    def snap(self):
+        self.setup()
+        if self.config['simulation']:
+            self.last_image = np.random.randint(100, 200, size=self.config['image_shape'], dtype='uint16')
+        elif self.dev_handle is not None:
+            self.dev_handle.setACQMode("fixed_length", number_frames=1)
+            self.dev_handle.startAcquisition()
+            [frames, dims] = self.dev_handle.getFrames()
+            self.dev_handle.stopAcquisition()
+            if len(frames) > 0:
+                self.last_image = np.reshape(frames[0].getData().astype(np.uint16), dims)
+            else:
+                self.logger.error("Camera buffer empty")
+                self.last_image = np.zeros(self.self.config['image_shape'])
+        else:
+            self.logger.error("Camera is not initialized!")
+            self.last_image = np.random.randint(100, 200, size=self.config['image_shape'], dtype='uint16')
+
+    def disconnect(self):
+        """Close the connection to camera"""
+        if self.dev_handle is not None:
+            self.dev_handle.shutdown()
+            self.dev_handle = None
+            self.logger.info("Camera disconnected")
+            self.status = 'Not_connected'
+        else:
+            self.logger.error("Camera already disconnected")
+
+    def set_frame_height(self, new_height):
+        self.frame_height_px = new_height
+        self.set_readout_time(new_height)
+        if self.gui_on:
+            self.sig_update_gui.emit()
+        if self.dev_handle is not None:
+            cam_voffset = int((self.config['sensor_shape'][0] - self.frame_height_px) / 2.0)
+            img_voffset = int((self.last_image.shape[0] - self.frame_height_px) / 2.0)
+            self.dev_handle.setPropertyValue("subarray_vsize", self.frame_height_px)
+            self.dev_handle.setPropertyValue("subarray_vpos", cam_voffset)
+            if (img_voffset >= 0) and (img_voffset + self.frame_height_px < self.last_image.shape[0]):
+                self.last_image = self.cam_last_image[img_voffset:(img_voffset + self.frame_height_px), :]
+            else:
+                self.last_image = np.random.randint(100, 200,
+                                              size=(self.frame_height_px, self.self.last_image[1]), dtype='uint16')
+            self.display_image(self.last_image, position=(0, cam_voffset))
+            self.logger.debug(f"New image dimensions {self.last_image.shape}")
+            v_pos = self.dev_handle.getPropertyValue("subarray_vpos")[0]
+            self.logger.debug(f"New subarray_vpos: {v_pos}")
+        else:
+            self.logger.error("Camera is not initialized!")
+
+    def set_readout_time(self, vsize):
+        """Compute the frame readout time based on its vertical extent.
+        Assuming triggered Sync Readout mode.
+        Parameters:
+            vsize: int
+                Number of rows in the frame (ROI).
+        """
+        h1 = 9.74436E-3  # 1-row readout time, ms
+        self.frame_readout_ms = ((vsize / 2.0) + 5) * h1
+
+    def _setup_gui(self):
+        self.gui.add_tabs("Control Tabs", tabs=['Control', 'Trigger IN', 'Trigger OUT'])
+        tab_name = 'Control'
+        self.gui.add_checkbox('Simulation', tab_name, self.config['simulation'], enabled=False)
+
+        groupbox_name = 'Connection'
+        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_button('Initialize', groupbox_name, lambda: self.initialize())
+        self.gui.add_button('Disconnect', groupbox_name, lambda: self.disconnect())
+        self.gui.add_string_field('Status', groupbox_name, value=self.status, enabled=False)
+
+        groupbox_name = 'Frame control'
+        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_numeric_field('Exposure, ms', groupbox_name, value=self.exposure_ms, vmin=0, vmax=1000,
+                                   enabled=True, decimals=1, func=self.set_exposure)
+        self.gui.add_numeric_field('Frame height, px', groupbox_name, value=self.frame_height_px,
+                                   vmin=128, vmax=self.config['sensor_shape'][0],
+                                   enabled=True, decimals=0, func=self.set_frame_height)
+        self.gui.add_numeric_field('Readout time, ms', groupbox_name, value=self.frame_readout_ms,
+                                   vmin=0, vmax=10, enabled=False, decimals=1)
+
+        tab_name = 'Trigger IN'
+        self.gui.add_checkbox('Trigger in', tab_name, self.config['trigger_in'], enabled=False)
+        self.gui.add_string_field('trig_in_mode', tab_name, value=self.config['trig_in_mode'], enabled=False)
+        self.gui.add_string_field('trig_in_source', tab_name, value=self.config['trig_in_source'], enabled=False)
+        self.gui.add_string_field('trig_in_type', tab_name, value=self.config['trig_in_type'], enabled=False)
+        self.gui.add_string_field('master_pulse_source', tab_name,
+                                  value=self.config['master_pulse_source'], enabled=False)
+        self.gui.add_string_field('master_pulse_mode', tab_name, value=self.config['master_pulse_mode'], enabled=False)
+        self.gui.add_numeric_field('master_pulse_burst_times', tab_name,
+                                   value=self.config['master_pulse_burst_times'], decimals=0, enabled=False)
+        self.gui.add_numeric_field('master_pulse_interval_s', tab_name,
+                                   value=self.config['master_pulse_interval_s'], decimals=3, enabled=False)
+
+        tab_name = 'Trigger OUT'
+        self.gui.add_checkbox('Trigger out', tab_name, self.config['trigger_out'], enabled=False, func=None)
+        self.gui.add_string_field('trig_out_kind', tab_name, value=self.config['trig_out_kind'], enabled=False)
+        self.gui.add_string_field('trig_out_source', tab_name, value=self.config['trig_out_source'], enabled=False)
+        self.gui.add_numeric_field('trig_out_duration_s', tab_name,
+                                   value=self.config['trig_out_duration_s'], decimals=3, enabled=False)
+        self.gui.add_string_field('trig_out_polarity', tab_name, value=self.config['trig_out_polarity'], enabled=False)
+
+    @QtCore.pyqtSlot()
+    def _update_gui(self):
+        self.gui.update_string_field('Status', self.status)
+        self.gui.update_numeric_field('Readout time, ms', self.frame_readout_ms)
+
+
+# run if the module is launched as a standalone program
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    dev = CamController()
+    dev.gui.show()
+    app.exec_()
 
 #
 # The MIT License
