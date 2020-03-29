@@ -500,6 +500,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
         self.button_saveto.clicked.connect(self.button_saveto_clicked)
         self.combobox_file_format.currentTextChanged.connect(self.set_file_format)
+        self.button_exit.clicked.connect(self.button_exit_clicked)
 
         # Signals Stage control
         self.button_stage_connect.clicked.connect(self.activate_stage)
@@ -845,7 +846,9 @@ class MainWindow(QtWidgets.QWidget):
             self.thread_saving_files.wait()
 
     def check_cam_initialized(self):
-        if self.dev_cam.dev_handle is None:
+        if self.dev_cam.config['simulation']:
+            pass
+        elif self.dev_cam.dev_handle is None:
             self.log_update("Please initialize the camera.\n")
             self.abort_pressed = True
 
@@ -867,13 +870,13 @@ class MainWindow(QtWidgets.QWidget):
                 self.abort_pressed = False
 
     def button_acquire_reset(self):
-        if not self.cam_running and not self.file_save_running:
+        if (not self.dev_cam.status == 'Running') and (not self.file_save_running):
             self.button_cam_acquire.setText("Acquire and save")
             self.button_cam_acquire.setStyleSheet('QPushButton {color: black;}')
-        if not self.cam_running and self.file_save_running:
+        if (not self.dev_cam.status == 'Running') and self.file_save_running:
             self.button_cam_acquire.setText("Saving...")
             self.button_cam_acquire.setStyleSheet('QPushButton {color: blue;}')
-        if self.cam_running:
+        if self.dev_cam.status == 'Running':
             self.button_cam_acquire.setText("Abort")
             self.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
 
