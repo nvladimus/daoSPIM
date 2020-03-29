@@ -264,13 +264,13 @@ class MainWindow(QtWidgets.QWidget):
         # Set up threads and signals
         # Live mode image display worker+thread:
         self.thread_live_mode = QtCore.QThread()
-        self.worker_live_mode = LiveImagingWorker(self)
+        self.worker_live_mode = LiveImagingWorker(self, self.dev_cam)
         self.worker_live_mode.moveToThread(self.thread_live_mode)
         self.thread_live_mode.started.connect(self.worker_live_mode.update)
         self.worker_live_mode.sig_finished.connect(self.thread_live_mode.quit)
 
-        self.thread_saving_files = SavingStacksThread(self)
-        self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.thread_saving_files)
+        self.thread_saving_files = SavingStacksThread(self, self.dev_cam)
+        self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files)
         # stage scanning worker+thread:
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self)
@@ -800,12 +800,12 @@ class MainWindow(QtWidgets.QWidget):
 
     def button_live_clicked(self):
         if not self.dev_cam.status == 'Running':
-            self.dev_cam.status == 'Running'
+            self.dev_cam.status = 'Running'
             self.thread_live_mode.start()
             self.cam_window.button_cam_live.setText("Stop")
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: red;}')
-        else:
-            self.dev_cam.status == 'Idle'
+        else:  # if clicked while running
+            self.dev_cam.status = 'Idle'
             #self.thread_live_mode.wait()
             self.cam_window.button_cam_live.setText("Live")
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: black;}')
@@ -838,14 +838,14 @@ class MainWindow(QtWidgets.QWidget):
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
         # If pressed DURING acquisition, abort acquisition and saving
         if self.dev_cam.status == 'Running' and self.file_save_running:
-            self.dev_cam.status != 'Idle'
+            self.dev_cam.status = 'Idle'
             self.abort_pressed = True
             self.button_acquire_reset()
             self.thread_frame_grabbing.wait()
             self.thread_saving_files.wait()
 
     def check_cam_initialized(self):
-        if self.cam_handle is None:
+        if self.dev_cam.dev_handle is None:
             self.log_update("Please initialize the camera.\n")
             self.abort_pressed = True
 
@@ -888,26 +888,6 @@ class MainWindow(QtWidgets.QWidget):
     def set_file_format(self, new_format):
         self.file_format = new_format
 
-    def activate_input_trig_options(self, trigger_source):
-        """Inactivate input trigger options that are not relevant to the current trigger source"""
-        if trigger_source == "master pulse":
-            m_pulse_enabled = True
-        else:
-            m_pulse_enabled = False
-        self.combobox_mpulse_mode.setEnabled(m_pulse_enabled)
-        self.combobox_mpulse_source.setEnabled(m_pulse_enabled)
-        self.lineedit_mpulse_interval.setEnabled(m_pulse_enabled)
-        self.lineedit_mpulse_nbursts.setEnabled(m_pulse_enabled)
-
-    def activate_output_trig_options(self, trigger_kind):
-        """Inactivate output trigger options that are not relevant to the current trigger source"""
-        if trigger_kind == "PROGRAMMABLE":
-            prog_enabled = True
-        else:
-            prog_enabled = False
-        self.combobox_output_trig_source.setEnabled(prog_enabled)
-        self.lineedit_output_trig_period.setEnabled(prog_enabled)
-
 
 class LiveImagingWorker(QtCore.QObject):
     """
@@ -915,14 +895,16 @@ class LiveImagingWorker(QtCore.QObject):
     """
     sig_finished = pyqtSignal()
 
-    def __init__(self, main_window):
+    def __init__(self, parent_window, camera):
         super().__init__()
-        self.main_window = main_window
+        self.parent_window = parent_window
+        self.camera = camera
 
     @QtCore.pyqtSlot()
     def update(self):
-        while self.main_window.dev_cam.status == 'Running':
-            self.main_window.button_snap_clicked()
+        while self.camera.status == 'Running':
+            self.parent_window.button_snap_clicked()
+            time.sleep(0.2)
         self.sig_finished.emit()
 
 
@@ -1031,13 +1013,14 @@ class CameraFrameGrabbingThread(QThread):
     signal_save_data = pyqtSignal(object)
     signal_display_image = pyqtSignal(object)
 
-    def __init__(self, camera_window, saving_thread=None):
+    def __init__(self, parent_window, camera, saving_thread=None):
         super().__init__()
-        self.camera_window = camera_window
+        self.parent_window = parent_window
+        self.camera = camera
         self.saving_thread = saving_thread
-        self.signal_log.connect(self.camera_window.log_update)
-        self.signal_GUI.connect(self.camera_window.button_acquire_reset)
-        self.signal_display_image.connect(self.camera_window.display_image)
+    #    self.signal_log.connect(self.camera_window.log_update)
+        self.signal_GUI.connect(self.parent_window.button_acquire_reset)
+        self.signal_display_image.connect(self.parent_window.display_image)
         self.gui_update_interval_s = 1.0
 
         if self.saving_thread is not None:
@@ -1053,21 +1036,19 @@ class CameraFrameGrabbingThread(QThread):
         self.wait()
 
     def run(self):
-        if not self.camera_window.simulation_mode:
-            self.camera_window.cam_handle.startAcquisition()
+        if not self.camera.config['simulation']:
+            self.camera.dev_handle.startAcquisition()
         self.signal_log.emit("Camera started\n")
         start_time = time.time()
-        while self.camera_window.cam_running and (self.n_frames_grabbed < self.n_frames_to_grab):
-            if self.camera_window.simulation_mode:
+        while (self.camera.status == 'Running') and (self.n_frames_grabbed < self.n_frames_to_grab):
+            if self.camera.config['simulation']:
                 self.n_frames_grabbed += 1
-                sim_image_16bit = np.random.randint(100, 200,
-                                                    size=self.cam_window.cam_image_dims[0]*self.cam_window.cam_image_dims[0],
-                                                    dtype='uint16')
+                sim_image_16bit = np.random.randint(100, 200, size=2048 * 2048, dtype='uint16')
                 frame_data = [sim_image_16bit]
                 self.signal_save_data.emit(frame_data)
-                self.signal_display_image.emit(np.reshape(frame_data, self.cam_window.cam_image_dims))
+                self.signal_display_image.emit(np.reshape(frame_data, self.camera.config['image_shape']))
             else:
-                [frames, dims] = self.camera_window.cam_handle.getFrames()
+                [frames, dims] = self.camera.dev_handle.getFrames()
                 self.n_frames_grabbed += len(frames)
                 if len(frames) > 0:
                     frame_data = []
@@ -1079,12 +1060,9 @@ class CameraFrameGrabbingThread(QThread):
                         start_time = time.time()
                         self.signal_display_image.emit(np.reshape(frame_data[0], dims))
         # Clean up after the main cycle is done
-        if not self.camera_window.simulation_mode:
-            self.camera_window.cam_handle.stopAcquisition()
-
-        self.camera_window.cam_running = False
-        # self.signal_log.emit("Captured:" + str(self.n_frames_grabbed) + " frames \n")
-        # self.signal_log.emit("FPS: " + "{:4.1f}".format(self.n_frames_grabbed / (end_time - start_time)) + "\n")
+        if not self.camera.config['simulation']:
+            self.camera.dev_handle.stopAcquisition()
+        self.camera.status = 'Idle'
         self.signal_GUI.emit()
 
 
@@ -1095,9 +1073,10 @@ class SavingStacksThread(QThread):
     signal_log = pyqtSignal(str)
     signal_GUI = pyqtSignal()
 
-    def __init__(self, main_window):
+    def __init__(self, parent_window, camera):
         super().__init__()
-        self.main_window = main_window
+        self.parent_window = parent_window
+        self.camera = camera
         self.frames_to_save = None
         self.frames_per_stack = None
         self.n_angles = None
@@ -1108,8 +1087,8 @@ class SavingStacksThread(QThread):
         self.stack = None
         self.cam_image_dims = (None, None)
         self.frameQueue = deque([])
-        self.signal_log.connect(self.main_window.log_update)
-        self.signal_GUI.connect(self.main_window.button_acquire_reset)
+        self.signal_log.connect(self.parent_window.log_update)
+        self.signal_GUI.connect(self.parent_window.button_acquire_reset)
 
     def __del__(self):
         self.wait()
@@ -1121,7 +1100,7 @@ class SavingStacksThread(QThread):
         self.frames_saved = 0
         self.stack_counter = 0
         self.angle_counter = 0
-        self.cam_image_dims = self.main_window.cam_window.cam_image_dims
+        self.cam_image_dims = self.camera.config['image_shape']
         self.stack = np.empty((frames_per_stack, self.cam_image_dims[0], self.cam_image_dims[1]), 'uint16')
 
     def append_new_data(self, obj_list):
@@ -1131,15 +1110,15 @@ class SavingStacksThread(QThread):
             pass
 
     def run(self):
-        self.main_window.file_save_running = True
-        if self.main_window.file_format == "HDF5":
-            self.bdv_writer = npy2bdv.BdvWriter(self.main_window.file_path + '.h5',
+        self.parent_window.file_save_running = True
+        if self.parent_window.file_format == "HDF5":
+            self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
                                                 nangles=self.n_angles,
                                                 subsamp=((1, 1, 1),))
-        elif self.main_window.file_format == "TIFF":
+        elif self.parent_window.file_format == "TIFF":
             pass
 
-        while (self.frames_saved < self.frames_to_save) and not self.main_window.abort_pressed:
+        while (self.frames_saved < self.frames_to_save) and not self.parent_window.abort_pressed:
             if len(self.frameQueue) >= self.frames_per_stack:
                 for iframe in range(self.frames_per_stack):
                     plane = self.frameQueue.popleft()
@@ -1149,8 +1128,8 @@ class SavingStacksThread(QThread):
                 # print("frames_saved:" + str(self.frames_saved))
                 # print("queue length:" + str(len(self.frameQueue)))
                 self.signal_log.emit(".")
-                if self.main_window.file_format == "HDF5":
-                    z_voxel_size = self.main_window.spinbox_stage_step_x.value() / np.sqrt(2)
+                if self.parent_window.file_format == "HDF5":
+                    z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
                     affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
                                               (0.0, 1.0, -z_anisotropy, 0.0),
@@ -1163,28 +1142,28 @@ class SavingStacksThread(QThread):
                                                 name_affine="unshearing transformation",
                                                 calibration=(1, 1, 1),
                                                 voxel_size_xyz=voxel_size,
-                                                exposure_time=self.main_window.dev_cam.exposure_ms
+                                                exposure_time=self.camera.exposure_ms
                                                 )
-                elif self.main_window.file_format == "TIFF":
-                    file_name = self.main_window.file_path + \
+                elif self.parent_window.file_format == "TIFF":
+                    file_name = self.parent_window.file_path + \
                                 "_t{:05d}a{:01d}.tiff".format(self.stack_counter, self.angle_counter)
                     tifffile.imsave(file_name, self.stack)
                 else:
-                    self.signal_log.emit("unknown format:" + self.main_window.file_format + "\n")
+                    self.signal_log.emit("unknown format:" + self.parent_window.file_format + "\n")
 
                 self.stack_counter += 1
                 self.angle_counter = (self.angle_counter + 1) % self.n_angles
             else:
                 self.msleep(10)
         # clean-up:
-        if self.main_window.file_format == "HDF5":
+        if self.parent_window.file_format == "HDF5":
             self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles),
                                            camera_name="Hamamatsu OrcaFlash 4.3")
             self.bdv_writer.close()
-        elif self.main_window.file_format == "TIFF":
+        elif self.parent_window.file_format == "TIFF":
             pass
         self.frameQueue.clear()
-        self.main_window.file_save_running = False
+        self.parent_window.file_save_running = False
         self.signal_log.emit("Saved " + str(self.frames_saved) + " images in "
                              + str(self.stack_counter) + " stacks \n")
         self.signal_GUI.emit()

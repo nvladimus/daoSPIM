@@ -47,7 +47,7 @@ stages = {
 dm = {'diameter_mm': 15.0}
 
 saving = {
-    'root_folder': 'C:/Users/Nikita/Pictures/Water/SPGD-beads-water'
+    'root_folder': 'C:/Users/nvladim/Pictures/'
 }
 
 microscope = {
