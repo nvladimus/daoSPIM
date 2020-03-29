@@ -962,14 +962,14 @@ class CamController(QtCore.QObject):
         # GUI setup
         self.gui_on = gui_on
         if self.gui_on:
-            self.logger.info("GUI activated")
+            self.logger.debug("Camera GUI on")
             self.gui = wd.widget(dev_name)
             self._setup_gui()
             self.sig_update_gui.connect(self._update_gui)
 
     def initialize(self):
         if self.config['simulation']:
-            self.logger.debug("connected to Camera 0, model: BestCameraEver")
+            self.logger.debug("Connected to SimulatedCamera")
         else:
             if self.dev_handle is None:
                 param_init = DCAMAPI_INIT(0, 0, 0, 0, None, None)

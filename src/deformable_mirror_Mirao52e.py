@@ -14,8 +14,8 @@ import numpy as np
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
-config = {'dll_path': "./deformable_mirror/mirao52e.dll",
-          'flat_file': './deformable_mirror/flat.mro'}
+config = {'dll_path': "./src/deformable_mirror/mirao52e.dll",
+          'flat_file': './src/deformable_mirror/flat.mro'}
 logging.basicConfig()
 
 
@@ -45,7 +45,7 @@ class DmController(QtCore.QObject):
         # GUI setup
         self.gui_on = gui_on
         if self.gui_on:
-            self.logger.info("GUI activated")
+            self.logger.debug("DM GUI on")
             self.gui = wd.widget(dev_name)
             self._setup_gui()
             self.sig_update_gui.connect(self._update_gui)
@@ -74,7 +74,7 @@ class DmController(QtCore.QObject):
             if self.gui_on:
                 self.sig_update_gui.emit()
         else:
-            self.logger.error("DM device handle is empty, check DLL path.")
+            self.logger.error("DM device handle is empty.")
 
     def apply_flat(self):
         """Apply factory-supplied flat command from .mro file"""

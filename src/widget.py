@@ -5,6 +5,7 @@ Copyright Nikita Vladimirov, @nvladimus 2020
 
 from PyQt5.QtWidgets import (QGroupBox, QLineEdit, QPushButton, QTabWidget, QCheckBox,
                              QVBoxLayout, QWidget, QDoubleSpinBox, QFormLayout)
+from PyQt5.QtCore import QLocale
 
 
 class widget(QWidget):
@@ -81,6 +82,7 @@ class widget(QWidget):
         assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
         assert title not in self.inputs, "Widget name already exists: " + title + "\n"
         self.inputs[title] = QDoubleSpinBox()
+        self.inputs[title].setLocale(QLocale(QLocale.English, QLocale.UnitedStates)) # comma -> period: 0,1 -> 0.1
         self.inputs[title].setDecimals(decimals)
         self.inputs[title].setRange(vmin, vmax)
         self.inputs[title].setValue(value)

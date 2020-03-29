@@ -4,7 +4,8 @@ from ctypes import c_ushort
 import widget as wd
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-
+import logging
+logging.basicConfig()
 
 class ETL_controller(QtCore.QObject):
     """
@@ -14,9 +15,11 @@ class ETL_controller(QtCore.QObject):
     """
     sig_update_gui = pyqtSignal()
 
-    def __init__(self, port=None):
+    def __init__(self, port=None, gui_on=True, logger_name='ETL'):
         super().__init__()
         self.port = port
+        self.logger = logging.getLogger(logger_name)
+        self.logger.setLevel(logging.DEBUG)
         self.crc_table = self._init_crc_table()
         self.ser = None
         self._current = self._focalpower = 0
@@ -24,10 +27,13 @@ class ETL_controller(QtCore.QObject):
         self._current_lower = -292.84
         self._status = "Unknown"
         # GUI
-        self.gui = wd.widget("Optotune ETL")
-        self.__setup_gui()
-        # signals
-        self.sig_update_gui.connect(self.__update_gui)
+        self.gui_on = gui_on
+        if self.gui_on:
+            self.gui = wd.widget("Optotune ETL")
+            self.logger.debug("ETL GUI on")
+            self.__setup_gui()
+            # signals
+            self.sig_update_gui.connect(self.__update_gui)
 
     def __enter__(self):
         self.connect()
@@ -53,10 +59,10 @@ class ETL_controller(QtCore.QObject):
                 raise(serial.SerialException('Handshake failed'))
             else:
                 self._status = "Ready"
-                self.sig_update_gui.emit()
-        except serial.SerialException:
-            self.ser.close()
-            raise
+                if self.gui_on:
+                    self.sig_update_gui.emit()
+        except serial.SerialException as e:
+            self.logger.fatal(f"Failed to open ETL serial port: {e}")
 
     def close(self, soft_close=None):
         """
@@ -74,9 +80,10 @@ class ETL_controller(QtCore.QObject):
                     time.sleep(0.100)
                 self.set_current(0)
             self.ser.close()
-            del self.ser
+            self.ser = None
             self._status = 'Disconnected'
-            self.sig_update_gui.emit()
+            if self.gui_on:
+                self.sig_update_gui.emit()
 
     def _send_cmd(self, cmd, include_crc=None, wait_for_resp=None):
         """

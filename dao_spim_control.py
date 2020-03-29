@@ -10,7 +10,6 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread, pyqtSignal
 import pyqtgraph as pg
-import ctypes
 import PyDAQmx as pd
 import numpy as np
 from skimage.external import tifffile
@@ -23,6 +22,9 @@ import deformable_mirror_Mirao52e as def_mirror
 import serial
 import etl_controller_Optotune as etl
 import scipy.optimize as opt
+import logging
+
+logging.basicConfig()
 
 
 class CameraWindow(QtWidgets.QWidget):
@@ -95,7 +97,7 @@ class CameraWindow(QtWidgets.QWidget):
             roi_hline = pg.InfiniteLine(pos=vpos, angle=0, movable=False, pen=pg.mkPen((150, 150, 150)))
             text_hline = pg.TextItem(f"{i * grid_spacing_um} um", color=(200, 200, 200))
             text_hline.setPos(self.cam_sensor_dims[0]/2.0, vpos)
-            #grid_spacing_um
+            # grid_spacing_um
             self.image_display.getView().addItem(roi_hline)
             self.image_display.getView().addItem(text_hline)
 
@@ -164,12 +166,26 @@ class CameraWindow(QtWidgets.QWidget):
         return xcenter, fwhm
 
 
+class QTextEditLogger(logging.Handler):
+    def __init__(self, parent):
+        super().__init__()
+        self.widget = QtWidgets.QPlainTextEdit(parent)
+        self.widget.setReadOnly(True)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.widget.appendPlainText(msg)
+
+
 class MainWindow(QtWidgets.QWidget):
     """Wiring up all controls together"""
-    def __init__(self):
+    def __init__(self, logger_name='main_window'):
         super().__init__()
         self.cam_window = None
-
+        self.logger = logging.getLogger(logger_name)
+        self.logger.setLevel(logging.DEBUG)
+        self.text_log = QTextEditLogger(self)
+        self.logger.addHandler(self.text_log)
         # tabs
         self.tabs = QtWidgets.QTabWidget()
         self.tab_camera = QtWidgets.QWidget()
@@ -179,7 +195,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_etl = QtWidgets.QWidget()
 
         # deformable mirror widgets
-        self.dev_dm = def_mirror.DmController()
+        self.dev_dm = def_mirror.DmController(logger_name=self.logger.name + '.DM')
 
         # light-sheet widgets
         self.spinbox_ls_duration = QtWidgets.QDoubleSpinBox()
@@ -216,13 +232,11 @@ class MainWindow(QtWidgets.QWidget):
 
         # camera widgets
         self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        self.dev_cam = cam.CamController()
+        self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
 
         # ETL widget
-        self.dev_etl = etl.ETL_controller(config.etl['port'])
+        self.dev_etl = etl.ETL_controller(config.etl['port'], logger_name=self.logger.name + '.ETL')
 
-        # Global widgets
-        self.text_log = QtWidgets.QTextEdit(self)
         self.button_exit = QtWidgets.QPushButton('Exit')
 
         # acquisition
@@ -269,11 +283,11 @@ class MainWindow(QtWidgets.QWidget):
         self.thread_live_mode.started.connect(self.worker_live_mode.update)
         self.worker_live_mode.sig_finished.connect(self.thread_live_mode.quit)
 
-        self.thread_saving_files = SavingStacksThread(self, self.dev_cam)
-        self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files)
+        self.thread_saving_files = SavingStacksThread(self, self.dev_cam, self.logger)
+        self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files, self.logger)
         # stage scanning worker+thread:
         self.thread_stage_scanning = QtCore.QThread()
-        self.worker_stage_scanning = StageScanningWorker(self)
+        self.worker_stage_scanning = StageScanningWorker(self, self.logger)
         self.worker_stage_scanning.moveToThread(self.thread_stage_scanning)
         self.thread_stage_scanning.started.connect(self.worker_stage_scanning.scan)
         self.worker_stage_scanning.finished.connect(self.thread_stage_scanning.quit)
@@ -436,9 +450,8 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_window.show()
 
         # log window
-        self.text_log.setReadOnly(True)
-        self.text_log.setMaximumHeight(120)
-        self.text_log.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
+        self.text_log.widget.setMaximumHeight(120)
+        self.text_log.widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
                                                           QtWidgets.QSizePolicy.Minimum))
         # acquisition params
         self.groupbox_acq_params.setFixedWidth(300)
@@ -491,7 +504,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_exit.setFixedWidth(120)
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.button_exit)
-        self.layout.addWidget(self.text_log)
+        self.layout.addWidget(self.text_log.widget)
         self.setLayout(self.layout)
 
         # Signals Camera control
@@ -538,9 +551,9 @@ class MainWindow(QtWidgets.QWidget):
                     status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
                     self.stage_update_curr_pos()
                 except Exception as e:
-                    self.log_update("error:" + str(e) + "\n")
+                    self.logger.error(str(e))
             else:
-                self.log_update("Please activate stage first\n")
+                self.logger.info("Please activate stage first\n")
 
     def stage_x_move_left(self):
         if self.serial_stage is not None:
@@ -551,9 +564,9 @@ class MainWindow(QtWidgets.QWidget):
                     status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
                     self.stage_update_curr_pos()
                 except Exception as e:
-                    self.log_update("error:" + str(e) + "\n")
+                    self.logger.error(str(e))
             else:
-                self.log_update("Please activate stage first\n")
+                self.logger.info("Please activate stage first")
 
     def stage_update_curr_pos(self):
         # update current position
@@ -564,9 +577,9 @@ class MainWindow(QtWidgets.QWidget):
                     status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
                     self.label_stage_current_pos.setText(status)
                 except Exception as e:
-                    self.log_update("error:" + str(e) + "\n")
+                    self.logger.error(str(e))
         else:
-            self.log_update("Please activate stage first\n")
+            self.logger.info("Please activate stage first")
 
     def stage_mark_start_pos(self):
         if self.serial_stage is not None:
@@ -576,9 +589,9 @@ class MainWindow(QtWidgets.QWidget):
                     status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
                     self.label_stage_start_pos.setText(status)
                 except Exception as e:
-                    self.log_update("error:" + str(e) + "\n")
+                    self.logger.error(str(e))
         else:
-            self.log_update("Please activate stage first\n")
+            self.logger.info("Please activate stage first")
 
     def stage_mark_stop_pos(self):
         if self.serial_stage is not None:
@@ -589,16 +602,16 @@ class MainWindow(QtWidgets.QWidget):
                         stop = start + 0.001*self.spinbox_stage_range_x.value()
                         self.label_stage_stop_pos.setText(str(stop))
                     except Exception as e:
-                        self.log_update("error:" + str(e) + "\n")
+                        self.logger.error("error:" + str(e) + "\n")
                 else:
                     try:
                         self.serial_stage.write('?pos x\r'.encode())
                         status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
                         self.label_stage_stop_pos.setText(status)
                     except Exception as e:
-                        self.log_update("error:" + str(e) + "\n")
+                        self.logger.error("error:" + str(e) + "\n")
         else:
-            self.log_update("Please activate stage first\n")
+            self.logger.info("Please activate stage first")
 
     def activate_stage(self):
         if self.serial_stage is None:
@@ -609,46 +622,46 @@ class MainWindow(QtWidgets.QWidget):
                 if config.stages['type'] == 'MHW':
                     self.serial_stage.write('?version\r'.encode())
                     status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.log_update('connected to stage ' + status)
+                    self.logger.info('connected to stage ' + status)
                     self.serial_stage.write('!dim 9\r'.encode())
-                    self.log_update('units mm/s; ')
+                    self.logger.info('units mm/s; ')
                     # self.serial_stage.write('!extmode 1\r'.encode()) # is this necessary?
-                    # self.log_update('extended mode; ')
+                    # self.logger.info('extended mode; ')
                     self.serial_stage.write('!stout 4\r'.encode())
-                    self.log_update('TRIGGER_OUT set; ')
+                    self.logger.info('TRIGGER_OUT set; ')
                     self.serial_stage.write('!trig 0\r'.encode())  # Trigger should be globally disabled for the initial configuration and may     remain enabled afterwards, even if the !trigr parameters are modified
                     self.serial_stage.write('!trigm 7\r'.encode())
-                    self.log_update('trigger mode 7; ')
+                    self.logger.info('trigger mode 7; ')
                     self.serial_stage.write('!trigs 500\r'.encode())
-                    self.log_update('trigger pulse duration set (500 us); ')
+                    self.logger.info('trigger pulse duration set (500 us); ')
                     self.serial_stage.write('!triga x\r'.encode())
-                    self.log_update('trigger axis X; ')
+                    self.logger.info('trigger axis X; ')
                     self.serial_stage.write('!scanmode 0\r'.encode())
-                    self.log_update('scanmode 0 (default); ')
+                    self.logger.info('scanmode 0 (default); ')
                     self.serial_stage.write('!autostatus 3\r'.encode())
-                    self.log_update('autostatus 3; ')
+                    self.logger.info('autostatus 3; ')
                     self.serial_stage.write(('!accel x ' + str(config.stages['x_accel']) + '\r').encode())
-                    self.log_update('acceleration (x) set; ')
+                    self.logger.info('acceleration (x) set; ')
                     self.serial_stage.write(('!secvel x ' + str(config.stages['x_speed_max']) + '\r').encode())
                     #self.serial_stage.write('?secvel x\r'.encode())
                     #status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    #self.log_update('secure velocity (mm/s) limit ' + status + '\n')
+                    #self.logger.info('secure velocity (mm/s) limit ' + status + '\n')
                     self.stage_update_curr_pos()
                 else:
-                    self.log_update("Stage type unknown, please check config file\n")
+                    self.logger.info("Stage type unknown, please check config file\n")
                 self.button_stage_connect.setText("Disconnect stage")
                 self.button_stage_connect.setStyleSheet('QPushButton {color: blue;}')
             except Exception as e:
-                self.log_update("Could not connect to stage:" + str(e) + "\n")
+                self.logger.info("Could not connect to stage:" + str(e) + "\n")
         else:
             try:
                 self.serial_stage.close()
                 self.serial_stage = None
                 self.button_stage_connect.setText("Connect to stage")
                 self.button_stage_connect.setStyleSheet('QPushButton {color: red;}')
-                self.log_update("Stage disconnected\n")
+                self.logger.info("Stage disconnected\n")
             except Exception as e:
-                self.log_update("Failed to disconnect stage:" + str(e) + "\n")
+                self.logger.info("Failed to disconnect stage:" + str(e) + "\n")
 
     def set_ls_switching(self):
         if self.checkbox_ls_switch_automatically.isChecked():
@@ -676,9 +689,9 @@ class MainWindow(QtWidgets.QWidget):
                 self.serial_ls = serial.Serial(self.combobox_ls_port.currentText(), 9600, timeout=2)
                 self.serial_ls.write("?ver\n".encode())
                 status = self.serial_ls.readline().decode('utf-8')
-                self.log_update("connected to Arduino switcher, version:" + status + "\n")
+                self.logger.info("Connected to Arduino switcher, version:" + status + "\n")
             except Exception as e:
-                self.log_update("Cannot connect to Arduino, error:" + str(e) + "\n")
+                self.logger.info("Cannot connect to Arduino, error:" + str(e) + "\n")
 
         if not self.ls_active:
             self.ls_active = True
@@ -732,7 +745,7 @@ class MainWindow(QtWidgets.QWidget):
                 self.serial_ls.write('v1 0.0\n'.encode())
                 self.serial_ls.write('reset\n'.encode())
         else:
-            self.log_update("Error: Arduino switcher is not connected\n")
+            self.logger.info("Error: Arduino switcher is not connected\n")
 
         if self.daqmx_task_AO_ls is not None:
             ls.task_config(self.daqmx_task_AO_ls,
@@ -742,7 +755,7 @@ class MainWindow(QtWidgets.QWidget):
                            laser_amplitude_V=ls_laser_volts,
                            galvo_inertia_ms=0.2)
         else:
-            self.log_update("Light sheet is inactive\n")
+            self.logger.info("Light sheet is inactive\n")
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
@@ -764,10 +777,6 @@ class MainWindow(QtWidgets.QWidget):
         if self.spinbox_stage_step_x.value() != 0:
             n_triggers = int(self.spinbox_stage_range_x.value() / self.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
-
-    def log_update(self, message):
-        self.text_log.insertPlainText(message)
-        self.text_log.moveCursor(QtGui.QTextCursor.End)
 
     def button_exit_clicked(self):
         if self.dev_cam.dev_handle is not None:
@@ -797,7 +806,7 @@ class MainWindow(QtWidgets.QWidget):
                                     pos=position, autoHistogramRange=False)
         self.cam_window.sig_update_metrics.emit()
         if text_update:
-            self.log_update("(min, max): (" + str(image.min()) + "," + str(image.max()) + ")\n")
+            self.logger.info("(min, max): (" + str(image.min()) + "," + str(image.max()) + ")\n")
 
     def button_live_clicked(self):
         if not self.dev_cam.status == 'Running':
@@ -849,24 +858,24 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_cam.config['simulation']:
             pass
         elif self.dev_cam.dev_handle is None:
-            self.log_update("Please initialize the camera.\n")
+            self.logger.error("Please initialize the camera.")
             self.abort_pressed = True
 
     def check_path_valid(self):
         """Check folder name. Create new folder for acquisition.
         Abort if folder already exists. """
         if self.root_folder is None:
-            self.log_update("Please specify root folder for data saving.\n")
+            self.logger.error("Please specify root folder for data saving.")
             self.abort_pressed = True
         else:
             self.dir_path = self.root_folder + "/" + self.lineedit_experimentID.text()
             self.file_path = self.dir_path + "/" + self.lineedit_file_prefix.text()
             if os.path.exists(self.dir_path):
-                self.log_update("Experiment subfolder already exists! Define new subfolder.\n")
+                self.logger.error("Experiment subfolder already exists! Define new subfolder.")
                 self.abort_pressed = True
             else:
                 os.mkdir(self.dir_path)
-                self.log_update("Experiment subfolder: " + self.dir_path + "\n")
+                self.logger.info("Experiment subfolder: " + self.dir_path)
                 self.abort_pressed = False
 
     def button_acquire_reset(self):
@@ -886,7 +895,7 @@ class MainWindow(QtWidgets.QWidget):
         folder = file_dialog.getExistingDirectory(self, "Save to folder", self.root_folder)
         if folder:
             self.root_folder = folder
-            self.log_update("Root folder for saving: " + self.root_folder + "\n")
+            self.logger.info("Root folder for saving: " + self.root_folder)
 
     def set_file_format(self, new_format):
         self.file_format = new_format
@@ -915,19 +924,18 @@ class StageScanningWorker(QtCore.QObject):
     """
     Scan the stage multiple cycles. Proper use of QThread via worker object.
     """
-    signal_log = pyqtSignal(str)
     finished = pyqtSignal()
 
-    def __init__(self, camera_window):
+    def __init__(self, camera_window, logger):
         super().__init__()
         self.camera_window = camera_window
+        self.logger = logger
         self.serial_stage = None
         self.ncycles = None
         self.start_pos = None
         self.stop_pos = None
         self.speed = None
         self.trigger_step = None
-        self.signal_log.connect(self.camera_window.log_update)
         self.scan_mode = None
 
     @QtCore.pyqtSlot()
@@ -968,18 +976,18 @@ class StageScanningWorker(QtCore.QObject):
                     # flush all buffers
                     self.serial_stage.reset_input_buffer()
                     self.serial_stage.reset_output_buffer()
-                    self.signal_log.emit("stage setup():ok\n")
+                    self.logger.info("stage setup():ok")
                 except Exception as e:
-                    self.signal_log.emit("error in stage worker setup():" + str(e) + "\n")
+                    self.logger.error("In stage worker setup():" + str(e) + "\n")
         else:
-            self.signal_log.emit("Please activate stage first\n")
+            self.logger.error("Please activate stage first")
 
     @QtCore.pyqtSlot()
     def scan(self):
         if self.serial_stage is not None:
             if config.stages['type'] == 'MHW':
                 try:
-                    self.signal_log.emit("scanning started\n")
+                    self.logger.info("scanning started")
                     for i in range(self.ncycles):
                         if self.scan_mode == 'linear':
                             self.serial_stage.write(('!moa x ' + str(self.stop_pos) + '\r').encode())
@@ -998,12 +1006,12 @@ class StageScanningWorker(QtCore.QObject):
                                 self.serial_stage.write(('!mor x -' + str(self.trigger_step) + '\r').encode())
                                 status = self.serial_stage.read(size=1).decode('utf-8')
                         else:
-                            self.signal_log.emit("Unknown scan mode: must be linear or discrete.\n")
-                    self.signal_log.emit("scanning finished\n")
+                            self.logger.error("Unknown scan mode: must be linear or discrete.")
+                    self.logger.info("scanning finished\n")
                 except Exception as e:
-                    self.signal_log.emit("error in stage thread run():" + str(e) + "\n")
+                    self.logger.error("error in stage thread run():" + str(e) + "\n")
         else:
-            self.signal_log.emit("Please activate stage first\n")
+            self.logger.error("Please activate stage first\n")
         self.finished.emit()
 
 
@@ -1011,17 +1019,16 @@ class CameraFrameGrabbingThread(QThread):
     """
     Grab images from the camera and save them into list.
     """
-    signal_log = pyqtSignal(str)
     signal_GUI = pyqtSignal()
     signal_save_data = pyqtSignal(object)
     signal_display_image = pyqtSignal(object)
 
-    def __init__(self, parent_window, camera, saving_thread=None):
+    def __init__(self, parent_window, camera, saving_thread, logger):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
+        self.logger = logger
         self.saving_thread = saving_thread
-    #    self.signal_log.connect(self.camera_window.log_update)
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
         self.signal_display_image.connect(self.parent_window.display_image)
         self.gui_update_interval_s = 1.0
@@ -1041,7 +1048,7 @@ class CameraFrameGrabbingThread(QThread):
     def run(self):
         if not self.camera.config['simulation']:
             self.camera.dev_handle.startAcquisition()
-        self.signal_log.emit("Camera started\n")
+        self.logger.info("Camera started")
         start_time = time.time()
         while (self.camera.status == 'Running') and (self.n_frames_grabbed < self.n_frames_to_grab):
             if self.camera.config['simulation']:
@@ -1073,13 +1080,13 @@ class SavingStacksThread(QThread):
     """
     Save stacks to files
     """
-    signal_log = pyqtSignal(str)
     signal_GUI = pyqtSignal()
 
-    def __init__(self, parent_window, camera):
+    def __init__(self, parent_window, camera, logger):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
+        self.logger = logger
         self.frames_to_save = None
         self.frames_per_stack = None
         self.n_angles = None
@@ -1090,7 +1097,6 @@ class SavingStacksThread(QThread):
         self.stack = None
         self.cam_image_dims = (None, None)
         self.frameQueue = deque([])
-        self.signal_log.connect(self.parent_window.log_update)
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
 
     def __del__(self):
@@ -1130,7 +1136,7 @@ class SavingStacksThread(QThread):
                 # print("stack#" + str(self.stack_counter))
                 # print("frames_saved:" + str(self.frames_saved))
                 # print("queue length:" + str(len(self.frameQueue)))
-                self.signal_log.emit(".")
+                self.logger.info(".")
                 if self.parent_window.file_format == "HDF5":
                     z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
@@ -1152,7 +1158,7 @@ class SavingStacksThread(QThread):
                                 "_t{:05d}a{:01d}.tiff".format(self.stack_counter, self.angle_counter)
                     tifffile.imsave(file_name, self.stack)
                 else:
-                    self.signal_log.emit("unknown format:" + self.parent_window.file_format + "\n")
+                    self.logger.error(f"unknown format:{self.parent_window.file_format}")
 
                 self.stack_counter += 1
                 self.angle_counter = (self.angle_counter + 1) % self.n_angles
@@ -1167,8 +1173,7 @@ class SavingStacksThread(QThread):
             pass
         self.frameQueue.clear()
         self.parent_window.file_save_running = False
-        self.signal_log.emit("Saved " + str(self.frames_saved) + " images in "
-                             + str(self.stack_counter) + " stacks \n")
+        self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks")
         self.signal_GUI.emit()
 
 
