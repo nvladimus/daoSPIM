@@ -21,9 +21,9 @@ import lsgeneration as ls
 import deformable_mirror_Mirao52e as def_mirror
 import serial
 import etl_controller_Optotune as etl
+import stage_ASI_MS2000 as stage
 import scipy.optimize as opt
 import logging
-
 logging.basicConfig()
 
 
@@ -31,9 +31,10 @@ class CameraWindow(QtWidgets.QWidget):
     """Class for stand-alone image display"""
     sig_update_metrics = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
-        self.cam_sensor_dims = self.cam_image_dims = (config.camera['image_width'], config.camera['image_height'])
+        self.parent = parent
+        self.cam_sensor_dims = self.cam_image_dims = parent.dev_cam.config['image_shape']
         self.image_display = pg.ImageView(self)
         self.roi_line_fwhm = self.roi_line_fwhm_data = self.roi_fwhm_text = None
         self.button_cam_snap = QtWidgets.QPushButton('Snap')
@@ -211,23 +212,22 @@ class MainWindow(QtWidgets.QWidget):
         self.serial_ls = None
 
         # stage widgets
-        self.button_stage_connect = QtWidgets.QPushButton("Connect to stage")
+        self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
+
+        self.groupbox_scanning = QtWidgets.QGroupBox("Scanning")
         self.button_stage_x_move_right = QtWidgets.QPushButton("move ->")
         self.button_stage_x_move_left = QtWidgets.QPushButton("<- move")
         self.spinbox_stage_x_move_step = QtWidgets.QSpinBox(suffix=" um")
-        self.button_stage_pos_start = QtWidgets.QPushButton("Mark start pos. >")
-        self.button_stage_pos_stop = QtWidgets.QPushButton("< Mark stop pos.")
+        self.button_stage_pos_start = QtWidgets.QPushButton("Mark x-start")
+        self.button_stage_pos_stop = QtWidgets.QPushButton("Mark x-stop")
         self.button_stage_start_scan = QtWidgets.QPushButton("Start scan cycle")
         self.checkbox_stage_use_fixed_range = QtWidgets.QCheckBox("Use fixed range, um")
-        self.combobox_stage_port = QtWidgets.QComboBox()
-        self.combobox_stage_scan_mode = QtWidgets.QComboBox()
-        self.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox()
-        self.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox()
-        self.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox()
-        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox()
+        self.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
+        self.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
+        self.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
+        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles')
         self.label_stage_start_pos = QtWidgets.QLabel("0.0")
         self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
-        self.label_stage_current_pos = QtWidgets.QLabel("0.0")
         self.serial_stage = None
 
         # camera widgets
@@ -235,7 +235,7 @@ class MainWindow(QtWidgets.QWidget):
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
 
         # ETL widget
-        self.dev_etl = etl.ETL_controller(config.etl['port'], logger_name=self.logger.name + '.ETL')
+        self.dev_etl = etl.ETL_controller(logger_name=self.logger.name + '.ETL')
 
         self.button_exit = QtWidgets.QPushButton('Exit')
 
@@ -293,6 +293,7 @@ class MainWindow(QtWidgets.QWidget):
         self.worker_stage_scanning.finished.connect(self.thread_stage_scanning.quit)
 
     def initUI(self):
+        self.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.setWindowTitle("Microscope control")
         self.move(50, 100)
         # set up Tabs
@@ -372,11 +373,11 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
-        self.button_stage_connect.setFixedWidth(160)
-        self.button_stage_connect.setStyleSheet('QPushButton {color: red;}')
+        self.dev_stage.gui.setFixedWidth(300)
+#        self.groupbox_scanning.setFixedWidth(300)
+        self.button_stage_pos_start.setFixedWidth(80)
+        self.button_stage_pos_stop.setFixedWidth(80)
 
-        self.button_stage_pos_start.setFixedWidth(120)
-        self.button_stage_pos_stop.setFixedWidth(120)
         self.label_stage_start_pos.setFixedWidth(60)
         self.label_stage_stop_pos.setFixedWidth(60)
 
@@ -385,68 +386,55 @@ class MainWindow(QtWidgets.QWidget):
 
         self.spinbox_stage_speed_x.setValue(0.2)
         self.spinbox_stage_speed_x.setMinimum(0.01)
-        self.spinbox_stage_speed_x.setFixedWidth(80)
+        self.spinbox_stage_speed_x.setFixedWidth(160)
         self.spinbox_stage_speed_x.setDecimals(4)
         self.spinbox_stage_speed_x.setEnabled(False)
 
         self.spinbox_stage_step_x.setValue(3.5)
         self.spinbox_stage_step_x.setMinimum(0.01)
-        self.spinbox_stage_step_x.setFixedWidth(60)
+        self.spinbox_stage_step_x.setFixedWidth(160)
         self.spinbox_stage_step_x.setSingleStep(0.1)
 
         self.spinbox_stage_n_cycles.setValue(3)
         self.spinbox_stage_n_cycles.setMinimum(1)
         self.spinbox_stage_n_cycles.setMaximum(1000)
-        self.spinbox_stage_n_cycles.setFixedWidth(60)
+        self.spinbox_stage_n_cycles.setFixedWidth(160)
 
         self.spinbox_stage_range_x.setValue(50)
-        self.spinbox_stage_range_x.setFixedWidth(80)
+        self.spinbox_stage_range_x.setFixedWidth(160)
         self.spinbox_stage_range_x.setDecimals(0)
         self.spinbox_stage_range_x.setSingleStep(1)
         self.spinbox_stage_range_x.setRange(1, 1000)
-
-        self.combobox_stage_port.addItems(self.detect_serial_ports())
-        self.combobox_stage_port.setCurrentText(config.stages['port'])
-        self.combobox_stage_port.setFixedWidth(80)
-
-        self.combobox_stage_scan_mode.addItems(['linear', 'discrete'])
-        self.combobox_stage_scan_mode.setCurrentText('linear')
-        self.combobox_stage_scan_mode.setFixedWidth(80)
 
         self.button_stage_x_move_right.setFixedWidth(80)
         self.button_stage_x_move_left.setFixedWidth(80)
 
         self.spinbox_stage_x_move_step.setValue(5)
-        self.spinbox_stage_x_move_step.setFixedWidth(80)
+        self.spinbox_stage_x_move_step.setFixedWidth(60)
         self.spinbox_stage_x_move_step.setRange(1, 500)
 
         layout_stage_start_stop = QtWidgets.QGridLayout()
         layout_stage_start_stop.addWidget(self.button_stage_pos_start, 0, 0)
         layout_stage_start_stop.addWidget(self.label_stage_start_pos, 0, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_pos_stop, 0, 3)
-        layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 2)
+        layout_stage_start_stop.addWidget(self.button_stage_pos_stop, 0, 2)
+        layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 3)
+        layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 2, 0)
+        layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 2, 1)
+        layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 2, 2)
 
-        layout_manual_move = QtWidgets.QGridLayout()
-        layout_manual_move.addWidget(self.button_stage_x_move_right, 0, 0)
-        layout_manual_move.addWidget(self.button_stage_x_move_left, 0, 1)
-        layout_manual_move.addWidget(self.spinbox_stage_x_move_step, 0, 2)
-
-        self.tab_stage.layout.addRow(self.button_stage_connect)
-        self.tab_stage.layout.addRow(self.combobox_stage_port)
-        self.tab_stage.layout.addRow("Current position, mm:", self.label_stage_current_pos)
-        self.tab_stage.layout.addRow("Stage scanning speed, mm/s", self.spinbox_stage_speed_x)
-        self.tab_stage.layout.addRow("Trigger step, micron", self.spinbox_stage_step_x)
-        self.tab_stage.layout.addRow(self.checkbox_stage_use_fixed_range, self.spinbox_stage_range_x)
-        self.tab_stage.layout.addRow("Scanning cycles", self.spinbox_stage_n_cycles)
-        self.tab_stage.layout.addRow("Scanning mode", self.combobox_stage_scan_mode)
+        self.tab_stage.layout.addWidget(self.dev_stage.gui)
+        self.tab_stage.layout.addWidget(self.spinbox_stage_speed_x)
+        self.tab_stage.layout.addWidget(self.spinbox_stage_step_x)
+        self.tab_stage.layout.addWidget(self.checkbox_stage_use_fixed_range)
+        self.tab_stage.layout.addWidget(self.spinbox_stage_range_x)
+        self.tab_stage.layout.addWidget(self.spinbox_stage_n_cycles)
         self.tab_stage.layout.addRow(layout_stage_start_stop)
-        self.tab_stage.layout.addRow(layout_manual_move)
         self.tab_stage.layout.addRow(self.button_stage_start_scan)
 
         self.tab_stage.setLayout(self.tab_stage.layout)
 
         # CAMERA window
-        self.cam_window = CameraWindow()
+        self.cam_window = CameraWindow(self)
         self.cam_window.show()
 
         # log window
@@ -516,7 +504,6 @@ class MainWindow(QtWidgets.QWidget):
         self.button_exit.clicked.connect(self.button_exit_clicked)
 
         # Signals Stage control
-        self.button_stage_connect.clicked.connect(self.activate_stage)
         self.button_stage_x_move_right.clicked.connect(self.stage_x_move_right)
         self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
         self.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
@@ -538,8 +525,7 @@ class MainWindow(QtWidgets.QWidget):
                                          float(self.label_stage_start_pos.text()),
                                          float(self.label_stage_stop_pos.text()),
                                          self.spinbox_stage_speed_x.value(),
-                                         0.001 * self.spinbox_stage_step_x.value(),
-                                         scan_mode=self.combobox_stage_scan_mode.currentText())
+                                         0.001 * self.spinbox_stage_step_x.value())
         self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
@@ -567,19 +553,6 @@ class MainWindow(QtWidgets.QWidget):
                     self.logger.error(str(e))
             else:
                 self.logger.info("Please activate stage first")
-
-    def stage_update_curr_pos(self):
-        # update current position
-        if self.serial_stage is not None:
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.serial_stage.write('?pos x\r'.encode())
-                    status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.label_stage_current_pos.setText(status)
-                except Exception as e:
-                    self.logger.error(str(e))
-        else:
-            self.logger.info("Please activate stage first")
 
     def stage_mark_start_pos(self):
         if self.serial_stage is not None:
@@ -612,56 +585,6 @@ class MainWindow(QtWidgets.QWidget):
                         self.logger.error("error:" + str(e) + "\n")
         else:
             self.logger.info("Please activate stage first")
-
-    def activate_stage(self):
-        if self.serial_stage is None:
-            try:
-                self.serial_stage = serial.Serial(self.combobox_stage_port.currentText(),
-                                                  config.stages['baudrate'],
-                                                  timeout=5.0, write_timeout=0.02)
-                if config.stages['type'] == 'MHW':
-                    self.serial_stage.write('?version\r'.encode())
-                    status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.logger.info('connected to stage ' + status)
-                    self.serial_stage.write('!dim 9\r'.encode())
-                    self.logger.info('units mm/s; ')
-                    # self.serial_stage.write('!extmode 1\r'.encode()) # is this necessary?
-                    # self.logger.info('extended mode; ')
-                    self.serial_stage.write('!stout 4\r'.encode())
-                    self.logger.info('TRIGGER_OUT set; ')
-                    self.serial_stage.write('!trig 0\r'.encode())  # Trigger should be globally disabled for the initial configuration and may     remain enabled afterwards, even if the !trigr parameters are modified
-                    self.serial_stage.write('!trigm 7\r'.encode())
-                    self.logger.info('trigger mode 7; ')
-                    self.serial_stage.write('!trigs 500\r'.encode())
-                    self.logger.info('trigger pulse duration set (500 us); ')
-                    self.serial_stage.write('!triga x\r'.encode())
-                    self.logger.info('trigger axis X; ')
-                    self.serial_stage.write('!scanmode 0\r'.encode())
-                    self.logger.info('scanmode 0 (default); ')
-                    self.serial_stage.write('!autostatus 3\r'.encode())
-                    self.logger.info('autostatus 3; ')
-                    self.serial_stage.write(('!accel x ' + str(config.stages['x_accel']) + '\r').encode())
-                    self.logger.info('acceleration (x) set; ')
-                    self.serial_stage.write(('!secvel x ' + str(config.stages['x_speed_max']) + '\r').encode())
-                    #self.serial_stage.write('?secvel x\r'.encode())
-                    #status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    #self.logger.info('secure velocity (mm/s) limit ' + status + '\n')
-                    self.stage_update_curr_pos()
-                else:
-                    self.logger.info("Stage type unknown, please check config file\n")
-                self.button_stage_connect.setText("Disconnect stage")
-                self.button_stage_connect.setStyleSheet('QPushButton {color: blue;}')
-            except Exception as e:
-                self.logger.info("Could not connect to stage:" + str(e) + "\n")
-        else:
-            try:
-                self.serial_stage.close()
-                self.serial_stage = None
-                self.button_stage_connect.setText("Connect to stage")
-                self.button_stage_connect.setStyleSheet('QPushButton {color: red;}')
-                self.logger.info("Stage disconnected\n")
-            except Exception as e:
-                self.logger.info("Failed to disconnect stage:" + str(e) + "\n")
 
     def set_ls_switching(self):
         if self.checkbox_ls_switch_automatically.isChecked():
@@ -816,7 +739,6 @@ class MainWindow(QtWidgets.QWidget):
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: red;}')
         else:  # if clicked while running
             self.dev_cam.status = 'Idle'
-            #self.thread_live_mode.wait()
             self.cam_window.button_cam_live.setText("Live")
             self.cam_window.button_cam_live.setStyleSheet('QPushButton {color: black;}')
 
@@ -939,7 +861,7 @@ class StageScanningWorker(QtCore.QObject):
         self.scan_mode = None
 
     @QtCore.pyqtSlot()
-    def setup(self, serial_stage, ncycles, start_pos, stop_pos, speed, trigger_step, scan_mode='linear'):
+    def setup(self, serial_stage, ncycles, start_pos, stop_pos, speed, trigger_step):
         """
         :param serial_stage:
         :param ncycles:
@@ -947,8 +869,6 @@ class StageScanningWorker(QtCore.QObject):
         :param stop_pos:
         :param speed:
         :param trigger_step:
-        :param scan_mode: str
-            Scanning mode, 'linear' (default) for continuous motion, 'discrete', for stepwise motion.
         :return: None
         """
         self.serial_stage = serial_stage
@@ -957,59 +877,15 @@ class StageScanningWorker(QtCore.QObject):
         self.stop_pos = stop_pos
         self.speed = speed
         self.trigger_step = trigger_step
-        self.scan_mode = scan_mode
         if self.serial_stage is not None:
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.serial_stage.write('!trig 0\r'.encode())  # disable global trigger
-                    # go to start position
-                    self.serial_stage.write(('!moa x ' + str(self.start_pos) + '\r').encode())
-                    status = self.serial_stage.read(size=1)
-                    # set axis velocity
-                    self.serial_stage.write(('!vel x ' + str(self.speed) + '\r').encode())
-                    # set trigger distance, um
-                    self.serial_stage.write(('!trigd ' + str(self.trigger_step) + '\r').encode())
-                    # fire one trigger pulse for camera frame readout
-                    self.serial_stage.write('!trig 1\r'.encode())  # enable global trigger
-                    self.serial_stage.write('!trigm 102\r!trigger\r'.encode()) # fire first trigger manually for camera exposure onset (Hamamatsu)
-                    self.serial_stage.write('!trigm 7\r'.encode())  # reset trigger mode
-                    # flush all buffers
-                    self.serial_stage.reset_input_buffer()
-                    self.serial_stage.reset_output_buffer()
-                    self.logger.info("stage setup():ok")
-                except Exception as e:
-                    self.logger.error("In stage worker setup():" + str(e) + "\n")
+            pass
         else:
             self.logger.error("Please activate stage first")
 
     @QtCore.pyqtSlot()
     def scan(self):
         if self.serial_stage is not None:
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.logger.info("scanning started")
-                    for i in range(self.ncycles):
-                        if self.scan_mode == 'linear':
-                            self.serial_stage.write(('!moa x ' + str(self.stop_pos) + '\r').encode())
-                            status = self.serial_stage.read(size=1).decode('utf-8')
-                            self.serial_stage.write(('!moa x ' + str(self.start_pos) + '\r').encode())
-                            status = self.serial_stage.read(size=1).decode('utf-8')
-                        elif self.scan_mode == 'discrete':
-                            total_dist_mm = abs(self.stop_pos - self.start_pos)
-                            n_intervals_per_scan = round(total_dist_mm / self.trigger_step)
-                            # forward scan, n steps
-                            for j in range(n_intervals_per_scan):
-                                self.serial_stage.write(('!mor x ' + str(self.trigger_step) + '\r').encode())
-                                status = self.serial_stage.read(size=1).decode('utf-8')
-                            # backward scan, n steps
-                            for j in range(n_intervals_per_scan):
-                                self.serial_stage.write(('!mor x -' + str(self.trigger_step) + '\r').encode())
-                                status = self.serial_stage.read(size=1).decode('utf-8')
-                        else:
-                            self.logger.error("Unknown scan mode: must be linear or discrete.")
-                    self.logger.info("scanning finished\n")
-                except Exception as e:
-                    self.logger.error("error in stage thread run():" + str(e) + "\n")
+            pass
         else:
             self.logger.error("Please activate stage first\n")
         self.finished.emit()

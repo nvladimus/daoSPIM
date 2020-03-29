@@ -7,6 +7,11 @@ from PyQt5.QtCore import pyqtSignal
 import logging
 logging.basicConfig()
 
+config = {'port': "COM11",
+          'baud': 115200,
+          'timeout_s': 0.2}
+
+
 class ETL_controller(QtCore.QObject):
     """
     Wrapper class for serial control of Optotune ETL lenses, written by @nvladimus.
@@ -15,13 +20,15 @@ class ETL_controller(QtCore.QObject):
     """
     sig_update_gui = pyqtSignal()
 
-    def __init__(self, port=None, gui_on=True, logger_name='ETL'):
+    def __init__(self, gui_on=True, logger_name='ETL'):
         super().__init__()
-        self.port = port
+        self.port = config['port']
+        self.baud = config['baud']
+        self.timeout_s = config['timeout_s']
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
         self.crc_table = self._init_crc_table()
-        self.ser = None
+        self._ser = None
         self._current = self._focalpower = 0
         self._current_max = self._current_upper = 292.84
         self._current_lower = -292.84
@@ -31,9 +38,9 @@ class ETL_controller(QtCore.QObject):
         if self.gui_on:
             self.gui = wd.widget("Optotune ETL")
             self.logger.debug("ETL GUI on")
-            self.__setup_gui()
+            self._setup_gui()
             # signals
-            self.sig_update_gui.connect(self.__update_gui)
+            self.sig_update_gui.connect(self._update_gui)
 
     def __enter__(self):
         self.connect()
@@ -49,14 +56,14 @@ class ETL_controller(QtCore.QObject):
         """
         Open the serial port and connect
         """
-        self.ser = serial.Serial()
-        self.ser.baudrate = 115200
-        self.ser.port = self.port
-        self.ser.timeout = 0.2
+        self._ser = serial.Serial()
+        self._ser.baudrate = self.baud
+        self._ser.port = self.port
+        self._ser.timeout = self.timeout_s
         try:
-            self.ser.open()
+            self._ser.open()
             if self.handshake() != b'Ready\r\n':
-                raise(serial.SerialException('Handshake failed'))
+                raise serial.SerialException('Handshake failed')
             else:
                 self._status = "Ready"
                 if self.gui_on:
@@ -72,15 +79,15 @@ class ETL_controller(QtCore.QObject):
         """
         if soft_close is None:
             soft_close = False
-        if self.ser:
+        if self._ser:
             if self._current and soft_close:
                 for f in range(5):
                     self.set_current(self._current/2)
                     self._current = self.get_current()
                     time.sleep(0.100)
                 self.set_current(0)
-            self.ser.close()
-            self.ser = None
+            self._ser.close()
+            self._ser = None
             self._status = 'Disconnected'
             if self.gui_on:
                 self.sig_update_gui.emit()
@@ -100,15 +107,15 @@ class ETL_controller(QtCore.QObject):
             include_crc = True
         if wait_for_resp is None:
             wait_for_resp = True
-        if self.ser is None:
+        if self._ser is None:
             raise(serial.SerialException('Serial not connected'))
         if include_crc:
             crc = self.calc_crc(cmd)
-            self.ser.write(cmd+crc)
+            self._ser.write(cmd + crc)
         else:
-            self.ser.write(cmd)
+            self._ser.write(cmd)
         if wait_for_resp:
-            resp = self.ser.read_until('\r\n')
+            resp = self._ser.read_until('\r\n')
             if include_crc:
                 resp_crc = resp[-4:-2]
                 resp_content = resp[:-4]
@@ -567,36 +574,22 @@ class ETL_controller(QtCore.QObject):
     ############
     # GUI part #
     ############
-    def __setup_gui(self):
-        self.gui.add_groupbox('ETL control')
-        self.gui.add_string_field('Port',
-                                  'ETL control',
-                                  value=self.port, func=self.set_port)
-        self.gui.add_string_field('Status',
-                                  'ETL control',
-                                  value=self._status, enabled=False)
-        self.gui.add_button('Connect',  # widget name
-                            'ETL control',  # parent name
-                            lambda: self.connect())
-        self.gui.add_numeric_field('Min current, mA',  # widget name
-                                   'ETL control',  # parent name
-                                   value=self._current_lower,
+    def _setup_gui(self):
+        parent_name = 'ETL control'
+        self.gui.add_groupbox(parent_name)
+        self.gui.add_string_field('Port', parent_name, value=self.port, func=self.set_port)
+        self.gui.add_string_field('Status', parent_name, value=self._status, enabled=False)
+        self.gui.add_button('Connect', parent_name, lambda: self.connect())
+        self.gui.add_numeric_field('Min current, mA', parent_name, value=self._current_lower,
                                    vmin=-293, vmax=0, enabled=False, decimals=1)
-        self.gui.add_numeric_field('Max current, mA',  # widget name
-                                   'ETL control',  # parent name
-                                   value=self._current_upper,
+        self.gui.add_numeric_field('Max current, mA', parent_name, value=self._current_upper,
                                    vmin=0, vmax=293, enabled=False, decimals=1)
-        self.gui.add_numeric_field('Current, mA',  # widget name
-                                   'ETL control',  # parent name
-                                   value=self._current,
-                                   vmin=self._current_lower,
-                                   vmax=self._current_upper, decimals=1,
+        self.gui.add_numeric_field('Current, mA', parent_name, value=self._current,
+                                   vmin=self._current_lower, vmax=self._current_upper, decimals=1,
                                    func=self.set_current)
 
-        self.gui.add_button('Close connection',  # widget name
-                            'ETL control',  # parent name
-                            lambda: self.close())
+        self.gui.add_button('Close connection', parent_name, lambda: self.close())
 
     @QtCore.pyqtSlot()
-    def __update_gui(self):
+    def _update_gui(self):
         self.gui.update_string_field('Status', self._status)

@@ -14,25 +14,7 @@ lightsheet_generation = {
 }
 
 camera = {
-    'exposure_ms': 20.0,
-    'pixel_um': 6.5,
-    'image_width': 2048,
-    'image_height': 2048,
-    # triggers in
-    'trig_in': False,
-    'trig_in_mode': 'Normal',  # 'Normal', 'Start'
-    'trig_in_source': 'external',  # 'internal', 'external', 'software', 'master pulse'
-    'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'
-    # triggers out
-    'trig_out': True,
-    'trig_out_kind': 'EXPOSURE',  # 'LOW', 'EXPOSURE', 'PROGRAMMABLE', 'TRIGGER READY', 'HIGH'
-    # misc
-    'subtract_background': 100 # value to subtract from image intensity when saving
-}
-
-etl = {
-    'model': 'Optotune EL-16-40-TC-VIS-5D-C',
-    'port': 'COM11'
+    'pixel_um': 6.5
 }
 
 stages = {
