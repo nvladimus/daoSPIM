@@ -13,12 +13,14 @@ import time
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
-config = {'port': "COM18",
-          'baud': 9600,
-          'timeout_s': 2,
-          'units_mm': 1e-4,
-          'max_speed_mm/s': 7.5,
-          'encoder_step_mm': 1.0/45396}
+config = {
+    'simulation': True,
+    'port': "COM18",
+    'baud': 9600,
+    'timeout_s': 2.0,
+    'units_mm': 1e-4,
+    'max_speed_mm/s': 7.5,
+    'encoder_step_mm': 1.0/45396}
 logging.basicConfig()
 
 
@@ -34,15 +36,16 @@ class MotionController(QtCore.QObject):
         self.baud = config['baud']
         self.timeout_s = config['timeout_s']
         self.units = config['units_mm']
+        self.simulation = config['simulation']
         self.encoder_step_mm = config['encoder_step_mm']
         self.speed_x = self.speed_y = config['max_speed_mm/s']
         self.pulse_intervals_xy = [0.01, 0.01]
         self.enc_counts_per_pulse_xy = [round(self.pulse_intervals_xy[0] / self.encoder_step_mm),
                                         round(self.pulse_intervals_xy[1] / self.encoder_step_mm)]
-        self.scan_limits_xx_yy = [0, 0.1, 0, 0.1]  # [x_start, x_stop, y_start, y_stop]
+        self.scan_limits_xx_yy = [0.0, 0.1, 0.0, 0.1]  # [x_start, x_stop, y_start, y_stop]
         self._ser = None
-        self.position_x_mm = self.position_y_mm = None
-        self.target_pos_x_mm = self.target_pos_y_mm = 0
+        self.position_x_mm = self.position_y_mm = 0.0
+        self.target_pos_x_mm = self.target_pos_y_mm = 0.0
         # logger setup
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
@@ -59,32 +62,41 @@ class MotionController(QtCore.QObject):
         self.port = port
         self.baud = baud
         self.timeout_s = timeout_s
-        try:
-            self._ser = serial.Serial(self.port, self.baud, timeout=self.timeout_s)
-            self.logger.info(f"Connected to port {self.port}")
-            self.get_position()
-            self.get_speed()
-        except Exception as e:
-            self.logger.error(f"Could not initialize stage: {e}")
+        if not self.simulation:
+            try:
+                self._ser = serial.Serial(self.port, self.baud, timeout=self.timeout_s)
+                self.logger.info(f"Connected to port {self.port}")
+                self.get_position()
+                self.get_speed()
+            except Exception as e:
+                self.logger.error(f"Could not initialize stage: {e}")
+        else:
+            self.logger.debug(f"Simulation: connected to port {self.port}")
 
     def get_position(self):
-        response = self.write_with_response(b'W X Y')
-        if response[:2] == ":A" and len(response) >= 3:
-            words = response.split(" ")
-            if len(words) >= 3:
-                self.position_x_mm = float(words[1]) * self.units
-                self.position_y_mm = float(words[2]) * self.units
+        if not self.simulation:
+            response = self.write_with_response(b'W X Y')
+            if response[:2] == ":A" and len(response) >= 3:
+                words = response.split(" ")
+                if len(words) >= 3:
+                    self.position_x_mm = float(words[1]) * self.units
+                    self.position_y_mm = float(words[2]) * self.units
+        else:
+            self.logger.debug(f"Simulation: get_position().")
         if self.gui_on:
             self.sig_update_gui.emit()
 
     def get_speed(self):
-        response = self.write_with_response(b"s x? y?")
-        if response[:2] == ":A" and len(response) >= 3:
-            words = response.split(" ")
-            if len(words) >= 3:
-                self.speed_x = float(words[1][2:])
-                self.speed_y = float(words[2][2:])
-                self.logger.info(f'speed: ({self.speed_x}, {self.speed_y})')
+        if not self.simulation:
+            response = self.write_with_response(b"s x? y?")
+            if response[:2] == ":A" and len(response) >= 3:
+                words = response.split(" ")
+                if len(words) >= 3:
+                    self.speed_x = float(words[1][2:])
+                    self.speed_y = float(words[2][2:])
+                    self.logger.info(f'speed: ({self.speed_x}, {self.speed_y})')
+        else:
+            self.logger.debug(f"Simulation: get_speed().")
         if self.gui_on:
             self.sig_update_gui.emit()
 
@@ -106,11 +118,14 @@ class MotionController(QtCore.QObject):
             self.logger.error("_flush(): serial port not initialized")
 
     def disconnect(self):
-        try:
-            self._ser.close()
-            self.logger.info("closed")
-        except Exception as e:
-            self.logger.error(f"Could not disconnect {e}")
+        if not self.simulation:
+            try:
+                self._ser.close()
+                self.logger.info("closed")
+            except Exception as e:
+                self.logger.error(f"Could not disconnect {e}")
+        else:
+            self.logger.debug("Simulation: disconnect()")
 
     def _set_port(self, port):
         self.port = port
@@ -135,11 +150,16 @@ class MotionController(QtCore.QObject):
             self.speed_y = speed_mms
         else:
             self.logger.error("set_speed(): argument axis must be /'X/' or /'Y/'")
-        response = self.write_with_response(f"S {axis}={speed_mms}".encode())
-        if response[:2] != ":A":
-            self.logger.warning(f"set_speed() unexpected response: {response}")
+        if not self.simulation:
+            response = self.write_with_response(f"S {axis}={speed_mms}".encode())
+            if response[:2] != ":A":
+                self.logger.warning(f"set_speed() unexpected response: {response}")
+            else:
+                self.get_speed()
         else:
-            self.get_speed()
+            pass
+        if self.gui_on:
+            self.sig_update_gui.emit()
 
     def move_abs(self, pos_mm, sleep_s=0.05):
         assert len(pos_mm) == 2, "move_abs(): argument pos_mm should be 2-element array-like"
@@ -163,7 +183,9 @@ class MotionController(QtCore.QObject):
                 self.enc_counts_per_pulse_xy[1] = round(interval_mm / self.encoder_step_mm)
             else:
                 self.logger.error("set_scan_region(): value of /'trigger_axis/' is invalid.")
-            self._setup_scan()
+            if not self.simulation:
+                self._setup_scan()
+            self.logger.debug(f"Simulation: set_trigger_intervals()")
         else:
             self.logger.error("set_trigger_intervals(): keyword /'trigger_axis/' is misssing.")
 
@@ -181,7 +203,10 @@ class MotionController(QtCore.QObject):
                 self.scan_limits_xx_yy[3] = pos_mm
             else:
                 self.logger.error("set_scan_region(): value of /'scan_boundary/' is invalid.")
-            self._setup_scan()
+            if not self.simulation:
+                self._setup_scan()
+            else:
+                self.logger.debug("Simulation: set_scan_region().")
         else:
             self.logger.error("set_scan_region(): keyword /'scan_boundary/' is misssing.")
 
@@ -217,10 +242,11 @@ class MotionController(QtCore.QObject):
         self.gui.add_tabs("Control Tabs", tabs=['Connection', 'Motion', 'Scanning'])
         tab_name = 'Connection'
         # Connection controls
+        self.gui.add_checkbox('Simulation', tab_name, self.simulation, enabled=False)
         self.gui.add_string_field('Port', tab_name, value=self.port, func=self._set_port)
         self.gui.add_numeric_field('Baud', tab_name, value=self.baud, func=self._set_baud,
                                    vmin=9600, vmax=115200, enabled=True, decimals=0)
-        self.gui.add_button('Connect', tab_name,
+        self.gui.add_button('Initialize', tab_name,
                             lambda: self.initialize(self.port, self.baud, self.timeout_s))
         self.gui.add_button('Disconnect', tab_name,
                             lambda: self.disconnect())

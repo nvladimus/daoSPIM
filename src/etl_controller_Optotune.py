@@ -579,7 +579,7 @@ class ETL_controller(QtCore.QObject):
         self.gui.add_groupbox(parent_name)
         self.gui.add_string_field('Port', parent_name, value=self.port, func=self.set_port)
         self.gui.add_string_field('Status', parent_name, value=self._status, enabled=False)
-        self.gui.add_button('Connect', parent_name, lambda: self.connect())
+        self.gui.add_button('Initialize', parent_name, lambda: self.connect())
         self.gui.add_numeric_field('Min current, mA', parent_name, value=self._current_lower,
                                    vmin=-293, vmax=0, enabled=False, decimals=1)
         self.gui.add_numeric_field('Max current, mA', parent_name, value=self._current_upper,
@@ -588,7 +588,7 @@ class ETL_controller(QtCore.QObject):
                                    vmin=self._current_lower, vmax=self._current_upper, decimals=1,
                                    func=self.set_current)
 
-        self.gui.add_button('Close connection', parent_name, lambda: self.close())
+        self.gui.add_button('Disconnect', parent_name, lambda: self.close())
 
     @QtCore.pyqtSlot()
     def _update_gui(self):

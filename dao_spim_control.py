@@ -225,7 +225,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
         self.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
         self.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
-        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles')
+        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
         self.label_stage_start_pos = QtWidgets.QLabel("0.0")
         self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
         self.serial_stage = None
@@ -399,6 +399,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_n_cycles.setMinimum(1)
         self.spinbox_stage_n_cycles.setMaximum(1000)
         self.spinbox_stage_n_cycles.setFixedWidth(160)
+        self.spinbox_stage_n_cycles.setEnabled(False)
 
         self.spinbox_stage_range_x.setValue(50)
         self.spinbox_stage_range_x.setFixedWidth(160)
@@ -491,8 +492,8 @@ class MainWindow(QtWidgets.QWidget):
         # global layout
         self.button_exit.setFixedWidth(120)
         self.layout.addWidget(self.tabs)
-        self.layout.addWidget(self.button_exit)
         self.layout.addWidget(self.text_log.widget)
+        self.layout.addWidget(self.button_exit)
         self.setLayout(self.layout)
 
         # Signals Camera control
@@ -515,6 +516,7 @@ class MainWindow(QtWidgets.QWidget):
         self.checkbox_ls_switch_automatically.stateChanged.connect(self.set_ls_switching)
 
         self.update_calculator()
+        self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
@@ -555,36 +557,25 @@ class MainWindow(QtWidgets.QWidget):
                 self.logger.info("Please activate stage first")
 
     def stage_mark_start_pos(self):
-        if self.serial_stage is not None:
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.serial_stage.write('?pos x\r'.encode())
-                    status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.label_stage_start_pos.setText(status)
-                except Exception as e:
-                    self.logger.error(str(e))
+        if self.dev_stage is not None:
+            self.dev_stage.get_position()
+            pos = self.dev_stage.position_x_mm
+            self.label_stage_start_pos.setText(str(pos))
         else:
-            self.logger.info("Please activate stage first")
+            self.logger.error("Please activate stage first")
 
     def stage_mark_stop_pos(self):
-        if self.serial_stage is not None:
-            if config.stages['type'] == 'MHW':
-                if self.checkbox_stage_use_fixed_range.isChecked():
-                    try:
-                        start = float(self.label_stage_start_pos.text().strip())
-                        stop = start + 0.001*self.spinbox_stage_range_x.value()
-                        self.label_stage_stop_pos.setText(str(stop))
-                    except Exception as e:
-                        self.logger.error("error:" + str(e) + "\n")
-                else:
-                    try:
-                        self.serial_stage.write('?pos x\r'.encode())
-                        status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                        self.label_stage_stop_pos.setText(status)
-                    except Exception as e:
-                        self.logger.error("error:" + str(e) + "\n")
+        if self.dev_stage is not None:
+            if self.checkbox_stage_use_fixed_range.isChecked():
+                start = float(self.label_stage_start_pos.text().strip())
+                stop = start + self.spinbox_stage_range_x.value()
+                self.label_stage_stop_pos.setText(str(stop))
+            else:
+                self.dev_stage.get_position()
+                pos = self.dev_stage.position_x_mm
+                self.label_stage_stop_pos.setText(str(pos))
         else:
-            self.logger.info("Please activate stage first")
+            self.logger.error("Please activate stage first")
 
     def set_ls_switching(self):
         if self.checkbox_ls_switch_automatically.isChecked():
@@ -685,6 +676,7 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_cam.exposure_ms != 0:
             stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.spinbox_stage_speed_x.setValue(stage_speed_x)
+            self.dev_stage.set_speed(stage_speed_x, axis='X')
 
         if self.spinbox_n_timepoints.value() != 0:
             self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
