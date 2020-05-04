@@ -90,6 +90,7 @@ class widget(QWidget):
         self.layouts[parent].addRow(title, self.inputs[title])
         if enabled and func is not None:
             self.inputs[title].editingFinished.connect(lambda: func(self.inputs[title].value(), **func_args))
+            # editingFinished() preferred over valueChanged() because the latter is too jumpy, doesn't let finish input.
 
     def add_string_field(self, title, parent, value='', enabled=True, func=None):
         """ Add a QLineEdit() widget to the parent container widget (groupbox or tab).

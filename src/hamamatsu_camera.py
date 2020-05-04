@@ -1153,7 +1153,7 @@ class CamController(QtCore.QObject):
         self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('Exposure, ms', groupbox_name, value=self.exposure_ms, vmin=0, vmax=1000,
                                    enabled=True, decimals=1, func=self.set_exposure)
-        self.gui.add_numeric_field('Frame height, px', groupbox_name, value=self.frame_height_px,
+        self.gui.add_numeric_field('Image height, px', groupbox_name, value=self.frame_height_px,
                                    vmin=128, vmax=self.config['sensor_shape'][0],
                                    enabled=True, decimals=0, func=self.set_frame_height)
         self.gui.add_numeric_field('Readout time, ms', groupbox_name, value=self.frame_readout_ms,
