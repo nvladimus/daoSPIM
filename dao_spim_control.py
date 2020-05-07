@@ -707,7 +707,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def button_snap_clicked(self):
         self.dev_cam.snap()
-        self.display_image(self.dev_cam.last_image)
+        self.display_image(self.dev_cam.last_image, position=(0, self.dev_cam.cam_voffset))
 
     def display_image(self, image, position=None, text_update=False):
         """

@@ -11,7 +11,7 @@ A wrapper with GUI added by @nvladimus, 03/2020
 """
 
 config = {
-    'simulation': True,
+    'simulation': False,
     'image_shape': (2048, 2048),  # (Y,X)
     'sensor_shape': (2048, 2048),  # (Y,X)
     'exposure_ms': 20,
@@ -32,7 +32,7 @@ config = {
     # next 2 settings matter only if 'trig_out_kind': 'PROGRAMMABLE'
     'trig_out_source':  'MASTER_PULSE', # 'READOUT_END', 'VSYNC', 'MASTER_PULSE'.
     'trig_out_duration_s': 0.001,
-    'trig_out_polarity': 'POSITIVE',  # 'POSITIVE', 'NEGATIVE'
+    'trig_out_polarity': 'POSITIVE'  # 'POSITIVE', 'NEGATIVE'
     # end of trigger_out block
 }
 
@@ -956,6 +956,7 @@ class CamController(QtCore.QObject):
         self.abort = False
         self.last_image = None
         self.frame_height_px = self.config['image_shape'][1]
+        self.cam_voffset = 0
         self.frame_readout_ms = 10.0
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
@@ -1048,7 +1049,7 @@ class CamController(QtCore.QObject):
             self.dev_handle.setPropertyValue("output_trigger_period[0]", self.config['trig_out_duration_s'])
 
             dicti = {'POSITIVE': 1, 'NEGATIVE': 2}
-            self.dev_handle.setPropertyValue('trig_out_polarity', dicti)
+            self._set_property_from_dict('trig_out_polarity', dicti)
         else:  # defaults
             self.dev_handle.setPropertyValue("output_trigger_kind[0]", 2)
             self.dev_handle.setPropertyValue("output_trigger_source[0]", 2)
@@ -1074,7 +1075,7 @@ class CamController(QtCore.QObject):
                 dev_prop_name = "output_trigger_polarity[0]"
             else:
                 dev_prop_name = prop_name
-            self.dev_handle.setPropertyValue(dev_prop_name, prop_dict[prop_name])
+            self.dev_handle.setPropertyValue(dev_prop_name, prop_dict[self.config[prop_name]])
         else:
             self.logger.error(f"{prop_name} mode unknown: {self.config[prop_name]}")
 
@@ -1107,21 +1108,21 @@ class CamController(QtCore.QObject):
             self.logger.error("Camera already disconnected")
 
     def set_frame_height(self, new_height):
-        self.frame_height_px = new_height
+        self.frame_height_px = int(new_height)
         self.set_readout_time(new_height)
         if self.gui_on:
             self.sig_update_gui.emit()
         if self.dev_handle is not None:
-            cam_voffset = int((self.config['sensor_shape'][0] - self.frame_height_px) / 2.0)
+            self.cam_voffset = int((self.config['sensor_shape'][0] - self.frame_height_px) / 2.0)
             img_voffset = int((self.last_image.shape[0] - self.frame_height_px) / 2.0)
             self.dev_handle.setPropertyValue("subarray_vsize", self.frame_height_px)
-            self.dev_handle.setPropertyValue("subarray_vpos", cam_voffset)
+            self.dev_handle.setPropertyValue("subarray_vpos", self.cam_voffset)
             if (img_voffset >= 0) and (img_voffset + self.frame_height_px < self.last_image.shape[0]):
-                self.last_image = self.cam_last_image[img_voffset:(img_voffset + self.frame_height_px), :]
+                self.last_image = self.last_image[img_voffset:(img_voffset + self.frame_height_px), :]
             else:
                 self.last_image = np.random.randint(100, 200,
-                                              size=(self.frame_height_px, self.self.last_image[1]), dtype='uint16')
-            self.display_image(self.last_image, position=(0, cam_voffset))
+                                              size=(self.frame_height_px, self.last_image.shape[1]), dtype='uint16')
+            #self.display_image(self.last_image, position=(0, cam_voffset))
             self.logger.debug(f"New image dimensions {self.last_image.shape}")
             v_pos = self.dev_handle.getPropertyValue("subarray_vpos")[0]
             self.logger.debug(f"New subarray_vpos: {v_pos}")
