@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
 config = {
-    'simulation': True,
+    'simulation': False,
     'port': "COM18",
     'baud': 9600,
     'timeout_s': 2.0,

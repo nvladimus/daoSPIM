@@ -373,7 +373,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
-        self.dev_stage.gui.setFixedWidth(300)
+        self.dev_stage.gui.setFixedWidth(240)
 #        self.groupbox_scanning.setFixedWidth(300)
         self.button_stage_pos_start.setFixedWidth(80)
         self.button_stage_pos_stop.setFixedWidth(80)
@@ -381,7 +381,7 @@ class MainWindow(QtWidgets.QWidget):
         self.label_stage_start_pos.setFixedWidth(60)
         self.label_stage_stop_pos.setFixedWidth(60)
 
-        self.button_stage_start_scan.setFixedWidth(320)
+        self.button_stage_start_scan.setFixedWidth(240)
         self.checkbox_stage_use_fixed_range.setChecked(True)
 
         self.spinbox_stage_speed_x.setValue(0.2)
@@ -419,9 +419,9 @@ class MainWindow(QtWidgets.QWidget):
         layout_stage_start_stop.addWidget(self.label_stage_start_pos, 0, 1)
         layout_stage_start_stop.addWidget(self.button_stage_pos_stop, 0, 2)
         layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 3)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 2, 0)
-        layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 2, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 2, 2)
+        layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 1, 0)
+        layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 1, 1)
+        layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 1, 2)
 
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
         self.tab_stage.layout.addWidget(self.spinbox_stage_speed_x)
@@ -515,7 +515,6 @@ class MainWindow(QtWidgets.QWidget):
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
         self.checkbox_ls_switch_automatically.stateChanged.connect(self.set_ls_switching)
 
-        self.update_calculator()
         self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
@@ -568,7 +567,7 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage is not None:
             if self.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
-                stop = start + self.spinbox_stage_range_x.value()
+                stop = start + self.spinbox_stage_range_x.value()/1000.
                 self.label_stage_stop_pos.setText(str(stop))
             else:
                 self.dev_stage.get_position()
