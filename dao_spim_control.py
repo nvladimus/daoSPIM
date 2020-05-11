@@ -530,30 +530,22 @@ class MainWindow(QtWidgets.QWidget):
         self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
-        if self.serial_stage is not None:
-            step = 0.001 * self.spinbox_stage_x_move_step.value()
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.serial_stage.write(('!mor x ' + str(step) + '\r').encode())
-                    status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.stage_update_curr_pos()
-                except Exception as e:
-                    self.logger.error(str(e))
-            else:
-                self.logger.info("Please activate stage first\n")
+        if self.dev_stage is not None:
+            self.dev_stage.get_position()
+            pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
+            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            self.dev_stage.move_abs((new_x, new_y))
+        else:
+            self.logger.error("Please activate stage first")
 
     def stage_x_move_left(self):
-        if self.serial_stage is not None:
-            step = -0.001 * self.spinbox_stage_x_move_step.value()
-            if config.stages['type'] == 'MHW':
-                try:
-                    self.serial_stage.write(('!mor x ' + str(step) + '\r').encode())
-                    status = self.serial_stage.read_until(terminator=b'\r').decode('utf-8')
-                    self.stage_update_curr_pos()
-                except Exception as e:
-                    self.logger.error(str(e))
-            else:
-                self.logger.info("Please activate stage first")
+        if self.dev_stage is not None:
+            self.dev_stage.get_position()
+            pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
+            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            self.dev_stage.move_abs((new_x, new_y))
+        else:
+            self.logger.error("Please activate stage first")
 
     def stage_mark_start_pos(self):
         if self.dev_stage is not None:

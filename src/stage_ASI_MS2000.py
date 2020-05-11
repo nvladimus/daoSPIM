@@ -20,7 +20,7 @@ config = {
     'timeout_s': 2.0,
     'units_mm': 1e-4,
     'max_speed_mm/s': 7.5,
-    'encoder_step_mm': 1.0/45396}
+    'encoder_step_mm': 1.0/45397.6}
 logging.basicConfig()
 
 
@@ -39,10 +39,10 @@ class MotionController(QtCore.QObject):
         self.simulation = config['simulation']
         self.encoder_step_mm = config['encoder_step_mm']
         self.speed_x = self.speed_y = config['max_speed_mm/s']
-        self.pulse_intervals_xy = [0.01, 0.01]
-        self.enc_counts_per_pulse_xy = [round(self.pulse_intervals_xy[0] / self.encoder_step_mm),
-                                        round(self.pulse_intervals_xy[1] / self.encoder_step_mm)]
-        self.scan_limits_xx_yy = [0.0, 0.1, 0.0, 0.1]  # [x_start, x_stop, y_start, y_stop]
+        self.pulse_intervals_x = 0.01
+        self.enc_counts_per_pulse = round(self.pulse_intervals_x / self.encoder_step_mm)
+        self.scan_limits_xx_yy = [0.0, 0.1, 0.0, 0.0]  # [x_start, x_stop, y_start, y_stop]
+        self.n_scan_lines = 2
         self._ser = None
         self.position_x_mm = self.position_y_mm = 0.0
         self.target_pos_x_mm = self.target_pos_y_mm = 0.0
@@ -176,16 +176,12 @@ class MotionController(QtCore.QObject):
         if 'trigger_axis' in kwargs.keys():
             trigger_axis = kwargs['trigger_axis']
             if trigger_axis == 'X':
-                self.pulse_intervals_xy[0] = interval_mm
-                self.enc_counts_per_pulse_xy[0] = round(interval_mm / self.encoder_step_mm)
-            elif trigger_axis == 'Y':
-                self.pulse_intervals_xy[1] = interval_mm
-                self.enc_counts_per_pulse_xy[1] = round(interval_mm / self.encoder_step_mm)
+                self.pulse_intervals_x = interval_mm
+                self.enc_counts_per_pulse = round(interval_mm / self.encoder_step_mm)
             else:
                 self.logger.error("set_scan_region(): value of /'trigger_axis/' is invalid.")
             if not self.simulation:
                 self._setup_scan()
-            self.logger.debug(f"Simulation: set_trigger_intervals()")
         else:
             self.logger.error("set_trigger_intervals(): keyword /'trigger_axis/' is misssing.")
 
@@ -210,17 +206,22 @@ class MotionController(QtCore.QObject):
         else:
             self.logger.error("set_scan_region(): keyword /'scan_boundary/' is misssing.")
 
+    def set_n_scan_lines(self, n):
+        self.n_scan_lines = n
+
     def _setup_scan(self):
         """Send the scan parameters to the stage"""
-        # set x-limits
+        # set x-limits and trigger interval
         command = f'SCANR X={self.scan_limits_xx_yy[0]} ' \
                   f'Y={self.scan_limits_xx_yy[1]} ' \
-                  f'Z={self.enc_counts_per_pulse_xy[0]}'
+                  f'Z={self.enc_counts_per_pulse}'
+        self.logger.debug(command)
         _ = self.write_with_response(command.encode())
-        # set y-limits
+        # set y-limits and the number of lines
         command = f'SCANV X={self.scan_limits_xx_yy[2]} ' \
                   f'Y={self.scan_limits_xx_yy[3]} ' \
-                  f'Z={self.enc_counts_per_pulse_xy[1]}'
+                  f'Z={self.n_scan_lines}'
+        self.logger.debug(command)
         _ = self.write_with_response(command.encode())
         # set RASTER (0) or SERPENTINE (1) scan mode:
         _ = self.write_with_response(b'SCAN F=1')
@@ -231,8 +232,9 @@ class MotionController(QtCore.QObject):
         Functions set_scan_region() and set_trigger_intervals() must be called before it
         """
         self.logger.info(f'scan limits: {self.scan_limits_xx_yy}')
-        self.logger.info(f'enc counts per pulse: {self.enc_counts_per_pulse_xy}')
+        self.logger.info(f'enc counts per pulse: {self.enc_counts_per_pulse}')
         response = self.write_with_response(b'SCAN')
+        self.logger.debug(f'SCAN returned: {response}')
 
     def halt(self):
         response = self.write_with_response(b'\\')
@@ -298,11 +300,11 @@ class MotionController(QtCore.QObject):
                                    value=self.scan_limits_xx_yy[3], vmin=-25, vmax=25, decimals=4,
                                    enabled=True, func=self.set_scan_region, **{'scan_boundary': 'y_stop'})
         self.gui.add_numeric_field('Trigger interval X, mm', groupbox_name,
-                                   value=self.pulse_intervals_xy[0], vmin=0, vmax=25, decimals=4,
+                                   value=self.pulse_intervals_x, vmin=0, vmax=25, decimals=4,
                                    enabled=True, func=self.set_trigger_intervals, **{'trigger_axis': 'X'})
-        self.gui.add_numeric_field('Trigger interval Y, mm', groupbox_name,
-                                   value=self.pulse_intervals_xy[1], vmin=0, vmax=25, decimals=4,
-                                   enabled=True, func=self.set_trigger_intervals, **{'trigger_axis': 'Y'})
+        self.gui.add_numeric_field('Num. of lines', groupbox_name,
+                                   value=self.n_scan_lines, vmin=0, vmax=10000, decimals=0,
+                                   enabled=True, func=self.set_n_scan_lines)
         self.gui.add_button('Start scanning', groupbox_name,
                             lambda: self.start_scan())
 
