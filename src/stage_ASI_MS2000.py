@@ -163,13 +163,14 @@ class MotionController(QtCore.QObject):
 
     def move_abs(self, pos_mm, sleep_s=0.05):
         assert len(pos_mm) == 2, "move_abs(): argument pos_mm should be 2-element array-like"
-        command = f'M X={pos_mm[0]/self.units} Y={pos_mm[1]/self.units}'.encode()
-        _ = self.write_with_response(command)
+        command = f'M X={round(pos_mm[0]/self.units)} Y={round(pos_mm[1]/self.units)}'
+        self.logger.debug(command)
+        _ = self.write_with_response(command.encode())
         response = self.write_with_response(b'/')
         while response[0] != 'N':
             response = self.write_with_response(b'/')
             time.sleep(sleep_s)
-        self.logger.info(f"move complete")
+        self.logger.debug(f"move complete")
         self.get_position()
 
     def set_trigger_intervals(self, interval_mm, **kwargs):
@@ -182,6 +183,8 @@ class MotionController(QtCore.QObject):
                 self.logger.error("set_scan_region(): value of /'trigger_axis/' is invalid.")
             if not self.simulation:
                 self._setup_scan()
+            if self.gui_on:
+                self.sig_update_gui.emit()
         else:
             self.logger.error("set_trigger_intervals(): keyword /'trigger_axis/' is misssing.")
 
@@ -203,6 +206,8 @@ class MotionController(QtCore.QObject):
                 self._setup_scan()
             else:
                 self.logger.debug("Simulation: set_scan_region().")
+            if self.gui_on:
+                self.sig_update_gui.emit()
         else:
             self.logger.error("set_scan_region(): keyword /'scan_boundary/' is misssing.")
 
@@ -212,14 +217,14 @@ class MotionController(QtCore.QObject):
     def _setup_scan(self):
         """Send the scan parameters to the stage"""
         # set x-limits and trigger interval
-        command = f'SCANR X={self.scan_limits_xx_yy[0]} ' \
-                  f'Y={self.scan_limits_xx_yy[1]} ' \
+        command = f'SCANR X={self.scan_limits_xx_yy[0]:.4f} ' \
+                  f'Y={self.scan_limits_xx_yy[1]:.4f} ' \
                   f'Z={self.enc_counts_per_pulse}'
         self.logger.debug(command)
         _ = self.write_with_response(command.encode())
         # set y-limits and the number of lines
-        command = f'SCANV X={self.scan_limits_xx_yy[2]} ' \
-                  f'Y={self.scan_limits_xx_yy[3]} ' \
+        command = f'SCANV X={self.scan_limits_xx_yy[2]:.4f} ' \
+                  f'Y={self.scan_limits_xx_yy[3]:.4f} ' \
                   f'Z={self.n_scan_lines}'
         self.logger.debug(command)
         _ = self.write_with_response(command.encode())
@@ -314,6 +319,11 @@ class MotionController(QtCore.QObject):
         self.gui.update_numeric_field('Y pos., mm', self.position_y_mm)
         self.gui.update_numeric_field('Speed X, mm/s', self.speed_x)
         self.gui.update_numeric_field('Speed Y, mm/s', self.speed_y)
+        self.gui.update_numeric_field('X start, mm', self.scan_limits_xx_yy[0])
+        self.gui.update_numeric_field('X stop, mm', self.scan_limits_xx_yy[1])
+        self.gui.update_numeric_field('Y start, mm', self.scan_limits_xx_yy[2])
+        self.gui.update_numeric_field('Y stop, mm', self.scan_limits_xx_yy[3])
+        self.gui.update_numeric_field('Trigger interval X, mm', self.pulse_intervals_x)
 
 
 # run if the module is launched as a standalone program

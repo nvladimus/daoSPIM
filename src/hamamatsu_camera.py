@@ -16,13 +16,14 @@ config = {
     'sensor_shape': (2048, 2048),  # (Y,X)
     'exposure_ms': 20,
     # triggers in block
-    'trigger_in': False,
+    'trigger_in': True,
     'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
     'trig_in_source': 'EXTERNAL',  # 'INTERNAL', 'EXTERNAL', 'SOFTWARE', 'MASTER_PULSE'
     'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'
+    'trig_in_polarity': 'NEGATIVE', # 'POSITIVE', 'NEGATIVE'
     # next 4 settings matter only if 'trig_in_source': 'MASTER_PULSE'
-    'master_pulse_source': 'external', # 'external', 'software'
-    'master_pulse_mode': 'continuos', # 'continuos', 'start', 'burst'
+    'master_pulse_source': 'EXTERNAL', # 'EXTERNAL', 'SOFTWARE'
+    'master_pulse_mode': 'CONTINUOUS', # 'CONTINUOUS', 'START', 'BURST'
     'master_pulse_burst_times': 1,
     'master_pulse_interval_s': 0.1,
     # end of trigger_in block
@@ -1015,16 +1016,19 @@ class CamController(QtCore.QObject):
             self._set_property_from_dict('trig_in_mode', dicti)
 
             dicti = {'EXTERNAL': 1, 'SOFTWARE': 2}
-            self._set_property_from_dict("master_pulse_trigger_source", dicti)
+            self._set_property_from_dict("master_pulse_source", dicti)
 
             dicti = {'INTERNAL': 1, 'EXTERNAL': 2, 'SOFTWARE': 3, 'MASTER_PULSE': 4}
-            self._set_property_from_dict("trigger_source", dicti)
+            self._set_property_from_dict("trig_in_source", dicti)
 
             dicti = {'EDGE': 1, 'LEVEL': 2, 'SYNCREADOUT': 3}
             self._set_property_from_dict('trig_in_type', dicti)
 
+            dicti = {'NEGATIVE': 1, 'POSITIVE': 2}
+            self._set_property_from_dict('trig_in_polarity', dicti)
+
             if self.config['trig_in_source'] == 'MASTER_PULSE':
-                dicti = {'continuous': 1, 'start': 2, 'burst': 3}
+                dicti = {'CONTINUOUS': 1, 'START': 2, 'BURST': 3}
                 self._set_property_from_dict('master_pulse_mode', dicti)
                 self.dev_handle.setPropertyValue("master_pulse_burst_times", self.config['master_pulse_burst_times'])
                 self.dev_handle.setPropertyValue("master_pulse_interval", self.config['master_pulse_interval_s'])
@@ -1065,8 +1069,12 @@ class CamController(QtCore.QObject):
                 dev_prop_name = "trigger_mode"
             elif prop_name == 'trig_in_type':
                 dev_prop_name = "trigger_active"
+            elif prop_name == 'trig_in_source':
+                dev_prop_name = 'trigger_source'
+            elif prop_name == 'trig_in_polarity':
+                dev_prop_name = 'trigger_polarity'
             elif prop_name == 'master_pulse_source':
-                prop_name = 'master_pulse_trigger_source'
+                dev_prop_name = 'master_pulse_trigger_source'
             elif prop_name == 'trig_out_kind':
                 dev_prop_name = 'output_trigger_kind[0]'
             elif prop_name == 'trig_out_source':

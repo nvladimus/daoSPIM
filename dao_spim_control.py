@@ -535,6 +535,7 @@ class MainWindow(QtWidgets.QWidget):
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
             new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
+            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -544,6 +545,7 @@ class MainWindow(QtWidgets.QWidget):
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
             new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
+            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -551,7 +553,8 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage is not None:
             self.dev_stage.get_position()
             pos = self.dev_stage.position_x_mm
-            self.label_stage_start_pos.setText(str(pos))
+            self.label_stage_start_pos.setText(f'{pos:.4f}')
+            self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
         else:
             self.logger.error("Please activate stage first")
 
@@ -559,12 +562,13 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage is not None:
             if self.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
-                stop = start + self.spinbox_stage_range_x.value()/1000.
-                self.label_stage_stop_pos.setText(str(stop))
+                pos = start + self.spinbox_stage_range_x.value()/1000.
+                self.label_stage_stop_pos.setText(f'{pos:.4f}')
             else:
                 self.dev_stage.get_position()
                 pos = self.dev_stage.position_x_mm
-                self.label_stage_stop_pos.setText(str(pos))
+                self.label_stage_stop_pos.setText(f'{pos:.4f}')
+            self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
         else:
             self.logger.error("Please activate stage first")
 
@@ -664,7 +668,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
-        if self.dev_cam.exposure_ms != 0:
+        if self.dev_cam.exposure_ms != 0 and self.dev_stage is not None:
             stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.spinbox_stage_speed_x.setValue(stage_speed_x)
             self.dev_stage.set_speed(stage_speed_x, axis='X')
@@ -672,10 +676,12 @@ class MainWindow(QtWidgets.QWidget):
         if self.spinbox_n_timepoints.value() != 0:
             self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
 
-        stage_step_x = self.spinbox_stage_speed_x.value() * self.dev_cam.exposure_ms
-        self.spinbox_stage_step_x.setValue(stage_step_x)
+        # feed the trigger interval to the stage settings
+        if self.dev_stage is not None:
+            stage_step_x_mm = 0.001 * self.spinbox_stage_step_x.value()
+            self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
 
-        if self.spinbox_stage_speed_x.value() != 0:
+        if self.spinbox_stage_speed_x.value() != 0 and self.dev_cam is not None:
             exposure_ms = self.spinbox_stage_step_x.value() / self.spinbox_stage_speed_x.value()
             self.dev_cam.set_exposure(exposure_ms)
 
