@@ -530,7 +530,7 @@ class MainWindow(QtWidgets.QWidget):
         self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
-        if self.dev_stage is not None:
+        if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
             new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
@@ -540,7 +540,7 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please activate stage first")
 
     def stage_x_move_left(self):
-        if self.dev_stage is not None:
+        if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
             new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
@@ -550,7 +550,7 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please activate stage first")
 
     def stage_mark_start_pos(self):
-        if self.dev_stage is not None:
+        if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos = self.dev_stage.position_x_mm
             self.label_stage_start_pos.setText(f'{pos:.4f}')
@@ -559,7 +559,7 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please activate stage first")
 
     def stage_mark_stop_pos(self):
-        if self.dev_stage is not None:
+        if self.dev_stage.initialized:
             if self.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
                 pos = start + self.spinbox_stage_range_x.value()/1000.
@@ -668,7 +668,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
-        if self.dev_cam.exposure_ms != 0 and self.dev_stage is not None:
+        if (self.dev_cam.exposure_ms != 0) and self.dev_stage.initialized:
             stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.spinbox_stage_speed_x.setValue(stage_speed_x)
             self.dev_stage.set_speed(stage_speed_x, axis='X')
@@ -677,7 +677,7 @@ class MainWindow(QtWidgets.QWidget):
             self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
 
         # feed the trigger interval to the stage settings
-        if self.dev_stage is not None:
+        if self.dev_stage.initialized:
             stage_step_x_mm = 0.001 * self.spinbox_stage_step_x.value()
             self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
 

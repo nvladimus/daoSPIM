@@ -16,7 +16,7 @@ config = {
     'sensor_shape': (2048, 2048),  # (Y,X)
     'exposure_ms': 20,
     # triggers in block
-    'trigger_in': True,
+    'trigger_in': False,
     'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
     'trig_in_source': 'EXTERNAL',  # 'INTERNAL', 'EXTERNAL', 'SOFTWARE', 'MASTER_PULSE'
     'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'
@@ -996,7 +996,7 @@ class CamController(QtCore.QObject):
             if min_exposure_time <= self.exposure_ms/1000.:
                 self.dev_handle.setPropertyValue("exposure_time", self.exposure_ms/1000.)
                 self.dev_handle.setPropertyValue("readout_speed", 2)
-                self.logger.debug(f"Camera exposure time, ms: {self.exposure_ms}")
+                # self.logger.debug(f"Camera exposure time, ms: {self.exposure_ms}")
                 self.setup_triggers()
             else:
                 self.abort = True
@@ -1052,7 +1052,7 @@ class CamController(QtCore.QObject):
 
             self.dev_handle.setPropertyValue("output_trigger_period[0]", self.config['trig_out_duration_s'])
 
-            dicti = {'POSITIVE': 1, 'NEGATIVE': 2}
+            dicti = {'NEGATIVE': 1, 'POSITIVE': 2}
             self._set_property_from_dict('trig_out_polarity', dicti)
         else:  # defaults
             self.dev_handle.setPropertyValue("output_trigger_kind[0]", 2)

@@ -44,6 +44,7 @@ class MotionController(QtCore.QObject):
         self.scan_limits_xx_yy = [0.0, 0.1, 0.0, 0.0]  # [x_start, x_stop, y_start, y_stop]
         self.n_scan_lines = 2
         self._ser = None
+        self.initialized = False
         self.position_x_mm = self.position_y_mm = 0.0
         self.target_pos_x_mm = self.target_pos_y_mm = 0.0
         # logger setup
@@ -68,6 +69,7 @@ class MotionController(QtCore.QObject):
                 self.logger.info(f"Connected to port {self.port}")
                 self.get_position()
                 self.get_speed()
+                self.initialized = True
             except Exception as e:
                 self.logger.error(f"Could not initialize stage: {e}")
         else:
