@@ -285,12 +285,6 @@ class MainWindow(QtWidgets.QWidget):
 
         self.thread_saving_files = SavingStacksThread(self, self.dev_cam, self.logger)
         self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files, self.logger)
-        # stage scanning worker+thread:
-        self.thread_stage_scanning = QtCore.QThread()
-        self.worker_stage_scanning = StageScanningWorker(self, self.logger)
-        self.worker_stage_scanning.moveToThread(self.thread_stage_scanning)
-        self.thread_stage_scanning.started.connect(self.worker_stage_scanning.scan)
-        self.worker_stage_scanning.finished.connect(self.thread_stage_scanning.quit)
 
     def initUI(self):
         self.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
@@ -395,7 +389,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_step_x.setFixedWidth(160)
         self.spinbox_stage_step_x.setSingleStep(0.1)
 
-        self.spinbox_stage_n_cycles.setValue(3)
+        self.spinbox_stage_n_cycles.setValue(1)
         self.spinbox_stage_n_cycles.setMinimum(1)
         self.spinbox_stage_n_cycles.setMaximum(1000)
         self.spinbox_stage_n_cycles.setFixedWidth(160)
@@ -509,7 +503,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
         self.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
         self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
-        self.button_stage_start_scan.clicked.connect(self.stage_start_scan_thread)
+        self.button_stage_start_scan.clicked.connect(self.dev_stage.start_scan)
 
         # Signals LS generation
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
@@ -519,15 +513,6 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
-
-    def stage_start_scan_thread(self):
-        self.worker_stage_scanning.setup(self.serial_stage,
-                                         self.spinbox_stage_n_cycles.value(),
-                                         float(self.label_stage_start_pos.text()),
-                                         float(self.label_stage_stop_pos.text()),
-                                         self.spinbox_stage_speed_x.value(),
-                                         0.001 * self.spinbox_stage_step_x.value())
-        self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
         if self.dev_stage.initialized:
@@ -552,7 +537,7 @@ class MainWindow(QtWidgets.QWidget):
     def stage_mark_start_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos = self.dev_stage.position_x_mm
+            pos = self.dev_stage.position_x_mm - self.dev_stage.backlash_mm
             self.label_stage_start_pos.setText(f'{pos:.4f}')
             self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
         else:
@@ -562,11 +547,11 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             if self.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
-                pos = start + self.spinbox_stage_range_x.value()/1000.
+                pos = start + self.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
                 self.label_stage_stop_pos.setText(f'{pos:.4f}')
             else:
                 self.dev_stage.get_position()
-                pos = self.dev_stage.position_x_mm
+                pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
                 self.label_stage_stop_pos.setText(f'{pos:.4f}')
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
         else:
@@ -668,10 +653,9 @@ class MainWindow(QtWidgets.QWidget):
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
-        if (self.dev_cam.exposure_ms != 0) and self.dev_stage.initialized:
+        if self.dev_cam.exposure_ms != 0:
             stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.spinbox_stage_speed_x.setValue(stage_speed_x)
-            self.dev_stage.set_speed(stage_speed_x, axis='X')
 
         if self.spinbox_n_timepoints.value() != 0:
             self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
@@ -680,14 +664,17 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             stage_step_x_mm = 0.001 * self.spinbox_stage_step_x.value()
             self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
+            self.dev_stage.set_speed(stage_speed_x, axis='X')
 
-        if self.spinbox_stage_speed_x.value() != 0 and self.dev_cam is not None:
+        if self.spinbox_stage_speed_x.value() != 0:
             exposure_ms = self.spinbox_stage_step_x.value() / self.spinbox_stage_speed_x.value()
-            self.dev_cam.set_exposure(exposure_ms)
+            if self.dev_cam is not None:
+                self.dev_cam.set_exposure(exposure_ms)
 
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
         if self.spinbox_stage_step_x.value() != 0:
-            n_triggers = int(self.spinbox_stage_range_x.value() / self.spinbox_stage_step_x.value())
+            n_triggers = int((self.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
+                             / self.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
 
     def button_exit_clicked(self):
@@ -750,7 +737,8 @@ class MainWindow(QtWidgets.QWidget):
             if self.ls_active:
                 self.setup_lightsheet()
             self.thread_frame_grabbing.setup(self.n_frames_to_grab)
-            self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack, self.n_angles)
+            self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
+                                           self.n_angles, self.dev_cam.frame_height_px)
 
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
@@ -829,55 +817,6 @@ class LiveImagingWorker(QtCore.QObject):
             self.parent_window.button_snap_clicked()
             time.sleep(0.2)
         self.sig_finished.emit()
-
-
-class StageScanningWorker(QtCore.QObject):
-    """
-    Scan the stage multiple cycles. Proper use of QThread via worker object.
-    """
-    finished = pyqtSignal()
-
-    def __init__(self, camera_window, logger):
-        super().__init__()
-        self.camera_window = camera_window
-        self.logger = logger
-        self.serial_stage = None
-        self.ncycles = None
-        self.start_pos = None
-        self.stop_pos = None
-        self.speed = None
-        self.trigger_step = None
-        self.scan_mode = None
-
-    @QtCore.pyqtSlot()
-    def setup(self, serial_stage, ncycles, start_pos, stop_pos, speed, trigger_step):
-        """
-        :param serial_stage:
-        :param ncycles:
-        :param start_pos:
-        :param stop_pos:
-        :param speed:
-        :param trigger_step:
-        :return: None
-        """
-        self.serial_stage = serial_stage
-        self.ncycles = ncycles
-        self.start_pos = start_pos
-        self.stop_pos = stop_pos
-        self.speed = speed
-        self.trigger_step = trigger_step
-        if self.serial_stage is not None:
-            pass
-        else:
-            self.logger.error("Please activate stage first")
-
-    @QtCore.pyqtSlot()
-    def scan(self):
-        if self.serial_stage is not None:
-            pass
-        else:
-            self.logger.error("Please activate stage first\n")
-        self.finished.emit()
 
 
 class CameraFrameGrabbingThread(QThread):
@@ -960,22 +899,22 @@ class SavingStacksThread(QThread):
         self.angle_counter = None
         self.bdv_writer = None
         self.stack = None
-        self.cam_image_dims = (None, None)
+        self.cam_image_height = None
         self.frameQueue = deque([])
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
 
     def __del__(self):
         self.wait()
 
-    def setup(self, frames_to_save, frames_per_stack, n_angles):
+    def setup(self, frames_to_save, frames_per_stack, n_angles, image_height):
         self.frames_to_save = frames_to_save
         self.frames_per_stack = frames_per_stack
         self.n_angles = n_angles
         self.frames_saved = 0
         self.stack_counter = 0
         self.angle_counter = 0
-        self.cam_image_dims = self.camera.config['image_shape']
-        self.stack = np.empty((frames_per_stack, self.cam_image_dims[0], self.cam_image_dims[1]), 'uint16')
+        self.cam_image_height = image_height
+        self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
 
     def append_new_data(self, obj_list):
         if len(obj_list) > 0:
@@ -996,7 +935,7 @@ class SavingStacksThread(QThread):
             if len(self.frameQueue) >= self.frames_per_stack:
                 for iframe in range(self.frames_per_stack):
                     plane = self.frameQueue.popleft()
-                    self.stack[iframe, :, :] = np.reshape(plane, self.cam_image_dims)
+                    self.stack[iframe, :, :] = np.reshape(plane, (self.cam_image_height, 2048))
                     self.frames_saved += 1
                 # print("stack#" + str(self.stack_counter))
                 # print("frames_saved:" + str(self.frames_saved))

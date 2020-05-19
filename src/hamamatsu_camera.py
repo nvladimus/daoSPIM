@@ -14,9 +14,9 @@ config = {
     'simulation': False,
     'image_shape': (2048, 2048),  # (Y,X)
     'sensor_shape': (2048, 2048),  # (Y,X)
-    'exposure_ms': 20,
+    'exposure_ms': 10,
     # triggers in block
-    'trigger_in': False,
+    'trigger_in': True,
     'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
     'trig_in_source': 'EXTERNAL',  # 'INTERNAL', 'EXTERNAL', 'SOFTWARE', 'MASTER_PULSE'
     'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'
@@ -985,6 +985,7 @@ class CamController(QtCore.QObject):
                     self.logger.info(f"Connected to Camera 0, model {self.dev_handle.getModelInfo(0)}")
                     self.status = 'Connected'
                     self.setup()
+                    self.last_image = np.random.randint(75, 125, size=self.config['image_shape'], dtype='uint16')
             else:
                 self.logger.error("Camera already initialized!")
 
@@ -1100,7 +1101,7 @@ class CamController(QtCore.QObject):
                 self.last_image = np.reshape(frames[0].getData().astype(np.uint16), dims)
             else:
                 self.logger.error("Camera buffer empty")
-                self.last_image = np.zeros(self.self.config['image_shape'])
+                self.last_image = np.zeros(self.config['image_shape'])
         else:
             self.logger.error("Camera is not initialized!")
             self.last_image = np.random.randint(100, 200, size=self.config['image_shape'], dtype='uint16')

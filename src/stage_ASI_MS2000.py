@@ -47,6 +47,7 @@ class MotionController(QtCore.QObject):
         self.initialized = False
         self.position_x_mm = self.position_y_mm = 0.0
         self.target_pos_x_mm = self.target_pos_y_mm = 0.0
+        self.backlash_mm = 0.03 # some stages are configured without anti-BL gear for smooth motion, and need a margin.
         # logger setup
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
@@ -312,6 +313,8 @@ class MotionController(QtCore.QObject):
         self.gui.add_numeric_field('Num. of lines', groupbox_name,
                                    value=self.n_scan_lines, vmin=0, vmax=10000, decimals=0,
                                    enabled=True, func=self.set_n_scan_lines)
+        self.gui.add_numeric_field('Backlash margin, mm', groupbox_name,
+                                   value=self.backlash_mm, vmin=0, vmax=0.05, decimals=3, enabled=False)
         self.gui.add_button('Start scanning', groupbox_name,
                             lambda: self.start_scan())
 
