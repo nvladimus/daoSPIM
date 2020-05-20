@@ -285,6 +285,12 @@ class MainWindow(QtWidgets.QWidget):
 
         self.thread_saving_files = SavingStacksThread(self, self.dev_cam, self.logger)
         self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files, self.logger)
+        # stage scanning worker+thread:
+        self.thread_stage_scanning = QtCore.QThread()
+        self.worker_stage_scanning = StageScanningWorker(self, self.logger)
+        self.worker_stage_scanning.moveToThread(self.thread_stage_scanning)
+        self.thread_stage_scanning.started.connect(self.worker_stage_scanning.scan)
+        self.worker_stage_scanning.finished.connect(self.thread_stage_scanning.quit)
 
     def initUI(self):
         self.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
@@ -503,7 +509,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
         self.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
         self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
-        self.button_stage_start_scan.clicked.connect(self.dev_stage.start_scan)
+        self.button_stage_start_scan.clicked.connect(self.start_scan)
 
         # Signals LS generation
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
@@ -513,6 +519,10 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
+
+    def start_scan(self):
+        self.worker_stage_scanning.setup()
+        self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
         if self.dev_stage.initialized:
@@ -817,6 +827,33 @@ class LiveImagingWorker(QtCore.QObject):
             self.parent_window.button_snap_clicked()
             time.sleep(0.2)
         self.sig_finished.emit()
+
+
+class StageScanningWorker(QtCore.QObject):
+    """
+    Scan the stage multiple cycles. Proper use of QThread via worker object.
+    """
+    finished = pyqtSignal()
+
+    def __init__(self, camera_window, logger):
+        super().__init__()
+        self.camera_window = camera_window
+        self.logger = logger
+        self.dev_stage = None
+
+    @QtCore.pyqtSlot()
+    def setup(self, dev_stage):
+        self.dev_stage = dev_stage
+
+    @QtCore.pyqtSlot()
+    def scan(self):
+        if self.dev_stage.initialized:
+            self.dev_stage.start_scan()
+            # todo: add status polling until the scan is complete
+            # todo: add return command to go to the start position
+        else:
+            self.logger.error("Please activate stage first\n")
+        self.finished.emit()
 
 
 class CameraFrameGrabbingThread(QThread):
