@@ -521,7 +521,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
-        self.worker_stage_scanning.setup()
+        self.worker_stage_scanning.setup(self.dev_stage)
         self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):

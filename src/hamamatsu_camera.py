@@ -16,7 +16,7 @@ config = {
     'sensor_shape': (2048, 2048),  # (Y,X)
     'exposure_ms': 10,
     # triggers in block
-    'trigger_in': True,
+    'trigger_in': False,
     'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
     'trig_in_source': 'EXTERNAL',  # 'INTERNAL', 'EXTERNAL', 'SOFTWARE', 'MASTER_PULSE'
     'trig_in_type': 'SYNCREADOUT',  # 'EDGE', 'LEVEL', 'SYNCREADOUT'

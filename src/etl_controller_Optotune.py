@@ -9,7 +9,8 @@ logging.basicConfig()
 
 config = {'port': "COM11",
           'baud': 115200,
-          'timeout_s': 0.2}
+          'timeout_s': 0.2,
+          'ini_current_mA': -30.0}
 
 
 class ETL_controller(QtCore.QObject):
@@ -66,6 +67,7 @@ class ETL_controller(QtCore.QObject):
                 raise serial.SerialException('Handshake failed')
             else:
                 self._status = "Ready"
+                self.set_current(config['ini_current_mA'])
                 if self.gui_on:
                     self.sig_update_gui.emit()
         except serial.SerialException as e:
@@ -593,3 +595,4 @@ class ETL_controller(QtCore.QObject):
     @QtCore.pyqtSlot()
     def _update_gui(self):
         self.gui.update_string_field('Status', self._status)
+        self.gui.update_numeric_field('Current, mA', self._current)
