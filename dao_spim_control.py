@@ -550,20 +550,22 @@ class MainWindow(QtWidgets.QWidget):
             pos = self.dev_stage.position_x_mm - self.dev_stage.backlash_mm
             self.label_stage_start_pos.setText(f'{pos:.4f}')
             self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
+            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_start')
         else:
             self.logger.error("Please activate stage first")
 
     def stage_mark_stop_pos(self):
         if self.dev_stage.initialized:
+            self.dev_stage.get_position()
             if self.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
                 pos = start + self.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
                 self.label_stage_stop_pos.setText(f'{pos:.4f}')
             else:
-                self.dev_stage.get_position()
                 pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
                 self.label_stage_stop_pos.setText(f'{pos:.4f}')
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
+            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_stop')
         else:
             self.logger.error("Please activate stage first")
 
@@ -849,8 +851,15 @@ class StageScanningWorker(QtCore.QObject):
     def scan(self):
         if self.dev_stage.initialized:
             self.dev_stage.start_scan()
-            # todo: add status polling until the scan is complete
-            # todo: add return command to go to the start position
+            # wait for response of move completion
+            response = self.dev_stage.write_with_response(b'/')
+            while response[0] != 'N':
+                response = self.dev_stage.write_with_response(b'/')
+                time.sleep(0.05)
+            self.dev_stage.logger.debug(f"move complete")
+            # return to scan start position
+            self.dev_stage.move_abs((self.dev_stage.scan_limits_xx_yy[0], self.dev_stage.scan_limits_xx_yy[2]))
+            self.dev_stage.get_position()
         else:
             self.logger.error("Please activate stage first\n")
         self.finished.emit()

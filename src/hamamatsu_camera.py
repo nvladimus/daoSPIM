@@ -959,6 +959,8 @@ class CamController(QtCore.QObject):
         self.frame_height_px = self.config['image_shape'][1]
         self.cam_voffset = 0
         self.frame_readout_ms = 10.0
+        self.trigger_in = self.config['trigger_in']
+        self.trigger_out = self.config['trigger_out']
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
         # GUI setup
@@ -1012,7 +1014,7 @@ class CamController(QtCore.QObject):
             self.sig_update_gui.emit()
 
     def setup_triggers(self):
-        if self.config['trigger_in']:
+        if self.trigger_in:
             dicti = {'NORMAL': 1, 'START': 6}
             self._set_property_from_dict('trig_in_mode', dicti)
 
@@ -1043,7 +1045,7 @@ class CamController(QtCore.QObject):
             self.dev_handle.setPropertyValue("master_pulse_interval", 0.1)
 
         # Trigger OUT
-        if self.config['trigger_out']:
+        if self.trigger_out:
             dicti = {'LOW': 1, 'EXPOSURE': 2, 'PROGRAMMABLE': 3, 'TRIGGER READY': 4, 'HIGH': 5}
             self._set_property_from_dict('trig_out_kind', dicti)
 
@@ -1060,6 +1062,14 @@ class CamController(QtCore.QObject):
             self.dev_handle.setPropertyValue("output_trigger_source[0]", 2)
             self.dev_handle.setPropertyValue("output_trigger_period[0]", 0.001)
             self.dev_handle.setPropertyValue("output_trigger_polarity[0]", 2)
+
+    def setup_trig_in(self, trig_in):
+        self.trigger_in = trig_in
+        self.setup_triggers()
+
+    def setup_trig_out(self, trig_out):
+        self.trigger_out = trig_out
+        self.setup_triggers()
 
     def _set_property_from_dict(self, prop_name, prop_dict):
         """Search the dictionary keys for property name. If found, set corresponding
@@ -1170,7 +1180,7 @@ class CamController(QtCore.QObject):
                                    vmin=0, vmax=10, enabled=False, decimals=1)
 
         tab_name = 'Trigger IN'
-        self.gui.add_checkbox('Trigger in', tab_name, self.config['trigger_in'], enabled=False)
+        self.gui.add_checkbox('Trigger in', tab_name, self.trigger_in, enabled=True, func=self.setup_trig_in)
         self.gui.add_string_field('trig_in_mode', tab_name, value=self.config['trig_in_mode'], enabled=False)
         self.gui.add_string_field('trig_in_source', tab_name, value=self.config['trig_in_source'], enabled=False)
         self.gui.add_string_field('trig_in_type', tab_name, value=self.config['trig_in_type'], enabled=False)
@@ -1183,7 +1193,7 @@ class CamController(QtCore.QObject):
                                    value=self.config['master_pulse_interval_s'], decimals=3, enabled=False)
 
         tab_name = 'Trigger OUT'
-        self.gui.add_checkbox('Trigger out', tab_name, self.config['trigger_out'], enabled=False, func=None)
+        self.gui.add_checkbox('Trigger out', tab_name, self.trigger_out, enabled=True, func=self.setup_trig_out)
         self.gui.add_string_field('trig_out_kind', tab_name, value=self.config['trig_out_kind'], enabled=False)
         self.gui.add_string_field('trig_out_source', tab_name, value=self.config['trig_out_source'], enabled=False)
         self.gui.add_numeric_field('trig_out_duration_s', tab_name,
