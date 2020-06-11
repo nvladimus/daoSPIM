@@ -178,6 +178,9 @@ class QTextEditLogger(logging.Handler):
         self.widget.appendPlainText(msg)
 
 
+def get_dirname(path): return '.../' + os.path.basename(os.path.normpath(path)) + '/'
+
+
 class MainWindow(QtWidgets.QWidget):
     """Wiring up all controls together"""
     def __init__(self, logger_name='main_window'):
@@ -205,7 +208,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_ls_galvo_amp0 = QtWidgets.QDoubleSpinBox()
         self.spinbox_ls_galvo_amp1 = QtWidgets.QDoubleSpinBox()
         self.spinbox_ls_laser_volts = QtWidgets.QDoubleSpinBox()
-        self.checkbox_ls_switch_automatically = QtWidgets.QCheckBox("Switch arms automatically")
+        self.checkbox_ls_switch_auto = QtWidgets.QCheckBox("Switch arms automatically")
         self.combobox_ls_side = QtWidgets.QComboBox()
         self.button_ls_activate = QtWidgets.QPushButton("Activate light sheet")
         self.combobox_ls_port = QtWidgets.QComboBox()
@@ -231,27 +234,29 @@ class MainWindow(QtWidgets.QWidget):
         self.serial_stage = None
 
         # camera widgets
-        self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
 
         # ETL widget
         self.dev_etl = etl.ETL_controller(logger_name=self.logger.name + '.ETL')
 
-        self.button_exit = QtWidgets.QPushButton('Exit')
-
         # acquisition
         self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
+        self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
+        self.checkbox_with_scanning = QtWidgets.QCheckBox('With scanning')
         self.spinbox_n_timepoints = QtWidgets.QSpinBox()
         self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
         self.spinbox_nangles = QtWidgets.QSpinBox()
 
         # saving
         self.groupbox_saving = QtWidgets.QGroupBox("Saving")
-        self.button_saveto = QtWidgets.QPushButton("...")
-        self.lineedit_experimentID = QtWidgets.QLineEdit("sample")
-        self.lineedit_file_prefix = QtWidgets.QLineEdit("stacks")
+
+        self.button_save_folder = QtWidgets.QPushButton(get_dirname(config.saving['root_folder']))
+        self.line_expt_ID = QtWidgets.QLineEdit("experiment1")
+        self.line_prefix = QtWidgets.QLineEdit("stack1")
         self.combobox_file_format = QtWidgets.QComboBox()
         self.checkbox_simulation = QtWidgets.QCheckBox("Simulation mode")
+
+        self.button_exit = QtWidgets.QPushButton('Exit')
 
         # GUI layouts
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -321,12 +326,12 @@ class MainWindow(QtWidgets.QWidget):
 
         self.spinbox_ls_galvo_offset0.setRange(-10, 10)
         self.spinbox_ls_galvo_offset0.setDecimals(2)
-        self.spinbox_ls_galvo_offset0.setFixedWidth(80)
+        self.spinbox_ls_galvo_offset0.setFixedWidth(60)
         self.spinbox_ls_galvo_offset0.setValue(config.lightsheet_generation['galvo_offset0_volts'])
 
         self.spinbox_ls_galvo_offset1.setRange(-10, 10)
         self.spinbox_ls_galvo_offset1.setDecimals(2)
-        self.spinbox_ls_galvo_offset1.setFixedWidth(80)
+        self.spinbox_ls_galvo_offset1.setFixedWidth(60)
         self.spinbox_ls_galvo_offset1.setValue(config.lightsheet_generation['galvo_offset1_volts'])
 
         self.spinbox_ls_galvo_amp0.setSingleStep(0.1)
@@ -345,8 +350,8 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_ls_laser_volts.setFixedWidth(60)
         self.spinbox_ls_laser_volts.setValue(config.lightsheet_generation['laser_set_volts'])
 
-        self.checkbox_ls_switch_automatically.setChecked(True)
-        self.checkbox_ls_switch_automatically.setEnabled(True)
+        self.checkbox_ls_switch_auto.setChecked(True)
+        self.checkbox_ls_switch_auto.setEnabled(True)
 
         self.combobox_ls_side.setFixedWidth(80)
         self.combobox_ls_side.addItem("Left")
@@ -368,13 +373,12 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_lightsheet.layout.addRow("Laser power ctrl, V", self.spinbox_ls_laser_volts)
         self.tab_lightsheet.layout.addRow("Illumination objective", self.combobox_ls_side)
         self.tab_lightsheet.layout.addRow(self.button_ls_activate)
-        self.tab_lightsheet.layout.addRow(self.checkbox_ls_switch_automatically)
+        self.tab_lightsheet.layout.addRow(self.checkbox_ls_switch_auto)
         self.tab_lightsheet.layout.addRow("Arduino COM port", self.combobox_ls_port)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
-        self.dev_stage.gui.setFixedWidth(240)
-#        self.groupbox_scanning.setFixedWidth(300)
+        self.dev_stage.gui.setFixedWidth(300)
         self.button_stage_pos_start.setFixedWidth(80)
         self.button_stage_pos_stop.setFixedWidth(80)
 
@@ -387,13 +391,14 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_speed_x.setValue(0.2)
         self.spinbox_stage_speed_x.setMinimum(0.01)
         self.spinbox_stage_speed_x.setFixedWidth(160)
-        self.spinbox_stage_speed_x.setDecimals(4)
+        self.spinbox_stage_speed_x.setDecimals(3)
         self.spinbox_stage_speed_x.setEnabled(False)
 
-        self.spinbox_stage_step_x.setValue(3.5)
-        self.spinbox_stage_step_x.setMinimum(0.01)
+        self.spinbox_stage_step_x.setDecimals(3)
+        self.spinbox_stage_step_x.setValue(2.816)
+        self.spinbox_stage_step_x.setMinimum(0.022)
         self.spinbox_stage_step_x.setFixedWidth(160)
-        self.spinbox_stage_step_x.setSingleStep(0.1)
+        self.spinbox_stage_step_x.setSingleStep(0.022)
 
         self.spinbox_stage_n_cycles.setValue(1)
         self.spinbox_stage_n_cycles.setMinimum(1)
@@ -466,25 +471,28 @@ class MainWindow(QtWidgets.QWidget):
 
         # saving, layouts
         self.groupbox_saving.setFixedWidth(300)
-        self.button_saveto.setFixedWidth(80)
-        self.lineedit_experimentID.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit_file_prefix.setAlignment(QtCore.Qt.AlignRight)
+        self.line_expt_ID.setAlignment(QtCore.Qt.AlignRight)
+        self.line_prefix.setAlignment(QtCore.Qt.AlignRight)
         self.combobox_file_format.setFixedWidth(80)
         self.combobox_file_format.addItem("HDF5")
         self.combobox_file_format.addItem("TIFF")
 
         layout_files = QtWidgets.QFormLayout()
-        layout_files.addRow("Root folder:", self.button_saveto)
-        layout_files.addRow("Expt ID (subfolder)", self.lineedit_experimentID)
-        layout_files.addRow("File prefix", self.lineedit_file_prefix)
+        layout_files.addRow(self.button_save_folder)
+        layout_files.addRow(self.line_expt_ID)
+        layout_files.addRow(self.line_prefix)
         layout_files.addRow("Format", self.combobox_file_format)
         self.groupbox_saving.setLayout(layout_files)
 
         # Camera controls layout
         self.dev_cam.gui.setFixedWidth(300)
         self.button_cam_acquire.setFixedWidth(300)
+        self.checkbox_with_scanning.setChecked(True)
+        self.checkbox_with_scanning.setToolTip('Start scanning cycle after camera started')
+
         self.tab_camera.layout.addWidget(self.dev_cam.gui)
         self.tab_camera.layout.addWidget(self.groupbox_acq_params)
+        self.tab_camera.layout.addWidget(self.checkbox_with_scanning)
         self.tab_camera.layout.addWidget(self.button_cam_acquire)
         self.tab_camera.layout.addWidget(self.groupbox_saving)
         self.tab_camera.setLayout(self.tab_camera.layout)
@@ -500,7 +508,7 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_window.button_cam_snap.clicked.connect(self.button_snap_clicked)
         self.cam_window.button_cam_live.clicked.connect(self.button_live_clicked)
         self.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
-        self.button_saveto.clicked.connect(self.button_saveto_clicked)
+        self.button_save_folder.clicked.connect(self.button_save_folder_clicked)
         self.combobox_file_format.currentTextChanged.connect(self.set_file_format)
         self.button_exit.clicked.connect(self.button_exit_clicked)
 
@@ -513,7 +521,7 @@ class MainWindow(QtWidgets.QWidget):
 
         # Signals LS generation
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
-        self.checkbox_ls_switch_automatically.stateChanged.connect(self.set_ls_switching)
+        self.checkbox_ls_switch_auto.stateChanged.connect(self.set_ls_switching)
 
         self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
@@ -570,7 +578,7 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please activate stage first")
 
     def set_ls_switching(self):
-        if self.checkbox_ls_switch_automatically.isChecked():
+        if self.checkbox_ls_switch_auto.isChecked():
             self.combobox_ls_side.setEnabled(False)
         else:
             self.combobox_ls_side.setEnabled(True)
@@ -590,24 +598,24 @@ class MainWindow(QtWidgets.QWidget):
     def activate_lightsheet(self):
         """Create and start DAQmx stask for cam-triggered light-sheet"""
         # connect to Arduino LS switcher
-        if self.checkbox_ls_switch_automatically and (self.serial_ls is None):
+        if self.checkbox_ls_switch_auto and (self.serial_ls is None):
             try:
                 self.serial_ls = serial.Serial(self.combobox_ls_port.currentText(), 9600, timeout=2)
                 self.serial_ls.write("?ver\n".encode())
                 status = self.serial_ls.readline().decode('utf-8')
                 self.logger.info("Connected to Arduino switcher, version:" + status + "\n")
-            except Exception as e:
-                self.logger.info("Cannot connect to Arduino, error:" + str(e) + "\n")
+            except serial.SerialException as e:
+                self.logger.error(f"Cannot connect to Arduino switcher {e}")
 
         if not self.ls_active:
-            self.ls_active = True
             self.create_daqmx_task()
             self.setup_lightsheet()
+            self.ls_active = True
             self.button_ls_activate.setText("Inactivate light sheet")
             self.button_ls_activate.setStyleSheet('QPushButton {color: blue;}')
         else:
-            self.ls_active = False
             self.cleanup_daqmx_task()
+            self.ls_active = False
             self.button_ls_activate.setText("Activate light sheet")
             self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
 
@@ -616,8 +624,11 @@ class MainWindow(QtWidgets.QWidget):
         self.daqmx_task_AO_ls = pd.Task()
         min_voltage = - config.lightsheet_generation['laser_max_volts']
         max_voltage = config.lightsheet_generation['laser_max_volts']
-        self.daqmx_task_AO_ls.CreateAOVoltageChan("/Dev1/ao0:1", "galvo-laser",
-                                                  min_voltage, max_voltage, pd.DAQmx_Val_Volts, None)
+        try:
+            self.daqmx_task_AO_ls.CreateAOVoltageChan("/Dev1/ao0:1", "galvo-laser",
+                                                      min_voltage, max_voltage, pd.DAQmx_Val_Volts, None)
+        except pd.DAQException as e:
+            self.logger.error(f"DAQmx error: {e}")
 
     def cleanup_daqmx_task(self):
         """Stop and clear the DAQmx task"""
@@ -633,35 +644,37 @@ class MainWindow(QtWidgets.QWidget):
         ls_laser_volts = self.spinbox_ls_laser_volts.value()
 
         # Arduino-controlled arm switcher
-        if self.serial_ls is not None:
-            # automatic mode
-            if self.checkbox_ls_switch_automatically.isChecked():
-                galvo_offsets = (0, 0)
-                i_arm = 0
+        # automatic mode
+        if self.checkbox_ls_switch_auto.isChecked():
+            galvo_offsets = (0, 0)
+            i_arm = 0
+            if self.serial_ls is not None:
                 self.serial_ls.write(('n ' + str(self.spinbox_frames_per_stack.value()) + '\n').encode())
                 self.serial_ls.write('reset\n'.encode())
                 self.serial_ls.write(('v0 ' + str(self.spinbox_ls_galvo_offset0.value()) + '\n').encode())
                 self.serial_ls.write(('v1 ' + str(self.spinbox_ls_galvo_offset1.value()) + '\n').encode())
-            # fixed arm mode
-            else:
-                galvo_offsets = self.spinbox_ls_galvo_offset0.value(), self.spinbox_ls_galvo_offset1.value()
-                i_arm = self.combobox_ls_side.currentIndex()
+        # fixed arm mode
+        else:
+            galvo_offsets = self.spinbox_ls_galvo_offset0.value(), self.spinbox_ls_galvo_offset1.value()
+            i_arm = self.combobox_ls_side.currentIndex()
+            if self.serial_ls is not None:
                 self.serial_ls.write('n 10000\n'.encode())
                 self.serial_ls.write('v0 0.0\n'.encode())
                 self.serial_ls.write('v1 0.0\n'.encode())
                 self.serial_ls.write('reset\n'.encode())
-        else:
-            self.logger.info("Error: Arduino switcher is not connected\n")
 
         if self.daqmx_task_AO_ls is not None:
-            ls.task_config(self.daqmx_task_AO_ls,
-                           wf_duration_ms=ls_duration_ms,
-                           galvo_offset_V=galvo_offsets[i_arm],
-                           galvo_amplitude_V=galvo_amplitudes[i_arm],
-                           laser_amplitude_V=ls_laser_volts,
-                           galvo_inertia_ms=0.2)
+            try:
+                ls.task_config(self.daqmx_task_AO_ls,
+                               wf_duration_ms=ls_duration_ms,
+                               galvo_offset_V=galvo_offsets[i_arm],
+                               galvo_amplitude_V=galvo_amplitudes[i_arm],
+                               laser_amplitude_V=ls_laser_volts,
+                               galvo_inertia_ms=0.2)
+            except pd.DAQException as e:
+                self.logger.error(f"DAQmx: {e}")
         else:
-            self.logger.info("Light sheet is inactive\n")
+            self.logger.error("Light sheet is inactive\n")
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
@@ -744,7 +757,6 @@ class MainWindow(QtWidgets.QWidget):
             self.n_stacks_to_grab = int(self.spinbox_n_timepoints.value() * self.spinbox_nangles.value())
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
             self.n_angles = int(self.spinbox_nangles.value())
-
             self.dev_cam.setup()
             if self.ls_active:
                 self.setup_lightsheet()
@@ -757,6 +769,9 @@ class MainWindow(QtWidgets.QWidget):
 
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
+                if self.checkbox_with_scanning.isChecked():
+                    time.sleep(1.0)
+                    self.start_scan()
         # If pressed DURING acquisition, abort acquisition and saving
         if self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
@@ -779,8 +794,8 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please specify root folder for data saving.")
             self.abort_pressed = True
         else:
-            self.dir_path = self.root_folder + "/" + self.lineedit_experimentID.text()
-            self.file_path = self.dir_path + "/" + self.lineedit_file_prefix.text()
+            self.dir_path = self.root_folder + "/" + self.line_expt_ID.text()
+            self.file_path = self.dir_path + "/" + self.line_prefix.text()
             if os.path.exists(self.dir_path):
                 self.logger.error("Experiment subfolder already exists! Define new subfolder.")
                 self.abort_pressed = True
@@ -800,12 +815,13 @@ class MainWindow(QtWidgets.QWidget):
             self.button_cam_acquire.setText("Abort")
             self.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
 
-    def button_saveto_clicked(self):
+    def button_save_folder_clicked(self):
         file_dialog = QtWidgets.QFileDialog()
         file_dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         folder = file_dialog.getExistingDirectory(self, "Save to folder", self.root_folder)
         if folder:
             self.root_folder = folder
+            self.button_save_folder.setText(get_dirname(folder))
             self.logger.info("Root folder for saving: " + self.root_folder)
 
     def set_file_format(self, new_format):
