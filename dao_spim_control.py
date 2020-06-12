@@ -242,7 +242,7 @@ class MainWindow(QtWidgets.QWidget):
         # acquisition
         self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
         self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        self.checkbox_with_scanning = QtWidgets.QCheckBox('With scanning')
+        #self.checkbox_with_scanning = QtWidgets.QCheckBox('With scanning')
         self.spinbox_n_timepoints = QtWidgets.QSpinBox()
         self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
         self.spinbox_nangles = QtWidgets.QSpinBox()
@@ -487,12 +487,12 @@ class MainWindow(QtWidgets.QWidget):
         # Camera controls layout
         self.dev_cam.gui.setFixedWidth(300)
         self.button_cam_acquire.setFixedWidth(300)
-        self.checkbox_with_scanning.setChecked(True)
-        self.checkbox_with_scanning.setToolTip('Start scanning cycle after camera started')
+        # self.checkbox_with_scanning.setChecked(True)
+        # self.checkbox_with_scanning.setToolTip('Start scanning cycle after camera started')
 
         self.tab_camera.layout.addWidget(self.dev_cam.gui)
         self.tab_camera.layout.addWidget(self.groupbox_acq_params)
-        self.tab_camera.layout.addWidget(self.checkbox_with_scanning)
+        #self.tab_camera.layout.addWidget(self.checkbox_with_scanning)
         self.tab_camera.layout.addWidget(self.button_cam_acquire)
         self.tab_camera.layout.addWidget(self.groupbox_saving)
         self.tab_camera.setLayout(self.tab_camera.layout)
@@ -628,7 +628,7 @@ class MainWindow(QtWidgets.QWidget):
             self.daqmx_task_AO_ls.CreateAOVoltageChan("/Dev1/ao0:1", "galvo-laser",
                                                       min_voltage, max_voltage, pd.DAQmx_Val_Volts, None)
         except pd.DAQException as e:
-            self.logger.error(f"DAQmx error: {e}")
+            self.logger.error(f"DAQmx error: {e.message}")
 
     def cleanup_daqmx_task(self):
         """Stop and clear the DAQmx task"""
@@ -765,12 +765,12 @@ class MainWindow(QtWidgets.QWidget):
                                            self.n_angles, self.dev_cam.frame_height_px)
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
-
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
-                # if self.checkbox_with_scanning:
-                #     time.sleep(10.0)
+                # if self.checkbox_with_scanning.isChecked():
+                #     time.sleep(6.0)
                 #     self.start_scan()
+                #     self.logger.info('Scanning started')
         # If pressed DURING acquisition, abort acquisition and saving
         if self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
@@ -876,7 +876,7 @@ class StageScanningWorker(QtCore.QObject):
             self.dev_stage.move_abs((self.dev_stage.scan_limits_xx_yy[0], self.dev_stage.scan_limits_xx_yy[2]))
             self.dev_stage.get_position()
         else:
-            self.logger.error("Please activate stage first\n")
+            self.logger.error("Please activate stage first")
         self.finished.emit()
 
 
@@ -1001,7 +1001,6 @@ class SavingStacksThread(QThread):
                 # print("stack#" + str(self.stack_counter))
                 # print("frames_saved:" + str(self.frames_saved))
                 # print("queue length:" + str(len(self.frameQueue)))
-                self.logger.info(".")
                 if self.parent_window.file_format == "HDF5":
                     z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']

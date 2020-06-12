@@ -14,7 +14,7 @@ config = {
     'simulation': False,
     'image_shape': (2048, 2048),  # (Y,X)
     'sensor_shape': (2048, 2048),  # (Y,X)
-    'exposure_ms': 10,
+    'exposure_ms': 20,
     # triggers in block
     'trigger_in': True,
     'trig_in_mode': 'NORMAL',  # 'NORMAL', 'START'
