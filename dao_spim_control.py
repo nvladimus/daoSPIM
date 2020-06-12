@@ -529,7 +529,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
-        self.worker_stage_scanning.setup(self.dev_stage)
+        self.worker_stage_scanning.setup(self.dev_stage, self.n_stacks_to_grab)
         self.thread_stage_scanning.start()
 
     def stage_x_move_right(self):
@@ -859,8 +859,9 @@ class StageScanningWorker(QtCore.QObject):
         self.dev_stage = None
 
     @QtCore.pyqtSlot()
-    def setup(self, dev_stage):
+    def setup(self, dev_stage, n_lines):
         self.dev_stage = dev_stage
+        self.dev_stage.set_n_scan_lines(n_lines)
 
     @QtCore.pyqtSlot()
     def scan(self):

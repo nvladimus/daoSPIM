@@ -216,6 +216,10 @@ class MotionController(QtCore.QObject):
 
     def set_n_scan_lines(self, n):
         self.n_scan_lines = n
+        if not self.simulation:
+            self._setup_scan()
+        if self.gui_on:
+            self.sig_update_gui.emit()
 
     def _setup_scan(self):
         """Send the scan parameters to the stage"""
@@ -223,7 +227,6 @@ class MotionController(QtCore.QObject):
         command = f'SCANR X={self.scan_limits_xx_yy[0]:.4f} ' \
                   f'Y={self.scan_limits_xx_yy[1]:.4f} ' \
                   f'Z={self.enc_counts_per_pulse}'
-        self.logger.debug(command)
         _ = self.write_with_response(command.encode())
         # set y-limits and the number of lines
         command = f'SCANV X={self.scan_limits_xx_yy[2]:.4f} ' \
