@@ -395,7 +395,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_speed_x.setEnabled(False)
 
         self.spinbox_stage_step_x.setDecimals(3)
-        self.spinbox_stage_step_x.setValue(2.816)
+        self.spinbox_stage_step_x.setValue(2.820)
         self.spinbox_stage_step_x.setMinimum(0.022)
         self.spinbox_stage_step_x.setFixedWidth(160)
         self.spinbox_stage_step_x.setSingleStep(0.022)
@@ -747,10 +747,10 @@ class MainWindow(QtWidgets.QWidget):
         '''
         Start camera acquisition and file saving
         '''
-        self.check_path_valid()
-        self.check_cam_initialized()
         # start acquisition
         if (not self.abort_pressed) and (self.dev_cam.status != 'Running') and (not self.file_save_running):
+            self.check_path_valid()
+            self.check_cam_initialized()
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
             self.n_frames_per_stack = int(self.spinbox_frames_per_stack.value())
@@ -763,15 +763,14 @@ class MainWindow(QtWidgets.QWidget):
             self.thread_frame_grabbing.setup(self.n_frames_to_grab)
             self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
                                            self.n_angles, self.dev_cam.frame_height_px)
-
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
 
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
-                if self.checkbox_with_scanning.isChecked():
-                    time.sleep(1.0)
-                    self.start_scan()
+                # if self.checkbox_with_scanning:
+                #     time.sleep(10.0)
+                #     self.start_scan()
         # If pressed DURING acquisition, abort acquisition and saving
         if self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
@@ -1032,14 +1031,15 @@ class SavingStacksThread(QThread):
                 self.msleep(10)
         # clean-up:
         if self.parent_window.file_format == "HDF5":
-            self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles),
-                                           camera_name="Hamamatsu OrcaFlash 4.3")
+            if not self.parent_window.abort_pressed:
+                self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles),
+                                               camera_name="Hamamatsu OrcaFlash 4.3")
             self.bdv_writer.close()
         elif self.parent_window.file_format == "TIFF":
             pass
         self.frameQueue.clear()
         self.parent_window.file_save_running = False
-        self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks")
+        self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks with {self.n_angles} angles")
         self.signal_GUI.emit()
 
 

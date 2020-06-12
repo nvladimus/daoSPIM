@@ -21,7 +21,7 @@ camera = {
 dm = {'diameter_mm': 15.0}
 
 saving = {
-    'root_folder': 'C:/Users/nvladim/Pictures/'
+    'root_folder': 'C:/Users/Nikita/Pictures/'
 }
 
 microscope = {

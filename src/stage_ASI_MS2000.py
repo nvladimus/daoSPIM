@@ -307,7 +307,7 @@ class MotionController(QtCore.QObject):
                                    value=self.scan_limits_xx_yy[3], vmin=-25, vmax=25, decimals=4,
                                    enabled=True, func=self.set_scan_region, **{'scan_boundary': 'y_stop'})
         self.gui.add_numeric_field('Trigger interval X, mm', groupbox_name,
-                                   value=self.pulse_intervals_x, vmin=0, vmax=25, decimals=4,
+                                   value=self.pulse_intervals_x, vmin=0, vmax=25, decimals=5,
                                    enabled=True, func=self.set_trigger_intervals, **{'trigger_axis': 'X'})
         self.gui.add_numeric_field('Num. of lines', groupbox_name,
                                    value=self.n_scan_lines, vmin=0, vmax=10000, decimals=0,
