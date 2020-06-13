@@ -237,8 +237,8 @@ class MainWindow(QtWidgets.QWidget):
         self.groupbox_saving = QtWidgets.QGroupBox("Saving")
 
         self.button_save_folder = QtWidgets.QPushButton(get_dirname(config.saving['root_folder']))
-        self.line_expt_ID = QtWidgets.QLineEdit("experiment1")
-        self.line_prefix = QtWidgets.QLineEdit("stack1")
+        self.line_subfolder = QtWidgets.QLineEdit("subfolder")
+        self.line_prefix = QtWidgets.QLineEdit("stack")
         self.combobox_file_format = QtWidgets.QComboBox()
         self.checkbox_simulation = QtWidgets.QCheckBox("Simulation mode")
 
@@ -453,7 +453,7 @@ class MainWindow(QtWidgets.QWidget):
 
         # saving, layouts
         self.groupbox_saving.setFixedWidth(300)
-        self.line_expt_ID.setAlignment(QtCore.Qt.AlignRight)
+        self.line_subfolder.setAlignment(QtCore.Qt.AlignRight)
         self.line_prefix.setAlignment(QtCore.Qt.AlignRight)
         self.combobox_file_format.setFixedWidth(80)
         self.combobox_file_format.addItem("HDF5")
@@ -461,7 +461,7 @@ class MainWindow(QtWidgets.QWidget):
 
         layout_files = QtWidgets.QFormLayout()
         layout_files.addRow(self.button_save_folder)
-        layout_files.addRow(self.line_expt_ID)
+        layout_files.addRow(self.line_subfolder)
         layout_files.addRow(self.line_prefix)
         layout_files.addRow("Format", self.combobox_file_format)
         self.groupbox_saving.setLayout(layout_files)
@@ -769,7 +769,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def check_path_valid(self):
         """Create new folder for acquisition."""
-        self.dir_path = self.root_folder + "/" + self.line_expt_ID.text()
+        self.dir_path = self.root_folder + "/" + self.line_subfolder.text()
         i_dir = 0
         while os.path.exists(self.dir_path + f'_v{i_dir}'): i_dir += 1
         self.dir_path += f'_v{i_dir}'
