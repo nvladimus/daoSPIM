@@ -768,21 +768,14 @@ class MainWindow(QtWidgets.QWidget):
             self.abort_pressed = True
 
     def check_path_valid(self):
-        """Check folder name. Create new folder for acquisition.
-        Abort if folder already exists. """
-        if self.root_folder is None:
-            self.logger.error("Please specify root folder for data saving.")
-            self.abort_pressed = True
-        else:
-            self.dir_path = self.root_folder + "/" + self.line_expt_ID.text()
-            self.file_path = self.dir_path + "/" + self.line_prefix.text()
-            if os.path.exists(self.dir_path):
-                self.logger.error("Experiment subfolder already exists! Define new subfolder.")
-                self.abort_pressed = True
-            else:
-                os.mkdir(self.dir_path)
-                self.logger.info("Experiment subfolder: " + self.dir_path)
-                self.abort_pressed = False
+        """Create new folder for acquisition."""
+        self.dir_path = self.root_folder + "/" + self.line_expt_ID.text()
+        self.file_path = self.dir_path + "/" + self.line_prefix.text()
+        i_dir = 0
+        while os.path.exists(self.dir_path + f'_v{i_dir}'): i_dir += 1
+        self.dir_path += f'_v{i_dir}'
+        os.mkdir(self.dir_path)
+        self.logger.info("Experiment folder: " + self.dir_path)
 
     def button_acquire_reset(self):
         if (not self.dev_cam.status == 'Running') and (not self.file_save_running):
