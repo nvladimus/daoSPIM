@@ -166,18 +166,6 @@ class CameraWindow(QtWidgets.QWidget):
         fwhm = self.sigma2fwhm(sigmaX)
         return xcenter, fwhm
 
-
-class QTextEditLogger(logging.Handler):
-    def __init__(self, parent):
-        super().__init__()
-        self.widget = QtWidgets.QPlainTextEdit(parent)
-        self.widget.setReadOnly(True)
-
-    def emit(self, record):
-        msg = self.format(record)
-        self.widget.appendPlainText(msg)
-
-
 def get_dirname(path): return '.../' + os.path.basename(os.path.normpath(path)) + '/'
 
 
@@ -188,8 +176,6 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_window = None
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
-        self.text_log = QTextEditLogger(self)
-        self.logger.addHandler(self.text_log)
         # tabs
         self.tabs = QtWidgets.QTabWidget()
         self.tab_camera = QtWidgets.QWidget()
@@ -443,10 +429,6 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_window = CameraWindow(self)
         self.cam_window.show()
 
-        # log window
-        self.text_log.widget.setMaximumHeight(120)
-        self.text_log.widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
-                                                          QtWidgets.QSizePolicy.Minimum))
         # acquisition params
         self.groupbox_acq_params.setFixedWidth(300)
 
@@ -500,7 +482,6 @@ class MainWindow(QtWidgets.QWidget):
         # global layout
         self.button_exit.setFixedWidth(120)
         self.layout.addWidget(self.tabs)
-        self.layout.addWidget(self.text_log.widget)
         self.layout.addWidget(self.button_exit)
         self.setLayout(self.layout)
 
