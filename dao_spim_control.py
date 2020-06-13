@@ -568,8 +568,8 @@ class MainWindow(QtWidgets.QWidget):
                 s = serial.Serial(port)
                 s.close()
                 ports_available.append(port)
-            except (OSError, serial.SerialException):
-                pass
+            except (OSError, serial.SerialException) as e:
+                self.logger.error(f"detect_serial_ports(), Exception: {e}")
         return ports_available
 
     def activate_lightsheet(self):
