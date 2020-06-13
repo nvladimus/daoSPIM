@@ -166,6 +166,7 @@ class CameraWindow(QtWidgets.QWidget):
         fwhm = self.sigma2fwhm(sigmaX)
         return xcenter, fwhm
 
+
 def get_dirname(path): return '.../' + os.path.basename(os.path.normpath(path)) + '/'
 
 
@@ -254,15 +255,10 @@ class MainWindow(QtWidgets.QWidget):
         self.initUI()
 
         # Internal parameters
-        self.n_frames_per_stack = None
-        self.n_stacks_to_grab = None
-        self.n_frames_to_grab = None
-        self.n_angles = None
-        self.file_save_running = False
-        self.abort_pressed = False
+        self.n_frames_per_stack = self.n_stacks_to_grab = self.n_frames_to_grab = self.n_angles = None
+        self.file_save_running = self.abort_pressed = False
         self.root_folder = config.saving['root_folder']
-        self.dir_path = None
-        self.file_path = None
+        self.dir_path = self.file_path = None
         self.file_format = "HDF5"
         self.daqmx_task_AO_ls = None
         self.ls_active = False
@@ -730,7 +726,7 @@ class MainWindow(QtWidgets.QWidget):
         '''
         # start acquisition
         if (not self.abort_pressed) and (self.dev_cam.status != 'Running') and (not self.file_save_running):
-            self.check_path_valid()
+            self.create_folder()
             self.check_cam_initialized()
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
@@ -748,10 +744,6 @@ class MainWindow(QtWidgets.QWidget):
             self.thread_saving_files.start()
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
-                # if self.checkbox_with_scanning.isChecked():
-                #     time.sleep(6.0)
-                #     self.start_scan()
-                #     self.logger.info('Scanning started')
         # If pressed DURING acquisition, abort acquisition and saving
         if self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
@@ -767,7 +759,7 @@ class MainWindow(QtWidgets.QWidget):
             self.logger.error("Please initialize the camera.")
             self.abort_pressed = True
 
-    def check_path_valid(self):
+    def create_folder(self):
         """Create new folder for acquisition."""
         self.dir_path = self.root_folder + "/" + self.line_subfolder.text()
         i_dir = 0
@@ -927,15 +919,8 @@ class SavingStacksThread(QThread):
         self.parent_window = parent_window
         self.camera = camera
         self.logger = logger
-        self.frames_to_save = None
-        self.frames_per_stack = None
-        self.n_angles = None
-        self.frames_saved = None
-        self.stack_counter = None
-        self.angle_counter = None
-        self.bdv_writer = None
-        self.stack = None
-        self.cam_image_height = None
+        self.frames_to_save = self.frames_per_stack = self.n_angles = self.frames_saved = None
+        self.stack_counter = self.angle_counter = self.bdv_writer = self.stack = self.cam_image_height = None
         self.frameQueue = deque([])
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
 
