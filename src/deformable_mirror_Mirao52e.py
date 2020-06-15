@@ -145,7 +145,7 @@ class DmController(QtCore.QObject):
         else:
             self.logger.error(self.errors[return_status])
 
-    def disconnect(self):
+    def close(self):
         """Close deformable mirror session"""
         if self.dev_handle is None:
             self.logger.error(f'DM was not initialized, cannot close.')
@@ -215,7 +215,7 @@ class DmController(QtCore.QObject):
         groupbox_name = 'Connection'
         self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
         self.gui.add_button('Initialize', groupbox_name, lambda: self.initialize())
-        self.gui.add_button('Disconnect', groupbox_name, lambda: self.disconnect())
+        self.gui.add_button('Disconnect', groupbox_name, lambda: self.close())
         self.gui.add_string_field('Status', groupbox_name, value=self.errors[self._status.value], enabled=False)
 
         groupbox_name = 'Commands'

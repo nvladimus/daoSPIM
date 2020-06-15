@@ -4,6 +4,7 @@ short finite AO waveform to synchronously move galvo and turn on the laser.
 Copyright @nvladimus, 2020
 '''
 
+from PyQt5 import QtCore
 import numpy as np
 import PyDAQmx as pd
 import ctypes as ct
@@ -12,18 +13,17 @@ import serial
 
 config = {
     'swipe_duration_ms': 1.0,
-    'galvo_offset0_volts': -0.32,
-    'galvo_offset1_volts': 0.45,
-    'galvo_amp0_volts': 0.60,
-    'galvo_amp1_volts': 0.60,
-    'laser_max_volts': 5.0,
+    'galvo_offsets_volts': (-0.32, 0.45),
+    'galvo_amp_volts': (0.60, 0.60),
+    'laser_max_volts': 1.0,
     'laser_set_volts': 1.0,
-    'arduino_switcher_port': 'COM6'
+    'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
+    'switch_auto': True
 }
 
 
 class LightsheetGenerator(QtCore.QObject):
-    sig_update_gui = pyqtSignal()
+    sig_update_gui = QtCore.pyqtSignal()
 
     def __init__(self, dev_name='LS generator', gui_on=True, logger_name='Lightsheet'):
         super().__init__()
@@ -42,6 +42,22 @@ class LightsheetGenerator(QtCore.QObject):
             self._setup_gui()
             self.sig_update_gui.connect(self._update_gui)
 
+    def initialize(self):
+        if self.config['arduino_switcher_port']:
+            self.connect_arduino(self.config['arduino_switcher_port'])
+            self.setup_arduino()
+        self.create_daqmx_task()
+        self.setup_ls()
+
+    def close(self):
+        if self.serial_arduino:
+            try:
+                self.serial_arduino.close()
+            except serial.SerialException as e:
+                self.logger.error(f"Could not close Arduino connection: {e}")
+        if self.daqmx_task:
+            self.cleanup_daqmx_task()
+
     def create_daqmx_task(self):
         """Create the DAQmx task, but don't start it yet."""
         self.daqmx_task = pd.Task()
@@ -54,8 +70,11 @@ class LightsheetGenerator(QtCore.QObject):
 
     def cleanup_daqmx_task(self):
         """Stop and clear the DAQmx task"""
-        self.daqmx_task.StopTask()
-        self.daqmx_task.ClearTask()
+        try:
+            self.daqmx_task.StopTask()
+            self.daqmx_task.ClearTask()
+        except pd.DAQException as e:
+            self.logger.error(f"DAQmx error: {e.message}")
 
     def connect_arduino(self, port):
         """"The Arduino switcher is optional, needed here only for periodic biasing of the galvo signal"""
@@ -68,20 +87,18 @@ class LightsheetGenerator(QtCore.QObject):
             except serial.SerialException as e:
                 self.logger.error(f"Could not connect to Arduino, SerialException: {e}")
                 self.serial_arduino.close()
-            except Exception as e:
-                self.logger.error(f"Could not connect to Arduino, Exception: {e}")
 
-    def setup_arduino_switcher(self, switch_auto=True, galvo_offsets_v = (0, 0), n_TTL_inputs: int):
+    def setup_arduino(self, n_TTL_inputs=10000):
         """"Send the galvo bias values and N(frames per stack) to the Arduino switcher that flips the galvo bias
         every N input pulses"""
-        assert len(galvo_offsets_v) == 2, "Argument galvo_offsets_v must be a 2-long tuple"
         # automatic mode
-        if switch_auto:
+        if self.config['switch_auto']:
             if self.serial_arduino:
+                galvo_offsets = self.config['galvo_offsets_volts']
                 self.serial_arduino.write(f'n {n_TTL_inputs}\n'.encode())
                 self.serial_arduino.write('reset\n'.encode())
-                self.serial_arduino.write(f'v0 {galvo_offsets_v[0]}\n'.encode())
-                self.serial_arduino.write(f'v1 {galvo_offsets_v[1]}\n'.encode())
+                self.serial_arduino.write(f'v0 {galvo_offsets[0]}\n'.encode())
+                self.serial_arduino.write(f'v1 {galvo_offsets[1]}\n'.encode())
         # no switching, zero bias, fixed arm mode
         else:
             if self.serial_arduino:
@@ -90,48 +107,79 @@ class LightsheetGenerator(QtCore.QObject):
                 self.serial_arduino.write('v1 0.0\n'.encode())
                 self.serial_arduino.write('reset\n'.encode())
 
-
-    def setup_ls(self, galvo_amp_V, galvo_offset_V, ls_duration_ms, laser_on_V):
+    def setup_ls(self):
         """Set up the lightsheet DAQmx task. """
+        assert self.config['laser_set_volts'] <= self.config['laser_max_volts'], 'Laser voltage too high'
         if self.daqmx_task:
             try:
-                task_config(self.daqmx_task, wf_duration_ms=ls_duration_ms,
-                               galvo_offset_V=galvo_offset_V, galvo_amplitude_V=galvo_amp_V,
-                               laser_amplitude_V=laser_on_V, galvo_inertia_ms=0.2)
+                task_config(wf_duration_ms=self.config['swipe_duration_ms'],
+                            galvo_offset_V=self.config['galvo_offset_volts'][0],
+                            galvo_amplitude_V=self.config['galvo_amp_volts'][0],
+                            laser_amplitude_V=self.config['laser_set_volts'],
+                            galvo_inertia_ms=0.2)
             except pd.DAQException as e:
                 self.logger.error(f"DAQmx: {e}")
-            except Exception as e:
-                self.logger.error(f"Non-DAQmx: {e}")
         else:
             self.logger.error("DAQmx task is None")
 
-    def activate_ls(self):
-        """Create and start DAQmx stask for TTL-triggered lightsheet"""
-        if not self.ls_active:
-            self.create_daqmx_task()
-            self.setup_lightsheet()
-            self.ls_active = True
-            self.button_ls_activate.setText("Inactivate light sheet")
-            self.button_ls_activate.setStyleSheet('QPushButton {color: blue;}')
-        else:
-            self.cleanup_daqmx_task()
-            self.ls_active = False
-            self.button_ls_activate.setText("Activate light sheet")
-            self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
+    def task_config(self, wf_duration_ms=50, galvo_offset_V=0, galvo_amplitude_V=1.0, laser_amplitude_V=0.0,
+                    galvo_inertia_ms=0.20):
+        """Configuration and automatic restart of light-sheet generation DAQmx AO task.
+        Channels:
+            ao0, galvo
+            ao1, laser
+        Parameters:
+            task, existing DAQmx AO task
+            wf_duration_ms
+            galvo_offset_V
+            galvo_amplitude_V
+            laser_amplitude_V.
+            galvo_inertia_ms, delay in laser onset after galvo, to accomodate galvo inertia.
+        """
+        sampleRate_Hz = 20000
+        samples_per_ch = np.int(sampleRate_Hz / 1000. * wf_duration_ms)
+        self.daqmx_task.StopTask()
+        self.daqmx_task.CfgSampClkTiming("", sampleRate_Hz, pd.DAQmx_Val_Rising, pd.DAQmx_Val_FiniteSamps, samples_per_ch)
 
-    def detect_serial_ports(self):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-        ports_available = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                ports_available.append(port)
-            except (OSError, serial.SerialException):
-                self.logger.error(f"detect_serial_ports(), Exception: {e}")
-        return ports_available
+        self.daqmx_task.CfgDigEdgeStartTrig("/Dev1/PFI0", pd.DAQmx_Val_Rising)
+        self.daqmx_task.SetTrigAttribute(pd.DAQmx_StartTrig_Retriggerable, True)
+        # generate galvo AO waveform
+        wf_galvo = np.zeros(samples_per_ch)
+        wf_sawtooth = np.linspace(-galvo_amplitude_V / 2.0, galvo_amplitude_V / 2.0, samples_per_ch - 2)
+        # note that the last value of waveform should be zero or galvo_offset_V constant
+        wf_galvo[1:-1] = wf_sawtooth
+        wf_galvo = wf_galvo + galvo_offset_V
+        # generate laser ON/OFF waveform
+        wf_laser = np.zeros(samples_per_ch)
+        laser_delay_samples = int(sampleRate_Hz / 1000. * galvo_inertia_ms)
+        wf_laser[laser_delay_samples:-1] = laser_amplitude_V  # laser wf must end with zero for safety reasons.
+        # combine
+        wform2D = np.column_stack((wf_galvo, wf_laser))
+        # write to buffer
+        samples_per_ch_ct = ct.c_int32()
+        samples_per_ch_ct.value = samples_per_ch
+        self.daqmx_task.WriteAnalogF64(samples_per_ch, False, 10, pd.DAQmx_Val_GroupByScanNumber,
+                            wform2D, ct.byref(samples_per_ch_ct), None)
+        # restart the task
+        self.daqmx_task.StartTask()
 
-    #Todo GUI with callbacks, Initialize, testing.
+    def update_config(self, **kwargs):
+        for k, v in zip(kwargs.keys(), kwargs.values()):
+            self.config[k] = v
+        self.setup_arduino()
+        self.setup_ls()
+
+    #Todo GUI with callbacks, testing.
+    def _setup_gui(self):
+        self.gui.add_tabs("Control Tabs", tabs=['LS settings', 'DAQ settings'])
+        tab_name = 'LS settings'
+        self.gui.add_button('Initialize', tab_name, lambda: self.initialize())
+        self.gui.add_numeric_field('Swipe duration', tab_name, value=self.config['swipe_duration_ms'],
+                                   vmin=0.1, vmax=100, enabled=True, decimals=1,
+                                   func=self.update_config, **{'swipe_duration_ms'}
+                                   )
+        self.gui.add_button('Disconnect', tab_name, lambda: self.close())
+
 
 def task_config(task, wf_duration_ms=50,
                    galvo_offset_V=0,

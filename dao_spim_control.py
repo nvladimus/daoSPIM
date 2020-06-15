@@ -341,8 +341,7 @@ class MainWindow(QtWidgets.QWidget):
         self.combobox_ls_side.setEnabled(False)
 
         self.combobox_ls_port.setFixedWidth(80)
-        self.combobox_ls_port.addItems(self.detect_serial_ports())
-        self.combobox_ls_port.setCurrentText(config.lightsheet_generation['arduino_switcher_port'])
+        self.combobox_ls_port.addItem(config.lightsheet_generation['arduino_switcher_port'])
 
         self.button_ls_activate.setFixedWidth(160)
         self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
@@ -560,18 +559,6 @@ class MainWindow(QtWidgets.QWidget):
         else:
             self.combobox_ls_side.setEnabled(True)
 
-    def detect_serial_ports(self):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-        ports_available = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                ports_available.append(port)
-            except (OSError, serial.SerialException):
-                self.logger.error(f"detect_serial_ports(), Exception: {e}")
-        return ports_available
-
     def activate_lightsheet(self):
         """Create and start DAQmx stask for cam-triggered light-sheet"""
         # connect to Arduino LS switcher
@@ -683,7 +670,7 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_cam.dev_handle is not None:
             self.dev_cam.dev_handle.shutdown()
         if self.dev_dm.dev_handle is not None:
-            self.dev_dm.disconnect()
+            self.dev_dm.close()
         if self.serial_ls is not None:
             self.serial_ls.close()
         if self.serial_stage is not None:

@@ -120,7 +120,7 @@ class MotionController(QtCore.QObject):
         else:
             self.logger.error("_flush(): serial port not initialized")
 
-    def disconnect(self):
+    def close(self):
         if not self.simulation:
             try:
                 self._ser.close()
@@ -261,7 +261,7 @@ class MotionController(QtCore.QObject):
         self.gui.add_button('Initialize', tab_name,
                             lambda: self.initialize(self.port, self.baud, self.timeout_s))
         self.gui.add_button('Disconnect', tab_name,
-                            lambda: self.disconnect())
+                            lambda: self.close())
         # Position/speed controls
         tab_name = 'Motion'
         groupbox_name = 'Position'
