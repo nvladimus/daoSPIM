@@ -512,9 +512,8 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -522,9 +521,8 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 

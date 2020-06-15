@@ -240,11 +240,9 @@ class MotionController(QtCore.QObject):
 
     def start_scan(self):
         """Scan the stage with ENC_INT module.
-        Functions set_scan_region() and set_trigger_intervals() must be called before it
+        Functions set_scan_region() and set_trigger_intervals() must be called before this.
         """
-        self.logger.debug(f'enc counts per pulse: {self.enc_counts_per_pulse}')
-        response = self.write_with_response(b'SCAN')
-        self.logger.debug(f'SCAN returned: {response}')
+        _ = self.write_with_response(b'SCAN')
 
     def halt(self):
         response = self.write_with_response(b'\\')
