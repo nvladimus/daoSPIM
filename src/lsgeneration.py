@@ -4,21 +4,24 @@ short finite AO waveform to synchronously move galvo and turn on the laser.
 Copyright @nvladimus, 2020
 '''
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
+import sys
+import logging
 import numpy as np
 import PyDAQmx as pd
 import ctypes as ct
 import widget as wd
 import serial
+from functools import partial
 
 config = {
     'swipe_duration_ms': 1.0,
-    'galvo_offsets_volts': (-0.32, 0.45),
-    'galvo_amp_volts': (0.60, 0.60),
-    'laser_max_volts': 1.0,
-    'laser_set_volts': 1.0,
+    'L-galvo_offsets_volts': -0.32, 'R-galvo_offsets_volts': 0.45,
+    'L-galvo_amp_volts': 0.60,      'R-galvo_amp_volts': 0.60,
+    'laser_max_volts': 1.0,         'laser_pow_volts': 1.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
-    'switch_auto': True
+    'arm_active': 'left',           'switch_auto': True,    'switch_every_n_pulses': 10000,
+    'DAQ_trig_in_ch': '/Dev1/PFI0', 'DAQ_AO_ch': '/Dev1/ao0:1'
 }
 
 
@@ -62,11 +65,10 @@ class LightsheetGenerator(QtCore.QObject):
         """Create the DAQmx task, but don't start it yet."""
         self.daqmx_task = pd.Task()
         try:
-            self.daqmx_task.CreateAOVoltageChan("/Dev1/ao0:1", "galvo-laser",
-                                                -self.config['laser_max_volts'],
-                                                self.config['laser_max_volts'], pd.DAQmx_Val_Volts, None)
+            self.daqmx_task.CreateAOVoltageChan(self.config['DAQ_AO_ch'], "galvo-laser",
+                                                -5, 5, pd.DAQmx_Val_Volts, None)
         except pd.DAQException as e:
-            self.logger.error(f"DAQmx error: {e.message}")
+            self.logger.error(f"Create DAQmx task error: {e.message}")
 
     def cleanup_daqmx_task(self):
         """Stop and clear the DAQmx task"""
@@ -74,7 +76,7 @@ class LightsheetGenerator(QtCore.QObject):
             self.daqmx_task.StopTask()
             self.daqmx_task.ClearTask()
         except pd.DAQException as e:
-            self.logger.error(f"DAQmx error: {e.message}")
+            self.logger.error(f"Cleanup DAQmx error: {e.message}")
 
     def connect_arduino(self, port):
         """"The Arduino switcher is optional, needed here only for periodic biasing of the galvo signal"""
@@ -86,15 +88,15 @@ class LightsheetGenerator(QtCore.QObject):
                 self.logger.info(f"Connected to Arduino switcher, version: {status}")
             except serial.SerialException as e:
                 self.logger.error(f"Could not connect to Arduino, SerialException: {e}")
-                self.serial_arduino.close()
 
-    def setup_arduino(self, n_TTL_inputs=10000):
+    def setup_arduino(self):
         """"Send the galvo bias values and N(frames per stack) to the Arduino switcher that flips the galvo bias
         every N input pulses"""
         # automatic mode
         if self.config['switch_auto']:
             if self.serial_arduino:
-                galvo_offsets = self.config['galvo_offsets_volts']
+                n_TTL_inputs = self.config['switch_every_n_pulses']
+                galvo_offsets = self.config['L-galvo_offsets_volts'], self.config['R-galvo_offsets_volts']
                 self.serial_arduino.write(f'n {n_TTL_inputs}\n'.encode())
                 self.serial_arduino.write('reset\n'.encode())
                 self.serial_arduino.write(f'v0 {galvo_offsets[0]}\n'.encode())
@@ -109,16 +111,19 @@ class LightsheetGenerator(QtCore.QObject):
 
     def setup_ls(self):
         """Set up the lightsheet DAQmx task. """
-        assert self.config['laser_set_volts'] <= self.config['laser_max_volts'], 'Laser voltage too high'
+        assert self.config['laser_pow_volts'] <= self.config['laser_max_volts'], 'Laser voltage too high'
         if self.daqmx_task:
             try:
-                task_config(wf_duration_ms=self.config['swipe_duration_ms'],
-                            galvo_offset_V=self.config['galvo_offset_volts'][0],
-                            galvo_amplitude_V=self.config['galvo_amp_volts'][0],
-                            laser_amplitude_V=self.config['laser_set_volts'],
-                            galvo_inertia_ms=0.2)
+                if self.config['arm_active'] == 'left':
+                    offset, amp = self.config['L-galvo_offsets_volts'], self.config['L-galvo_amp_volts']
+                else:
+                    offset, amp = self.config['R-galvo_offsets_volts'], self.config['R-galvo_amp_volts']
+                self.task_config(wf_duration_ms=self.config['swipe_duration_ms'],
+                                 galvo_offset_V=offset, galvo_amplitude_V=amp,
+                                 laser_amplitude_V=self.config['laser_pow_volts'],
+                                 galvo_inertia_ms=0.2)
             except pd.DAQException as e:
-                self.logger.error(f"DAQmx: {e}")
+                self.logger.error(f"Config DAQmx: {e.message}")
         else:
             self.logger.error("DAQmx task is None")
 
@@ -141,7 +146,7 @@ class LightsheetGenerator(QtCore.QObject):
         self.daqmx_task.StopTask()
         self.daqmx_task.CfgSampClkTiming("", sampleRate_Hz, pd.DAQmx_Val_Rising, pd.DAQmx_Val_FiniteSamps, samples_per_ch)
 
-        self.daqmx_task.CfgDigEdgeStartTrig("/Dev1/PFI0", pd.DAQmx_Val_Rising)
+        self.daqmx_task.CfgDigEdgeStartTrig(self.config['DAQ_trig_in_ch'], pd.DAQmx_Val_Rising)
         self.daqmx_task.SetTrigAttribute(pd.DAQmx_StartTrig_Retriggerable, True)
         # generate galvo AO waveform
         wf_galvo = np.zeros(samples_per_ch)
@@ -163,23 +168,56 @@ class LightsheetGenerator(QtCore.QObject):
         # restart the task
         self.daqmx_task.StartTask()
 
-    def update_config(self, **kwargs):
-        for k, v in zip(kwargs.keys(), kwargs.values()):
-            self.config[k] = v
+    def update_config(self, key, value):
+        if key in self.config.keys():
+            self.config[key] = value
+        else:
+            self.logger.error("Parameter name not found in config file")
         self.setup_arduino()
         self.setup_ls()
+        if self.gui_on:
+            self.sig_update_gui.emit()
 
-    #Todo GUI with callbacks, testing.
     def _setup_gui(self):
         self.gui.add_tabs("Control Tabs", tabs=['LS settings', 'DAQ settings'])
         tab_name = 'LS settings'
         self.gui.add_button('Initialize', tab_name, lambda: self.initialize())
+        self.gui.add_string_field('Port', tab_name, value=self.config['arduino_switcher_port'], enabled=False)
         self.gui.add_numeric_field('Swipe duration', tab_name, value=self.config['swipe_duration_ms'],
-                                   vmin=0.1, vmax=100, enabled=True, decimals=1,
-                                   func=self.update_config, **{'swipe_duration_ms'}
-                                   )
+                                   vmin=0.1, vmax=100, decimals=1,
+                                   func=partial(self.update_config, 'swipe_duration_ms'))
+        self.gui.add_numeric_field('L-arm galvo offset', tab_name, value=self.config['L-galvo_offsets_volts'],
+                                   vmin=-10, vmax=10, decimals=2,
+                                   func=partial(self.update_config, 'L-galvo_offsets_volts'))
+        self.gui.add_numeric_field('R-arm galvo offset', tab_name, value=self.config['R-galvo_offsets_volts'],
+                                   vmin=-10, vmax=10,  decimals=2,
+                                   func=partial(self.update_config, 'R-galvo_offsets_volts'))
+        self.gui.add_numeric_field('L-galvo amp (V)', tab_name, value=self.config['L-galvo_amp_volts'],
+                                   vmin=-1., vmax=1.,  decimals=2,
+                                   func=partial(self.update_config, 'L-galvo_amp_volts'))
+        self.gui.add_numeric_field('R-galvo amp (V)', tab_name, value=self.config['R-galvo_amp_volts'],
+                                   vmin=-1., vmax=1., decimals=2,
+                                   func=partial(self.update_config, 'R-galvo_amp_volts'))
+        self.gui.add_numeric_field('Laser power (V)', tab_name, value=self.config['laser_pow_volts'],
+                                   vmin=0, vmax=self.config['laser_max_volts'], decimals=2,
+                                   func=partial(self.update_config, 'laser_pow_volts'))
+        self.gui.add_combobox('Active arm', tab_name, ['left', 'right'], func=partial(self.update_config, 'arm_active'))
+        self.gui.add_numeric_field('Switch every N pulses', tab_name, value=self.config['switch_every_n_pulses'],
+                                   vmin=0, vmax=10000, decimals=0,
+                                   func=partial(self.update_config, 'switch_every_n_pulses'))
+        self.gui.add_checkbox('Auto-switching', tab_name,  value=self.config['switch_auto'],
+                              func=partial(self.update_config, 'switch_auto'))
         self.gui.add_button('Disconnect', tab_name, lambda: self.close())
 
+        tab_name = 'DAQ settings'
+        self.gui.add_string_field('Trigger-in channel', tab_name,
+                                  value=self.config['DAQ_trig_in_ch'], enabled=False)
+        self.gui.add_string_field('AO channels (galvo, laser)', tab_name,
+                                  value=self.config['DAQ_AO_ch'], enabled=False)
+
+    @QtCore.pyqtSlot()
+    def _update_gui(self):
+        self.gui.update('Laser power (V)', self.config['laser_pow_volts']) #Todo
 
 def task_config(task, wf_duration_ms=50,
                    galvo_offset_V=0,
@@ -225,3 +263,11 @@ def task_config(task, wf_duration_ms=50,
                         wform2D, ct.byref(samples_per_ch_ct), None)
     # restart the task
     task.StartTask()
+
+
+# run if the module is launched as a standalone program
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    dev = LightsheetGenerator()
+    dev.gui.show()
+    app.exec_()
