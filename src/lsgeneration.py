@@ -20,8 +20,9 @@ config = {
     'L-galvo_amp_volts': 0.60,      'R-galvo_amp_volts': 0.60,
     'laser_max_volts': 1.0,         'laser_pow_volts': 1.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
-    'arm_active': 'left',           'switch_auto': True,    'switch_every_n_pulses': 10000,
-    'DAQ_trig_in_ch': '/Dev1/PFI0', 'DAQ_AO_ch': '/Dev1/ao0:1'
+    'active_arm': 'left',           'switch_auto': True,    'switch_every_n_pulses': 100,
+    'DAQ_trig_in_ch': '/Dev1/PFI0', 'DAQ_AO_ch': '/Dev1/ao0:1',
+    'DAQ_sample_rate_Hz': 20000
 }
 
 
@@ -114,7 +115,7 @@ class LightsheetGenerator(QtCore.QObject):
         assert self.config['laser_pow_volts'] <= self.config['laser_max_volts'], 'Laser voltage too high'
         if self.daqmx_task:
             try:
-                if self.config['arm_active'] == 'left':
+                if self.config['active_arm'] == 'left':
                     offset, amp = self.config['L-galvo_offsets_volts'], self.config['L-galvo_amp_volts']
                 else:
                     offset, amp = self.config['R-galvo_offsets_volts'], self.config['R-galvo_amp_volts']
@@ -141,10 +142,10 @@ class LightsheetGenerator(QtCore.QObject):
             laser_amplitude_V.
             galvo_inertia_ms, delay in laser onset after galvo, to accomodate galvo inertia.
         """
-        sampleRate_Hz = 20000
-        samples_per_ch = np.int(sampleRate_Hz / 1000. * wf_duration_ms)
+        samples_per_ch = np.int(self.config['DAQ_sample_rate_Hz'] / 1000. * wf_duration_ms)
         self.daqmx_task.StopTask()
-        self.daqmx_task.CfgSampClkTiming("", sampleRate_Hz, pd.DAQmx_Val_Rising, pd.DAQmx_Val_FiniteSamps, samples_per_ch)
+        self.daqmx_task.CfgSampClkTiming("", self.config['DAQ_sample_rate_Hz'],
+                                         pd.DAQmx_Val_Rising, pd.DAQmx_Val_FiniteSamps, samples_per_ch)
 
         self.daqmx_task.CfgDigEdgeStartTrig(self.config['DAQ_trig_in_ch'], pd.DAQmx_Val_Rising)
         self.daqmx_task.SetTrigAttribute(pd.DAQmx_StartTrig_Retriggerable, True)
@@ -156,7 +157,7 @@ class LightsheetGenerator(QtCore.QObject):
         wf_galvo = wf_galvo + galvo_offset_V
         # generate laser ON/OFF waveform
         wf_laser = np.zeros(samples_per_ch)
-        laser_delay_samples = int(sampleRate_Hz / 1000. * galvo_inertia_ms)
+        laser_delay_samples = int(self.config['DAQ_sample_rate_Hz'] / 1000. * galvo_inertia_ms)
         wf_laser[laser_delay_samples:-1] = laser_amplitude_V  # laser wf must end with zero for safety reasons.
         # combine
         wform2D = np.column_stack((wf_galvo, wf_laser))
@@ -201,7 +202,7 @@ class LightsheetGenerator(QtCore.QObject):
         self.gui.add_numeric_field('Laser power (V)', tab_name, value=self.config['laser_pow_volts'],
                                    vmin=0, vmax=self.config['laser_max_volts'], decimals=2,
                                    func=partial(self.update_config, 'laser_pow_volts'))
-        self.gui.add_combobox('Active arm', tab_name, ['left', 'right'], func=partial(self.update_config, 'arm_active'))
+        self.gui.add_combobox('Active arm', tab_name, ['left', 'right'], func=partial(self.update_config, 'active_arm'))
         self.gui.add_numeric_field('Switch every N pulses', tab_name, value=self.config['switch_every_n_pulses'],
                                    vmin=0, vmax=10000, decimals=0,
                                    func=partial(self.update_config, 'switch_every_n_pulses'))
@@ -214,10 +215,11 @@ class LightsheetGenerator(QtCore.QObject):
                                   value=self.config['DAQ_trig_in_ch'], enabled=False)
         self.gui.add_string_field('AO channels (galvo, laser)', tab_name,
                                   value=self.config['DAQ_AO_ch'], enabled=False)
+        self.gui.add_numeric_field('Sample rate, Hz', tab_name, value=self.config['DAQ_sample_rate_Hz'], enabled=False)
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
-        self.gui.update('Laser power (V)', self.config['laser_pow_volts']) #Todo
+        self.gui.update('Active arm', self.config['active_arm'])
 
 def task_config(task, wf_duration_ms=50,
                    galvo_offset_V=0,

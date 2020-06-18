@@ -1164,13 +1164,13 @@ class CamController(QtCore.QObject):
         self.gui.add_checkbox('Simulation', tab_name, self.config['simulation'], enabled=False)
 
         groupbox_name = 'Connection'
-        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_button('Initialize', groupbox_name, lambda: self.initialize())
         self.gui.add_button('Disconnect', groupbox_name, lambda: self.disconnect())
         self.gui.add_string_field('Status', groupbox_name, value=self.status, enabled=False)
 
         groupbox_name = 'Frame control'
-        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('Exposure, ms', groupbox_name, value=self.exposure_ms, vmin=0, vmax=1000,
                                    enabled=True, decimals=1, func=self.set_exposure)
         self.gui.add_numeric_field('Image height, px', groupbox_name, value=self.frame_height_px,
