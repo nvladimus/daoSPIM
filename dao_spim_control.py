@@ -216,7 +216,6 @@ class MainWindow(QtWidgets.QWidget):
         # acquisition
         self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
         self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        #self.checkbox_with_scanning = QtWidgets.QCheckBox('With scanning')
         self.spinbox_n_timepoints = QtWidgets.QSpinBox()
         self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
         self.spinbox_nangles = QtWidgets.QSpinBox()
