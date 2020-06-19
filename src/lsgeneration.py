@@ -25,6 +25,8 @@ config = {
     'DAQ_sample_rate_Hz': 20000
 }
 
+logging.basicConfig()
+
 
 class LightsheetGenerator(QtCore.QObject):
     sig_update_gui = QtCore.pyqtSignal()
@@ -57,27 +59,36 @@ class LightsheetGenerator(QtCore.QObject):
         if self.serial_arduino:
             try:
                 self.serial_arduino.close()
+                self.serial_arduino = None
+                self.logger.info('Arduino connection closed')
             except serial.SerialException as e:
                 self.logger.error(f"Could not close Arduino connection: {e}")
         if self.daqmx_task:
             self.cleanup_daqmx_task()
+            self.logger.info('DAQmx task closed.')
 
     def create_daqmx_task(self):
         """Create the DAQmx task, but don't start it yet."""
         self.daqmx_task = pd.Task()
         try:
+            max_volts = 5.0
             self.daqmx_task.CreateAOVoltageChan(self.config['DAQ_AO_ch'], "galvo-laser",
-                                                -5, 5, pd.DAQmx_Val_Volts, None)
+                                                -max_volts, max_volts, pd.DAQmx_Val_Volts, None)
+            self.logger.info('DAQmx AO task created.')
         except pd.DAQException as e:
             self.logger.error(f"Create DAQmx task error: {e.message}")
 
     def cleanup_daqmx_task(self):
         """Stop and clear the DAQmx task"""
-        try:
-            self.daqmx_task.StopTask()
-            self.daqmx_task.ClearTask()
-        except pd.DAQException as e:
-            self.logger.error(f"Cleanup DAQmx error: {e.message}")
+        if self.daqmx_task:
+            try:
+                self.daqmx_task.StopTask()
+                self.daqmx_task.ClearTask()
+                self.daqmx_task = None
+            except pd.DAQException as e:
+                self.logger.error(f"Cleanup DAQmx error: {e.message}")
+        else:
+            self.logger.error("DAQmx task is None")
 
     def connect_arduino(self, port):
         """"The Arduino switcher is optional, needed here only for periodic biasing of the galvo signal"""
@@ -123,6 +134,7 @@ class LightsheetGenerator(QtCore.QObject):
                                  galvo_offset_V=offset, galvo_amplitude_V=amp,
                                  laser_amplitude_V=self.config['laser_pow_volts'],
                                  galvo_inertia_ms=0.2)
+                self.logger.info('DAQmx AO task configured.')
             except pd.DAQException as e:
                 self.logger.error(f"Config DAQmx: {e.message}")
         else:
@@ -182,7 +194,7 @@ class LightsheetGenerator(QtCore.QObject):
     def _setup_gui(self):
         self.gui.add_tabs("Control Tabs", tabs=['LS settings', 'DAQ settings'])
         tab_name = 'LS settings'
-        self.gui.add_button('Initialize', tab_name, lambda: self.initialize())
+        self.gui.add_button('Initialize', tab_name, func=self.initialize)
         self.gui.add_string_field('Port', tab_name, value=self.config['arduino_switcher_port'], enabled=False)
         self.gui.add_numeric_field('Swipe duration', tab_name, value=self.config['swipe_duration_ms'],
                                    vmin=0.1, vmax=100, decimals=1,
@@ -221,6 +233,7 @@ class LightsheetGenerator(QtCore.QObject):
     def _update_gui(self):
         self.gui.update('Active arm', self.config['active_arm'])
 
+
 def task_config(task, wf_duration_ms=50,
                    galvo_offset_V=0,
                    galvo_amplitude_V=1.0,
@@ -245,7 +258,7 @@ def task_config(task, wf_duration_ms=50,
 
     task.CfgDigEdgeStartTrig("/Dev1/PFI0", pd.DAQmx_Val_Rising)
     task.SetTrigAttribute(pd.DAQmx_StartTrig_Retriggerable, True)
-    
+
     # generate galvo AO waveform
     wf_galvo = np.zeros(samples_per_ch)
     wf_sawtooth = np.linspace(-galvo_amplitude_V/2.0, galvo_amplitude_V/2.0, samples_per_ch-2)
