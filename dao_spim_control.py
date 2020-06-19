@@ -437,7 +437,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_frames_per_stack.setRange(1, 1000)
 
         self.spinbox_nangles.setValue(2)
-        self.spinbox_nangles.setMinimum(1)
+        self.spinbox_nangles.setEnabled(False)
         self.spinbox_nangles.setFixedWidth(60)
 
         layout_acquisition = QtWidgets.QFormLayout()
@@ -499,6 +499,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_ls_activate.clicked.connect(self.activate_lightsheet)
         self.checkbox_ls_switch_auto.stateChanged.connect(self.set_ls_switching)
 
+        # coupling between camera and stage params
         self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
