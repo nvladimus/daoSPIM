@@ -306,7 +306,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_speed_x.setEnabled(False)
 
         self.spinbox_stage_step_x.setDecimals(3)
-        self.spinbox_stage_step_x.setValue(2.820)
+        self.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
         self.spinbox_stage_step_x.setMinimum(0.022)
         self.spinbox_stage_step_x.setFixedWidth(160)
         self.spinbox_stage_step_x.setSingleStep(0.022)

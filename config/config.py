@@ -6,6 +6,9 @@ camera = {
     'pixel_um': 6.5
 }
 
+scanning = {
+    'step_x_um': 2.82
+}
 # deformable mirror
 dm = {'diameter_mm': 15.0}
 
