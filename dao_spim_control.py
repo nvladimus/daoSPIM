@@ -10,16 +10,14 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread, pyqtSignal
 import pyqtgraph as pg
-import PyDAQmx as pd
 import numpy as np
 from skimage.external import tifffile
 import time
 from collections import deque
 import hamamatsu_camera as cam
 import npy2bdv
-import lsgeneration as ls
+import lightsheet_generator as lsg
 import deformable_mirror_Mirao52e as def_mirror
-import serial
 import etl_controller_Optotune as etl
 import stage_ASI_MS2000 as stage
 import scipy.optimize as opt
@@ -188,18 +186,8 @@ class MainWindow(QtWidgets.QWidget):
         # deformable mirror widgets
         self.dev_dm = def_mirror.DmController(logger_name=self.logger.name + '.DM')
 
-        # light-sheet widgets
-        self.spinbox_ls_duration = QtWidgets.QDoubleSpinBox()
-        self.spinbox_ls_galvo_offset0 = QtWidgets.QDoubleSpinBox()
-        self.spinbox_ls_galvo_offset1 = QtWidgets.QDoubleSpinBox()
-        self.spinbox_ls_galvo_amp0 = QtWidgets.QDoubleSpinBox()
-        self.spinbox_ls_galvo_amp1 = QtWidgets.QDoubleSpinBox()
-        self.spinbox_ls_laser_volts = QtWidgets.QDoubleSpinBox()
-        self.checkbox_ls_switch_auto = QtWidgets.QCheckBox("Switch arms automatically")
-        self.combobox_ls_side = QtWidgets.QComboBox()
-        self.button_ls_activate = QtWidgets.QPushButton("Activate light sheet")
-        self.combobox_ls_port = QtWidgets.QComboBox()
-        self.serial_ls = None
+        # light-sheet widget
+        self.ls_generator = lsg.LightsheetGenerator()
 
         # stage widgets
         self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
@@ -218,7 +206,6 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
         self.label_stage_start_pos = QtWidgets.QLabel("0.0")
         self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
-        self.serial_stage = None
 
         # camera widgets
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
@@ -229,7 +216,6 @@ class MainWindow(QtWidgets.QWidget):
         # acquisition
         self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
         self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        #self.checkbox_with_scanning = QtWidgets.QCheckBox('With scanning')
         self.spinbox_n_timepoints = QtWidgets.QSpinBox()
         self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
         self.spinbox_nangles = QtWidgets.QSpinBox()
@@ -260,8 +246,6 @@ class MainWindow(QtWidgets.QWidget):
         self.root_folder = config.saving['root_folder']
         self.dir_path = self.file_path = None
         self.file_format = "HDF5"
-        self.daqmx_task_AO_ls = None
-        self.ls_active = False
         # Set up threads and signals
         # Live mode image display worker+thread:
         self.thread_live_mode = QtCore.QThread()
@@ -301,61 +285,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_etl.setLayout(self.tab_etl.layout)
 
         #LIGHTSHEET tab
-        self.spinbox_ls_duration.setDecimals(1)
-        self.spinbox_ls_duration.setSingleStep(0.1)
-        self.spinbox_ls_duration.setFixedWidth(60)
-        self.spinbox_ls_duration.setValue(config.lightsheet_generation['swipe_duration_ms'])
-
-        self.spinbox_ls_galvo_offset0.setRange(-10, 10)
-        self.spinbox_ls_galvo_offset0.setDecimals(2)
-        self.spinbox_ls_galvo_offset0.setFixedWidth(60)
-        self.spinbox_ls_galvo_offset0.setValue(config.lightsheet_generation['galvo_offset0_volts'])
-
-        self.spinbox_ls_galvo_offset1.setRange(-10, 10)
-        self.spinbox_ls_galvo_offset1.setDecimals(2)
-        self.spinbox_ls_galvo_offset1.setFixedWidth(60)
-        self.spinbox_ls_galvo_offset1.setValue(config.lightsheet_generation['galvo_offset1_volts'])
-
-        self.spinbox_ls_galvo_amp0.setSingleStep(0.1)
-        self.spinbox_ls_galvo_amp0.setRange(0, 10)
-        self.spinbox_ls_galvo_amp0.setFixedWidth(60)
-        self.spinbox_ls_galvo_amp0.setValue(config.lightsheet_generation['galvo_amp0_volts'])
-
-        self.spinbox_ls_galvo_amp1.setSingleStep(0.1)
-        self.spinbox_ls_galvo_amp1.setRange(0, 10)
-        self.spinbox_ls_galvo_amp1.setFixedWidth(60)
-        self.spinbox_ls_galvo_amp1.setValue(config.lightsheet_generation['galvo_amp1_volts'])
-
-        self.spinbox_ls_laser_volts.setRange(0, config.lightsheet_generation['laser_max_volts'])
-        self.spinbox_ls_laser_volts.setDecimals(2)
-        self.spinbox_ls_laser_volts.setSingleStep(0.05)
-        self.spinbox_ls_laser_volts.setFixedWidth(60)
-        self.spinbox_ls_laser_volts.setValue(config.lightsheet_generation['laser_set_volts'])
-
-        self.checkbox_ls_switch_auto.setChecked(True)
-        self.checkbox_ls_switch_auto.setEnabled(True)
-
-        self.combobox_ls_side.setFixedWidth(80)
-        self.combobox_ls_side.addItem("Left")
-        self.combobox_ls_side.addItem("Right")
-        self.combobox_ls_side.setEnabled(False)
-
-        self.combobox_ls_port.setFixedWidth(80)
-        self.combobox_ls_port.addItem(config.lightsheet_generation['arduino_switcher_port'])
-
-        self.button_ls_activate.setFixedWidth(160)
-        self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
-
-        self.tab_lightsheet.layout.addRow("Swipe duration, ms", self.spinbox_ls_duration)
-        self.tab_lightsheet.layout.addRow("L-arm galvo offset, V", self.spinbox_ls_galvo_offset0)
-        self.tab_lightsheet.layout.addRow("R-arm galvo offset, V", self.spinbox_ls_galvo_offset1)
-        self.tab_lightsheet.layout.addRow("L-arm galvo amplitude, V", self.spinbox_ls_galvo_amp0)
-        self.tab_lightsheet.layout.addRow("R-arm galvo amplitude, V", self.spinbox_ls_galvo_amp1)
-        self.tab_lightsheet.layout.addRow("Laser power ctrl, V", self.spinbox_ls_laser_volts)
-        self.tab_lightsheet.layout.addRow("Illumination objective", self.combobox_ls_side)
-        self.tab_lightsheet.layout.addRow(self.button_ls_activate)
-        self.tab_lightsheet.layout.addRow(self.checkbox_ls_switch_auto)
-        self.tab_lightsheet.layout.addRow("Arduino COM port", self.combobox_ls_port)
+        self.tab_lightsheet.layout.addWidget(self.ls_generator.gui)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
@@ -437,7 +367,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_frames_per_stack.setRange(1, 1000)
 
         self.spinbox_nangles.setValue(2)
-        self.spinbox_nangles.setEnabled(False)
+        self.spinbox_nangles.setMinimum(1)
         self.spinbox_nangles.setFixedWidth(60)
 
         layout_acquisition = QtWidgets.QFormLayout()
@@ -469,7 +399,6 @@ class MainWindow(QtWidgets.QWidget):
 
         self.tab_camera.layout.addWidget(self.dev_cam.gui)
         self.tab_camera.layout.addWidget(self.groupbox_acq_params)
-        #self.tab_camera.layout.addWidget(self.checkbox_with_scanning)
         self.tab_camera.layout.addWidget(self.button_cam_acquire)
         self.tab_camera.layout.addWidget(self.groupbox_saving)
         self.tab_camera.setLayout(self.tab_camera.layout)
@@ -495,11 +424,6 @@ class MainWindow(QtWidgets.QWidget):
         self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
         self.button_stage_start_scan.clicked.connect(self.start_scan)
 
-        # Signals LS generation
-        self.button_ls_activate.clicked.connect(self.activate_lightsheet)
-        self.checkbox_ls_switch_auto.stateChanged.connect(self.set_ls_switching)
-
-        # coupling between camera and stage params
         self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
@@ -513,8 +437,9 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
+            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -522,8 +447,9 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
             self.dev_stage.move_abs((new_x, new_y))
+            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -552,93 +478,6 @@ class MainWindow(QtWidgets.QWidget):
         else:
             self.logger.error("Please activate stage first")
 
-    def set_ls_switching(self):
-        if self.checkbox_ls_switch_auto.isChecked():
-            self.combobox_ls_side.setEnabled(False)
-        else:
-            self.combobox_ls_side.setEnabled(True)
-
-    def activate_lightsheet(self):
-        """Create and start DAQmx stask for cam-triggered light-sheet"""
-        # connect to Arduino LS switcher
-        if self.checkbox_ls_switch_auto and (self.serial_ls is None):
-            try:
-                self.serial_ls = serial.Serial(self.combobox_ls_port.currentText(), 9600, timeout=2)
-                self.serial_ls.write("?ver\n".encode())
-                status = self.serial_ls.readline().decode('utf-8')
-                self.logger.info("Connected to Arduino switcher, version:" + status + "\n")
-            except serial.SerialException as e:
-                self.logger.error(f"Cannot connect to Arduino switcher {e}")
-
-        if not self.ls_active:
-            self.create_daqmx_task()
-            self.setup_lightsheet()
-            self.ls_active = True
-            self.button_ls_activate.setText("Inactivate light sheet")
-            self.button_ls_activate.setStyleSheet('QPushButton {color: blue;}')
-        else:
-            self.cleanup_daqmx_task()
-            self.ls_active = False
-            self.button_ls_activate.setText("Activate light sheet")
-            self.button_ls_activate.setStyleSheet('QPushButton {color: red;}')
-
-    def create_daqmx_task(self):
-        """Create the DAQmx task, but don't start it yet."""
-        self.daqmx_task_AO_ls = pd.Task()
-        min_voltage = - config.lightsheet_generation['laser_max_volts']
-        max_voltage = config.lightsheet_generation['laser_max_volts']
-        try:
-            self.daqmx_task_AO_ls.CreateAOVoltageChan("/Dev1/ao0:1", "galvo-laser",
-                                                      min_voltage, max_voltage, pd.DAQmx_Val_Volts, None)
-        except pd.DAQException as e:
-            self.logger.error(f"DAQmx error: {e.message}")
-
-    def cleanup_daqmx_task(self):
-        """Stop and clear the DAQmx task"""
-        self.daqmx_task_AO_ls.StopTask()
-        self.daqmx_task_AO_ls.ClearTask()
-
-    def setup_lightsheet(self):
-        """Set up the lightsheet for L/R arm illumination.
-        Stops, re-configures, and restarts the DAQmx task.
-        """
-        galvo_amplitudes = self.spinbox_ls_galvo_amp0.value(), self.spinbox_ls_galvo_amp1.value()
-        ls_duration_ms = self.spinbox_ls_duration.value()
-        ls_laser_volts = self.spinbox_ls_laser_volts.value()
-
-        # Arduino-controlled arm switcher
-        # automatic mode
-        if self.checkbox_ls_switch_auto.isChecked():
-            galvo_offsets = (0, 0)
-            i_arm = 0
-            if self.serial_ls is not None:
-                self.serial_ls.write(('n ' + str(self.spinbox_frames_per_stack.value()) + '\n').encode())
-                self.serial_ls.write('reset\n'.encode())
-                self.serial_ls.write(('v0 ' + str(self.spinbox_ls_galvo_offset0.value()) + '\n').encode())
-                self.serial_ls.write(('v1 ' + str(self.spinbox_ls_galvo_offset1.value()) + '\n').encode())
-        # fixed arm mode
-        else:
-            galvo_offsets = self.spinbox_ls_galvo_offset0.value(), self.spinbox_ls_galvo_offset1.value()
-            i_arm = self.combobox_ls_side.currentIndex()
-            if self.serial_ls is not None:
-                self.serial_ls.write('n 10000\n'.encode())
-                self.serial_ls.write('v0 0.0\n'.encode())
-                self.serial_ls.write('v1 0.0\n'.encode())
-                self.serial_ls.write('reset\n'.encode())
-
-        if self.daqmx_task_AO_ls is not None:
-            try:
-                ls.task_config(self.daqmx_task_AO_ls,
-                               wf_duration_ms=ls_duration_ms,
-                               galvo_offset_V=galvo_offsets[i_arm],
-                               galvo_amplitude_V=galvo_amplitudes[i_arm],
-                               laser_amplitude_V=ls_laser_volts,
-                               galvo_inertia_ms=0.2)
-            except pd.DAQException as e:
-                self.logger.error(f"DAQmx: {e}")
-        else:
-            self.logger.error("Light sheet is inactive\n")
-
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
         if self.dev_cam.exposure_ms != 0:
@@ -664,16 +503,14 @@ class MainWindow(QtWidgets.QWidget):
             n_triggers = int((self.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
                              / self.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
+            if self.ls_generator.initialized:
+                self.ls_generator.set_switching_period(n_triggers)
 
     def button_exit_clicked(self):
         if self.dev_cam.dev_handle is not None:
             self.dev_cam.dev_handle.shutdown()
         if self.dev_dm.dev_handle is not None:
-            self.dev_dm.disconnect()
-        if self.serial_ls is not None:
-            self.serial_ls.close()
-        if self.serial_stage is not None:
-            self.serial_stage.close()
+            self.dev_dm.close()
         self.cam_window.close()
         self.close()
 
@@ -721,8 +558,6 @@ class MainWindow(QtWidgets.QWidget):
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
             self.n_angles = int(self.spinbox_nangles.value())
             self.dev_cam.setup()
-            if self.ls_active:
-                self.setup_lightsheet()
             self.thread_frame_grabbing.setup(self.n_frames_to_grab)
             self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
                                            self.n_angles, self.dev_cam.frame_height_px)

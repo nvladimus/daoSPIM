@@ -145,7 +145,7 @@ class DmController(QtCore.QObject):
         else:
             self.logger.error(self.errors[return_status])
 
-    def disconnect(self):
+    def close(self):
         """Close deformable mirror session"""
         if self.dev_handle is None:
             self.logger.error(f'DM was not initialized, cannot close.')
@@ -213,19 +213,19 @@ class DmController(QtCore.QObject):
         self.gui.add_tabs("Control Tabs", tabs=['Control', 'Config'])
         tab_name = 'Control'
         groupbox_name = 'Connection'
-        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_button('Initialize', groupbox_name, lambda: self.initialize())
-        self.gui.add_button('Disconnect', groupbox_name, lambda: self.disconnect())
+        self.gui.add_button('Disconnect', groupbox_name, lambda: self.close())
         self.gui.add_string_field('Status', groupbox_name, value=self.errors[self._status.value], enabled=False)
 
         groupbox_name = 'Commands'
-        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_button('Apply flat', groupbox_name, lambda: self.apply_flat())
         self.gui.add_button('Load from .npy file', groupbox_name, lambda: self.read_npy_file())
 
         tab_name = 'Config'
         groupbox_name = 'Required files'
-        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_string_field('DLL path', groupbox_name, value=self.dll_path, enabled=False)
         self.gui.add_string_field('Flat file', groupbox_name, value=self.flat_file, enabled=False)
 
