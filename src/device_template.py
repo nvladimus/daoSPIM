@@ -1,6 +1,4 @@
-'''This is class for generating triggered AO waveforms.
-The AO task listens to the input TTL pulse (eg from camera) and generates
-short finite AO waveform to synchronously move galvo and turn on the laser.
+'''This is a template for device adapter.
 Copyright @nvladimus, 2020
 '''
 
@@ -12,9 +10,10 @@ from functools import partial
 logging.basicConfig()
 
 config = {
-    'param1': 1.0,
-    'param2': 'string',
-    'param3': True
+    'param1': 1.0,  # numerical parameter
+    'param2': 'string',  # string parameter
+    'param3': True,  # checkbox
+    'param4': 'option1'  # combobox parameter
 }
 
 
@@ -65,10 +64,13 @@ class Device(QtCore.QObject):
         self.gui.add_string_field('Parameter 2', tab_name, value=self.config['param2'], enabled=False)
         self.gui.add_checkbox('Parameter 3', tab_name,  value=self.config['param3'],
                               func=partial(self.update_config, 'param3'))
+        self.gui.add_combobox('Parameter 4', tab_name, items=['option1', 'option2'],
+                              value=self.config['param4'], func=partial(self.update_config, 'param4'))
         self.gui.add_button('Disconnect', tab_name, lambda: self.close())
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
+        self.gui.update_param('Parameter 1', self.config['param1'])
         self.logger.info('GUI updated')
 
 

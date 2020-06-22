@@ -152,26 +152,29 @@ class widget(QWidget):
             self.inputs[label].stateChanged.connect(lambda: func(self.inputs[label].isChecked()))
         self.layouts[parent].addRow(self.inputs[label])
 
-    def add_combobox(self, title, parent, items=['Item1'], enabled=True, func=None):
+    def add_combobox(self, label, parent, items=['Item1', 'Item2'], value='Item1', enabled=True, func=None):
         """Add a combobox to a parent container widget.
             Parameters
-            :param title: str
+            :param label: str
                 Name of the checkbox. Also, serves as system name of the widget. Beware of typos!
             :param parent: str
                 Name of the parent container.
-            :param items: list of strings
+            :param items: list of strings (available options)
+            :param value: currently selected option
             :param: enabled: Boolean
             :param: func: function reference
                 Ref to the function executed when an item is changed.
         """
-        assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-        assert title not in self.inputs, "Widget name already exists: " + title + "\n"
-        self.inputs[title] = QComboBox()
-        self.inputs[title].addItems(items)
-        self.inputs[title].setEnabled(enabled)
+        assert parent in self.layouts, f"Parent container name not found: {parent}"
+        assert label not in self.inputs, f"Widget name already exists: {label}"
+        assert value in items, f"Parameter value {value} does not match available options: {items}"
+        self.inputs[label] = QComboBox()
+        self.inputs[label].addItems(items)
+        self.inputs[label].setEnabled(enabled)
+        self.inputs[label].setCurrentText(value)
         if enabled and func is not None:
-            self.inputs[title].currentTextChanged.connect(lambda: func(self.inputs[title].currentText()))
-        self.layouts[parent].addRow(title, self.inputs[title])
+            self.inputs[label].currentTextChanged.connect(lambda: func(self.inputs[label].currentText()))
+        self.layouts[parent].addRow(label, self.inputs[label])
 
     def update_numeric_field(self, title, value):
         """"Deprecated"""
@@ -183,7 +186,7 @@ class widget(QWidget):
         assert title in self.inputs, "Text field not found: " + title + "\n"
         self.inputs[title].setText(text)
 
-    def update(self, title, value):
+    def update_param(self, title, value):
         assert title in self.inputs, f"{title} field not found"
         if isinstance(self.inputs[title], QDoubleSpinBox):
             self.inputs[title].setValue(value)
