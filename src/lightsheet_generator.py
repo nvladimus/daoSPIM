@@ -16,7 +16,7 @@ from functools import partial
 
 config = {
     'swipe_duration_ms': 1.0,
-    'L-galvo_offsets_volts': -0.32, 'R-galvo_offsets_volts': 0.45,
+    'L-galvo_offsets_volts': 0.45, 'R-galvo_offsets_volts': -0.32,
     'L-galvo_amp_volts': 0.60,      'R-galvo_amp_volts': 0.60,
     'laser_max_volts': 1.0,         'laser_pow_volts': 1.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
@@ -108,15 +108,18 @@ class LightsheetGenerator(QtCore.QObject):
     def setup_arduino(self):
         """"Send the galvo bias values and N(frames per stack) to the Arduino switcher that flips the galvo bias
         every N input pulses"""
-        # automatic mode
+        # automatic switching mode
         if self.config['switch_auto']:
             if self.serial_arduino:
-                n_TTL_inputs = self.config['switch_every_n_pulses']
+                n_TTL_inputs = int(self.config['switch_every_n_pulses'])
                 galvo_offsets = self.config['L-galvo_offsets_volts'], self.config['R-galvo_offsets_volts']
                 self.serial_arduino.write(f'n {n_TTL_inputs}\n'.encode())
                 self.serial_arduino.write('reset\n'.encode())
                 self.serial_arduino.write(f'v0 {galvo_offsets[0]}\n'.encode())
                 self.serial_arduino.write(f'v1 {galvo_offsets[1]}\n'.encode())
+                self.logger.debug(f'n {n_TTL_inputs}\n')
+                self.logger.debug(f'v0 {galvo_offsets[0]}\n')
+                self.logger.debug(f'v1 {galvo_offsets[1]}\n')
         # no switching, zero bias, fixed arm mode
         else:
             if self.serial_arduino:
@@ -139,6 +142,8 @@ class LightsheetGenerator(QtCore.QObject):
                     offset, amp = self.config['L-galvo_offsets_volts'], self.config['L-galvo_amp_volts']
                 else:
                     offset, amp = self.config['R-galvo_offsets_volts'], self.config['R-galvo_amp_volts']
+                if self.config['switch_auto']:
+                    amp = 0
                 self.task_config(wf_duration_ms=self.config['swipe_duration_ms'],
                                  galvo_offset_V=offset, galvo_amplitude_V=amp,
                                  laser_amplitude_V=self.config['laser_pow_volts'],
@@ -152,7 +157,7 @@ class LightsheetGenerator(QtCore.QObject):
         else:
             self.logger.error("DAQmx task is None")
 
-    def task_config(self, wf_duration_ms=50, galvo_offset_V=0, galvo_amplitude_V=1.0, laser_amplitude_V=0.0,
+    def task_config(self, wf_duration_ms, galvo_offset_V, galvo_amplitude_V, laser_amplitude_V,
                     galvo_inertia_ms=0.20):
         """Configuration and automatic restart of light-sheet generation DAQmx AO task.
         Channels:
