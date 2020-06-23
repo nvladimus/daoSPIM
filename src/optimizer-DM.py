@@ -92,6 +92,11 @@ class Device(QtCore.QObject):
         self.gui.add_button('Run', tab_name, func=self.run)
         self.gui.add_button('Save report', tab_name, self.save_report)
 
+        #add standalone window
+        self.gui.add_window('Optimization window')
+        self.gui.add_image_view('Image view', 'Optimization window')
+        self.gui.add_plot('Basic plot', 'Optimization window')
+
     @QtCore.pyqtSlot()
     def _update_gui(self):
         #self.gui.update_param('Parameter 1', self.config['param1'])

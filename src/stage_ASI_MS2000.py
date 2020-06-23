@@ -262,7 +262,7 @@ class MotionController(QtCore.QObject):
         # Position/speed controls
         tab_name = 'Motion'
         groupbox_name = 'Position'
-        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('X pos., mm',  groupbox_name, value=-1, enabled=False, decimals=5)
         self.gui.add_numeric_field('Y pos., mm', groupbox_name,  value=-1, enabled=False, decimals=5)
         self.gui.add_button('Update position', groupbox_name, func=self.get_position)
@@ -277,7 +277,7 @@ class MotionController(QtCore.QObject):
 
         tab_name = 'Motion'
         groupbox_name = 'Speed'
-        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('Speed X, mm/s', groupbox_name,
                                    value=self.speed_x, vmin=0, vmax=7.5, decimals=5,
                                    func=self.set_speed, **{'axis': 'X'})
@@ -287,7 +287,7 @@ class MotionController(QtCore.QObject):
 
         tab_name = 'Scanning'
         groupbox_name = 'Scan region'
-        self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
+        self.gui.add_groupbox(title=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('X start, mm', groupbox_name,
                                    value=self.scan_limits_xx_yy[0], vmin=-25, vmax=25, decimals=4,
                                    func=self.set_scan_region, **{'scan_boundary': 'x_start'})
