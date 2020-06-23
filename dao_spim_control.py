@@ -367,7 +367,7 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_frames_per_stack.setRange(1, 1000)
 
         self.spinbox_nangles.setValue(2)
-        self.spinbox_nangles.setMinimum(1)
+        self.spinbox_nangles.setEnabled(False)
         self.spinbox_nangles.setFixedWidth(60)
 
         layout_acquisition = QtWidgets.QFormLayout()
@@ -558,6 +558,7 @@ class MainWindow(QtWidgets.QWidget):
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
             self.n_angles = int(self.spinbox_nangles.value())
             self.dev_cam.setup()
+            self.ls_generator.setup()
             self.thread_frame_grabbing.setup(self.n_frames_to_grab)
             self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
                                            self.n_angles, self.dev_cam.frame_height_px)

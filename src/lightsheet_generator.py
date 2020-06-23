@@ -16,15 +16,18 @@ from functools import partial
 
 config = {
     'swipe_duration_ms': 1.0,
-    'L-galvo_offsets_volts': 0.45, 'R-galvo_offsets_volts': -0.32,
-    'L-galvo_amp_volts': 0.60,      'R-galvo_amp_volts': 0.60,
+    'L-galvo_offsets_volts': -0.32,
+    'R-galvo_offsets_volts': 0.45,
+    'L-galvo_amp_volts': 0.60,
+    'R-galvo_amp_volts': 0.60,
     'laser_max_volts': 1.0,
     'laser_pow_volts': 1.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
     'active_arm': 'left',
     'switch_auto': True,
     'switch_every_n_pulses': 100,
-    'DAQ_trig_in_ch': '/Dev1/PFI0', 'DAQ_AO_ch': '/Dev1/ao0:1',
+    'DAQ_trig_in_ch': '/Dev1/PFI0',
+    'DAQ_AO_ch': '/Dev1/ao0:1',
     'DAQ_sample_rate_Hz': 20000
 }
 
@@ -203,10 +206,13 @@ class LightsheetGenerator(QtCore.QObject):
             self.logger.debug(f'{key}: {value}')
         else:
             self.logger.error("Parameter name not found in config file")
-        self.setup_arduino()
-        self.setup_ls()
+        self.setup()
         if self.gui_on:
             self.sig_update_gui.emit()
+
+    def setup(self):
+        self.setup_arduino()
+        self.setup_ls()
 
     def _setup_gui(self):
         self.gui.add_tabs("Control Tabs", tabs=['LS settings', 'DAQ settings'])
