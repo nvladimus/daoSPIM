@@ -238,7 +238,8 @@ class LightsheetGenerator(QtCore.QObject):
         self.gui.add_numeric_field('Laser power (V)', tab_name, value=self.config['laser_pow_volts'],
                                    vmin=0, vmax=self.config['laser_max_volts'], decimals=2,
                                    func=partial(self.update_config, 'laser_pow_volts'))
-        self.gui.add_combobox('Active arm', tab_name, ['left', 'right'], func=partial(self.update_config, 'active_arm'))
+        self.gui.add_combobox('Active arm', tab_name, ['left', 'right'], value=self.config['active_arm'],
+                              func=partial(self.update_config, 'active_arm'))
         self.gui.add_numeric_field('Switch every N pulses', tab_name, value=self.config['switch_every_n_pulses'],
                                    vmin=0, vmax=10000, decimals=0,
                                    func=partial(self.update_config, 'switch_every_n_pulses'))
