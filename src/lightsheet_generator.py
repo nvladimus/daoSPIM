@@ -16,12 +16,12 @@ from functools import partial
 
 config = {
     'swipe_duration_ms': 1.0,
-    'L-galvo_offsets_volts': -0.32,
-    'R-galvo_offsets_volts': 0.45,
-    'L-galvo_amp_volts': 0.60,
-    'R-galvo_amp_volts': 0.60,
-    'laser_max_volts': 1.0,
-    'laser_pow_volts': 1.0,
+    'L-galvo_offsets_volts': -0.30,
+    'R-galvo_offsets_volts': 0.47,
+    'L-galvo_amp_volts': 0.50,
+    'R-galvo_amp_volts': 0.50,
+    'laser_max_volts': 5.0,
+    'laser_pow_volts': 5.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
     'active_arm': 'left',
     'switch_auto': True,
