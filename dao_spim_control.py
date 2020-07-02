@@ -175,6 +175,7 @@ class MainWindow(QtWidgets.QWidget):
         self.cam_window = None
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
+        self.frame_queue = deque([])
         # tabs
         self.tabs = QtWidgets.QTabWidget()
         self.tab_camera = QtWidgets.QWidget()
@@ -254,16 +255,18 @@ class MainWindow(QtWidgets.QWidget):
         self.worker_live_mode.sig_finished.connect(self.thread_live_mode.quit)
 
         self.thread_saving_files = QtCore.QThread()
-        self.worker_saving = SavingStacksWorker(self, self.dev_cam, self.logger)
+        self.worker_saving = SavingStacksWorker(self, self.dev_cam, self.logger, self.frame_queue)
         self.worker_saving.moveToThread(self.thread_saving_files)
         self.thread_saving_files.started.connect(self.worker_saving.run)
+        self.worker_saving.sig_finished.connect(self.thread_saving_files.quit)
 
         self.thread_frame_grabbing = QtCore.QThread()
         self.worker_grabbing = CameraFrameGrabbingWorker(self, self.dev_cam, self.logger)
         self.worker_grabbing.moveToThread(self.thread_frame_grabbing)
         self.thread_frame_grabbing.started.connect(self.worker_grabbing.run)
-        self.worker_grabbing.signal_save_data.connect(self.worker_saving.append_new_data)
-        self.worker_grabbing.sig_dummy_send.connect(self.worker_saving.dummy_receive)
+        self.worker_grabbing.sig_save_data.connect(self.append_new_data)
+        self.worker_grabbing.sig_finished.connect(self.thread_frame_grabbing.quit)
+ #       self.worker_grabbing.sig_dummy_send.connect(self.dummy_receive)
 
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self, self.logger)
@@ -575,7 +578,7 @@ class MainWindow(QtWidgets.QWidget):
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
         # If pressed DURING acquisition, abort acquisition and saving
-        elif self.dev_cam.status == 'Running' and self.file_save_running:
+        if self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
             self.abort_pressed = True
             self.button_acquire_reset()
@@ -621,6 +624,18 @@ class MainWindow(QtWidgets.QWidget):
 
     def set_file_format(self, new_format):
         self.file_format = new_format
+
+    # @QtCore.pyqtSlot()
+    # def dummy_receive(self):
+    #     self.logger.debug("dummy received")
+
+    @QtCore.pyqtSlot(object)
+    def append_new_data(self, obj_list):
+        if len(obj_list) > 0:
+            #self.logger.debug(f"received {len(obj_list)}")
+            self.frame_queue.extend(obj_list)
+        else:
+            pass
 
 
 class LiveImagingWorker(QtCore.QObject):
@@ -681,18 +696,18 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
     """
     Grab images from the camera and save them into list.
     """
-    signal_GUI = pyqtSignal()
-    signal_save_data = pyqtSignal(object)
-    signal_display_image = pyqtSignal(object)
-    sig_dummy_send = pyqtSignal()
+    sig_update_GUI = pyqtSignal()
+    sig_save_data = pyqtSignal(object)
+    sig_display_image = pyqtSignal(object)
+    sig_finished = pyqtSignal()
 
     def __init__(self, parent_window, camera, logger):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
         self.logger = logger
-        self.signal_GUI.connect(self.parent_window.button_acquire_reset)
-        self.signal_display_image.connect(self.parent_window.display_image)
+        self.sig_update_GUI.connect(self.parent_window.button_acquire_reset)
+        self.sig_display_image.connect(self.parent_window.display_image)
         self.gui_update_interval_s = 1.0
         self.n_frames_to_grab = None
         self.n_frames_grabbed = None
@@ -706,14 +721,15 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
         if not self.camera.config['simulation']:
             self.camera.dev_handle.startAcquisition()
         self.logger.info("Camera started")
-        start_time = time.time()
+        gui_update_time = time.time()
+        fps_count_time = gui_update_time
         while (self.camera.status == 'Running') and (self.n_frames_grabbed < self.n_frames_to_grab):
             if self.camera.config['simulation']:
                 self.n_frames_grabbed += 1
                 sim_image_16bit = np.random.randint(100, 200, size=2048 * 2048, dtype='uint16')
                 frame_data = [sim_image_16bit]
-                self.signal_save_data.emit(frame_data)
-                self.signal_display_image.emit(np.reshape(frame_data, self.camera.config['image_shape']))
+                self.sig_save_data.emit(frame_data)
+                self.sig_display_image.emit(np.reshape(frame_data, self.camera.config['image_shape']))
             else:
                 [frames, dims] = self.camera.dev_handle.getFrames()
                 self.n_frames_grabbed += len(frames)
@@ -721,36 +737,36 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
                     frame_data = []
                     for frame in frames:
                         frame_data.append(frame.getData())
-                    self.signal_save_data.emit(frame_data)
-                    self.sig_dummy_send.emit()
-                    self.logger.debug(f"dummy emitted")
+                    self.sig_save_data.emit(frame_data)
                     time_stamp = time.time()
-                    if (time_stamp - start_time) >= self.gui_update_interval_s:
-                        start_time = time.time()
-                        self.signal_display_image.emit(np.reshape(frame_data[0], dims))
+                    if (time_stamp - gui_update_time) >= self.gui_update_interval_s:
+                        gui_update_time = time.time()
+                        self.sig_display_image.emit(np.reshape(frame_data[0], dims))
         # Clean up after the main cycle is done
         if not self.camera.config['simulation']:
             self.camera.dev_handle.stopAcquisition()
-            self.logger.debug(f"camera finished")
+            self.logger.debug(f"camera finished, mean fps {self.n_frames_to_grab/(time.time() - fps_count_time):2.1f}")
         self.camera.status = 'Idle'
-        self.signal_GUI.emit()
+        self.sig_update_GUI.emit()
+        self.sig_finished.emit()
 
 
 class SavingStacksWorker(QtCore.QObject):
     """
     Save stacks to files
     """
-    signal_GUI = pyqtSignal()
+    sig_update_GUI = pyqtSignal()
+    sig_finished = pyqtSignal()
 
-    def __init__(self, parent_window, camera, logger):
+    def __init__(self, parent_window, camera, logger, frame_queue):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
         self.logger = logger
+        self.frame_queue = frame_queue
         self.frames_to_save = self.frames_per_stack = self.n_angles = self.frames_saved = None
         self.stack_counter = self.angle_counter = self.bdv_writer = self.stack = self.cam_image_height = None
-        self.frameQueue = deque([])
-        self.signal_GUI.connect(self.parent_window.button_acquire_reset)
+        self.sig_update_GUI.connect(self.parent_window.button_acquire_reset)
 
     def setup(self, frames_to_save, frames_per_stack, n_angles, image_height):
         self.frames_to_save = frames_to_save
@@ -761,18 +777,6 @@ class SavingStacksWorker(QtCore.QObject):
         self.angle_counter = 0
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
-
-    @QtCore.pyqtSlot(object)
-    def append_new_data(self, obj_list):
-        if len(obj_list) > 0:
-            self.logger.debug(f"received {len(obj_list)}")
-            self.frameQueue.extend(obj_list)
-        else:
-            pass
-
-    @QtCore.pyqtSlot()
-    def dummy_receive(self):
-        self.logger.debug("dummy received")
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -785,15 +789,12 @@ class SavingStacksWorker(QtCore.QObject):
             pass
 
         while (self.frames_saved < self.frames_to_save) and not self.parent_window.abort_pressed:
-            if len(self.frameQueue) >= self.frames_per_stack:
+            if len(self.frame_queue) >= self.frames_per_stack:
                 for iframe in range(self.frames_per_stack):
-                    plane = self.frameQueue.popleft()
+                    plane = self.frame_queue.popleft()
                     self.stack[iframe, :, :] = np.reshape(plane, (self.cam_image_height, 2048))
                     self.frames_saved += 1
-                # print("stack#" + str(self.stack_counter))
-                # print("frames_saved:" + str(self.frames_saved))
-                # print("queue length:" + str(len(self.frameQueue)))
-                self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
+                #self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
                 if self.parent_window.file_format == "HDF5":
                     z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
@@ -829,10 +830,11 @@ class SavingStacksWorker(QtCore.QObject):
             self.bdv_writer.close()
         elif self.parent_window.file_format == "TIFF":
             pass
-        self.frameQueue.clear()
+        self.frame_queue.clear()
         self.parent_window.file_save_running = False
         self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks with {self.n_angles} angles")
-        self.signal_GUI.emit()
+        self.sig_update_GUI.emit()
+        self.sig_finished.emit()
 
 
 if __name__ == '__main__':
