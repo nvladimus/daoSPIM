@@ -254,15 +254,16 @@ class MainWindow(QtWidgets.QWidget):
         self.worker_live_mode.sig_finished.connect(self.thread_live_mode.quit)
 
         self.thread_saving_files = QtCore.QThread()
-        self.worker_saving_files = SavingStacksWorker(self, self.dev_cam, self.logger)
-        self.worker_saving_files.moveToThread(self.thread_saving_files)
-        self.thread_saving_files.started.connect(self.worker_saving_files.run)
+        self.worker_saving = SavingStacksWorker(self, self.dev_cam, self.logger)
+        self.worker_saving.moveToThread(self.thread_saving_files)
+        self.thread_saving_files.started.connect(self.worker_saving.run)
 
         self.thread_frame_grabbing = QtCore.QThread()
-        self.worker_frame_grabbing = CameraFrameGrabbingWorker(self, self.dev_cam,
-                                                               self.worker_saving_files, self.logger)
-        self.worker_frame_grabbing.moveToThread(self.thread_frame_grabbing)
-        self.thread_frame_grabbing.started.connect(self.worker_frame_grabbing.run)
+        self.worker_grabbing = CameraFrameGrabbingWorker(self, self.dev_cam, self.logger)
+        self.worker_grabbing.moveToThread(self.thread_frame_grabbing)
+        self.thread_frame_grabbing.started.connect(self.worker_grabbing.run)
+        self.worker_grabbing.signal_save_data.connect(self.worker_saving.append_new_data)
+        self.worker_grabbing.sig_dummy_send.connect(self.worker_saving.dummy_receive)
 
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self, self.logger)
@@ -566,15 +567,15 @@ class MainWindow(QtWidgets.QWidget):
             self.n_angles = int(self.spinbox_nangles.value())
             self.dev_cam.setup()
             self.ls_generator.setup()
-            self.worker_frame_grabbing.setup(self.n_frames_to_grab)
-            self.worker_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
-                                           self.n_angles, self.dev_cam.frame_height_px)
+            self.worker_grabbing.setup(self.n_frames_to_grab)
+            self.worker_saving.setup(self.n_frames_to_grab, self.n_frames_per_stack,
+                                     self.n_angles, self.dev_cam.frame_height_px)
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
             if not self.dev_cam.config['simulation']:
                 self.dev_cam.dev_handle.setACQMode("run_till_abort")
         # If pressed DURING acquisition, abort acquisition and saving
-        if self.dev_cam.status == 'Running' and self.file_save_running:
+        elif self.dev_cam.status == 'Running' and self.file_save_running:
             self.dev_cam.status = 'Idle'
             self.abort_pressed = True
             self.button_acquire_reset()
@@ -683,19 +684,16 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
     signal_GUI = pyqtSignal()
     signal_save_data = pyqtSignal(object)
     signal_display_image = pyqtSignal(object)
+    sig_dummy_send = pyqtSignal()
 
-    def __init__(self, parent_window, camera, worker_saving, logger):
+    def __init__(self, parent_window, camera, logger):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
         self.logger = logger
-        self.worker_saving = worker_saving
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
         self.signal_display_image.connect(self.parent_window.display_image)
         self.gui_update_interval_s = 1.0
-
-        if self.worker_saving is not None:
-            self.signal_save_data.connect(self.worker_saving.append_new_data)
         self.n_frames_to_grab = None
         self.n_frames_grabbed = None
 
@@ -724,6 +722,8 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
                     for frame in frames:
                         frame_data.append(frame.getData())
                     self.signal_save_data.emit(frame_data)
+                    self.sig_dummy_send.emit()
+                    self.logger.debug(f"dummy emitted")
                     time_stamp = time.time()
                     if (time_stamp - start_time) >= self.gui_update_interval_s:
                         start_time = time.time()
@@ -731,6 +731,7 @@ class CameraFrameGrabbingWorker(QtCore.QObject):
         # Clean up after the main cycle is done
         if not self.camera.config['simulation']:
             self.camera.dev_handle.stopAcquisition()
+            self.logger.debug(f"camera finished")
         self.camera.status = 'Idle'
         self.signal_GUI.emit()
 
@@ -761,12 +762,17 @@ class SavingStacksWorker(QtCore.QObject):
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(object)
     def append_new_data(self, obj_list):
         if len(obj_list) > 0:
+            self.logger.debug(f"received {len(obj_list)}")
             self.frameQueue.extend(obj_list)
         else:
             pass
+
+    @QtCore.pyqtSlot()
+    def dummy_receive(self):
+        self.logger.debug("dummy received")
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -787,6 +793,7 @@ class SavingStacksWorker(QtCore.QObject):
                 # print("stack#" + str(self.stack_counter))
                 # print("frames_saved:" + str(self.frames_saved))
                 # print("queue length:" + str(len(self.frameQueue)))
+                self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
                 if self.parent_window.file_format == "HDF5":
                     z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
@@ -813,7 +820,7 @@ class SavingStacksWorker(QtCore.QObject):
                 self.stack_counter += 1
                 self.angle_counter = (self.angle_counter + 1) % self.n_angles
             else:
-                self.msleep(10)
+                time.sleep(0.02)
         # clean-up:
         if self.parent_window.file_format == "HDF5":
             if not self.parent_window.abort_pressed:
