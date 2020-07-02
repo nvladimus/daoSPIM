@@ -256,9 +256,9 @@ class LightsheetGenerator(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
-        self.gui.update('Active arm', self.config['active_arm'])
-        self.gui.update('Switch every N pulses', self.config['switch_every_n_pulses'])
-        self.gui.update('Status', self.status)
+        self.gui.update_param('Active arm', self.config['active_arm'])
+        self.gui.update_param('Switch every N pulses', self.config['switch_every_n_pulses'])
+        self.gui.update_param('Status', self.status)
 
 
 # run if the module is launched as a standalone program

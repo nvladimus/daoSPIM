@@ -247,16 +247,23 @@ class MainWindow(QtWidgets.QWidget):
         self.dir_path = self.file_path = None
         self.file_format = "HDF5"
         # Set up threads and signals
-        # Live mode image display worker+thread:
         self.thread_live_mode = QtCore.QThread()
         self.worker_live_mode = LiveImagingWorker(self, self.dev_cam)
         self.worker_live_mode.moveToThread(self.thread_live_mode)
         self.thread_live_mode.started.connect(self.worker_live_mode.update)
         self.worker_live_mode.sig_finished.connect(self.thread_live_mode.quit)
 
-        self.thread_saving_files = SavingStacksThread(self, self.dev_cam, self.logger)
-        self.thread_frame_grabbing = CameraFrameGrabbingThread(self, self.dev_cam, self.thread_saving_files, self.logger)
-        # stage scanning worker+thread:
+        self.thread_saving_files = QtCore.QThread()
+        self.worker_saving_files = SavingStacksWorker(self, self.dev_cam, self.logger)
+        self.worker_saving_files.moveToThread(self.thread_saving_files)
+        self.thread_saving_files.started.connect(self.worker_saving_files.run)
+
+        self.thread_frame_grabbing = QtCore.QThread()
+        self.worker_frame_grabbing = CameraFrameGrabbingWorker(self, self.dev_cam,
+                                                               self.worker_saving_files, self.logger)
+        self.worker_frame_grabbing.moveToThread(self.thread_frame_grabbing)
+        self.thread_frame_grabbing.started.connect(self.worker_frame_grabbing.run)
+
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self, self.logger)
         self.worker_stage_scanning.moveToThread(self.thread_stage_scanning)
@@ -424,7 +431,7 @@ class MainWindow(QtWidgets.QWidget):
         self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
         self.button_stage_start_scan.clicked.connect(self.start_scan)
 
-        self.dev_cam.gui.inputs['Exposure, ms'].editingFinished.connect(self.update_calculator)
+        self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
@@ -559,8 +566,8 @@ class MainWindow(QtWidgets.QWidget):
             self.n_angles = int(self.spinbox_nangles.value())
             self.dev_cam.setup()
             self.ls_generator.setup()
-            self.thread_frame_grabbing.setup(self.n_frames_to_grab)
-            self.thread_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
+            self.worker_frame_grabbing.setup(self.n_frames_to_grab)
+            self.worker_saving_files.setup(self.n_frames_to_grab, self.n_frames_per_stack,
                                            self.n_angles, self.dev_cam.frame_height_px)
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
@@ -669,7 +676,7 @@ class StageScanningWorker(QtCore.QObject):
         self.finished.emit()
 
 
-class CameraFrameGrabbingThread(QThread):
+class CameraFrameGrabbingWorker(QtCore.QObject):
     """
     Grab images from the camera and save them into list.
     """
@@ -677,18 +684,18 @@ class CameraFrameGrabbingThread(QThread):
     signal_save_data = pyqtSignal(object)
     signal_display_image = pyqtSignal(object)
 
-    def __init__(self, parent_window, camera, saving_thread, logger):
+    def __init__(self, parent_window, camera, worker_saving, logger):
         super().__init__()
         self.parent_window = parent_window
         self.camera = camera
         self.logger = logger
-        self.saving_thread = saving_thread
+        self.worker_saving = worker_saving
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
         self.signal_display_image.connect(self.parent_window.display_image)
         self.gui_update_interval_s = 1.0
 
-        if self.saving_thread is not None:
-            self.signal_save_data.connect(self.saving_thread.append_new_data)
+        if self.worker_saving is not None:
+            self.signal_save_data.connect(self.worker_saving.append_new_data)
         self.n_frames_to_grab = None
         self.n_frames_grabbed = None
 
@@ -696,9 +703,7 @@ class CameraFrameGrabbingThread(QThread):
         self.n_frames_to_grab = n_frames_to_grab
         self.n_frames_grabbed = 0
 
-    def __del__(self):
-        self.wait()
-
+    @QtCore.pyqtSlot()
     def run(self):
         if not self.camera.config['simulation']:
             self.camera.dev_handle.startAcquisition()
@@ -730,7 +735,7 @@ class CameraFrameGrabbingThread(QThread):
         self.signal_GUI.emit()
 
 
-class SavingStacksThread(QThread):
+class SavingStacksWorker(QtCore.QObject):
     """
     Save stacks to files
     """
@@ -746,9 +751,6 @@ class SavingStacksThread(QThread):
         self.frameQueue = deque([])
         self.signal_GUI.connect(self.parent_window.button_acquire_reset)
 
-    def __del__(self):
-        self.wait()
-
     def setup(self, frames_to_save, frames_per_stack, n_angles, image_height):
         self.frames_to_save = frames_to_save
         self.frames_per_stack = frames_per_stack
@@ -759,12 +761,14 @@ class SavingStacksThread(QThread):
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
 
+    @QtCore.pyqtSlot()
     def append_new_data(self, obj_list):
         if len(obj_list) > 0:
             self.frameQueue.extend(obj_list)
         else:
             pass
 
+    @QtCore.pyqtSlot()
     def run(self):
         self.parent_window.file_save_running = True
         if self.parent_window.file_format == "HDF5":

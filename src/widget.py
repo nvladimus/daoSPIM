@@ -18,7 +18,7 @@ class widget(QWidget):
         super().__init__()
         self.setWindowTitle(title)
         self.containers = {}
-        self.inputs = {}
+        self.params = {}
         self.layouts = {}
         self.layout_window = QVBoxLayout(self)
 
@@ -39,7 +39,7 @@ class widget(QWidget):
             self.layout_window.addWidget(new_widget)
         else:
             assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-            assert label not in self.inputs, "Widget name already exists: " + label + "\n"
+            assert label not in self.params, "Widget name already exists: " + label + "\n"
             self.layouts[parent].addWidget(new_widget)
 
     def add_tabs(self, label, tabs=['Tab1', 'Tab2']):
@@ -80,17 +80,17 @@ class widget(QWidget):
                 Function's additional key-value parameters (dictionary), besides the field value.
         """
         assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-        assert label not in self.inputs, "Widget name already exists: " + label + "\n"
-        self.inputs[label] = QDoubleSpinBox()
-        self.inputs[label].setLocale(QLocale(QLocale.English, QLocale.UnitedStates)) # comma -> period: 0,1 -> 0.1
-        self.inputs[label].setDecimals(decimals)
-        self.inputs[label].setSingleStep(1. / 10 ** decimals)
-        self.inputs[label].setRange(vmin, vmax)
-        self.inputs[label].setValue(value)
-        self.inputs[label].setEnabled(enabled)
-        self.layouts[parent].addRow(label, self.inputs[label])
+        assert label not in self.params, "Widget name already exists: " + label + "\n"
+        self.params[label] = QDoubleSpinBox()
+        self.params[label].setLocale(QLocale(QLocale.English, QLocale.UnitedStates)) # comma -> period: 0,1 -> 0.1
+        self.params[label].setDecimals(decimals)
+        self.params[label].setSingleStep(1. / 10 ** decimals)
+        self.params[label].setRange(vmin, vmax)
+        self.params[label].setValue(value)
+        self.params[label].setEnabled(enabled)
+        self.layouts[parent].addRow(label, self.params[label])
         if enabled and func is not None:
-            self.inputs[label].editingFinished.connect(lambda: func(self.inputs[label].value(), **func_args))
+            self.params[label].editingFinished.connect(lambda: func(self.params[label].value(), **func_args))
             # editingFinished() preferred over valueChanged() because the latter is too jumpy, doesn't let finish input.
 
     def add_string_field(self, label, parent, value='', enabled=True, func=None):
@@ -108,12 +108,12 @@ class widget(QWidget):
         :return: None
         """
         assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-        assert label not in self.inputs, "Widget name already exists: " + label + "\n"
-        self.inputs[label] = QLineEdit(value)
-        self.inputs[label].setEnabled(enabled)
-        self.layouts[parent].addRow(label, self.inputs[label])
+        assert label not in self.params, "Widget name already exists: " + label + "\n"
+        self.params[label] = QLineEdit(value)
+        self.params[label].setEnabled(enabled)
+        self.layouts[parent].addRow(label, self.params[label])
         if enabled and func is not None:
-            self.inputs[label].editingFinished.connect(lambda: func(self.inputs[label].text()))
+            self.params[label].editingFinished.connect(lambda: func(self.params[label].text()))
 
     def add_button(self, label, parent, func):
         """Add a button to a parent container widget (groupbox or tab).
@@ -126,10 +126,10 @@ class widget(QWidget):
                 Name of the function that is executed on button click.
         """
         assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-        assert label not in self.inputs, "Button name already exists: " + label + "\n"
-        self.inputs[label] = QPushButton(label)
-        self.inputs[label].clicked.connect(func)
-        self.layouts[parent].addRow(self.inputs[label])
+        assert label not in self.params, "Button name already exists: " + label + "\n"
+        self.params[label] = QPushButton(label)
+        self.params[label].clicked.connect(func)
+        self.layouts[parent].addRow(self.params[label])
 
     def add_checkbox(self, label, parent, value=False, enabled=True, func=None):
         """Add a checkbox to a parent container widget (groupbox or tab).
@@ -144,13 +144,13 @@ class widget(QWidget):
                 Name of the function that is executed on button click.
         """
         assert parent in self.layouts, "Parent container name not found: " + parent + "\n"
-        assert label not in self.inputs, "Button name already exists: " + label + "\n"
-        self.inputs[label] = QCheckBox(label)
-        self.inputs[label].setChecked(value)
-        self.inputs[label].setEnabled(enabled)
+        assert label not in self.params, "Button name already exists: " + label + "\n"
+        self.params[label] = QCheckBox(label)
+        self.params[label].setChecked(value)
+        self.params[label].setEnabled(enabled)
         if enabled and func is not None:
-            self.inputs[label].stateChanged.connect(lambda: func(self.inputs[label].isChecked()))
-        self.layouts[parent].addRow(self.inputs[label])
+            self.params[label].stateChanged.connect(lambda: func(self.params[label].isChecked()))
+        self.layouts[parent].addRow(self.params[label])
 
     def add_combobox(self, title, parent, items=['Item1', 'Item2'], value='Item1', enabled=True, func=None):
         """Add a combobox to a parent container widget.
@@ -166,30 +166,29 @@ class widget(QWidget):
                 Ref to the function executed when an item is changed.
         """
         assert parent in self.layouts, f"Parent title not found: {parent}"
-        assert title not in self.inputs, f"Widget title already exists: {title}"
+        assert title not in self.params, f"Widget title already exists: {title}"
         assert value in items, f"Parameter value {value} does not match available options: {items}"
-        self.inputs[title] = QComboBox()
-        self.inputs[title].addItems(items)
-        self.inputs[title].setEnabled(enabled)
-        self.inputs[title].setCurrentText(value)
+        self.params[title] = QComboBox()
+        self.params[title].addItems(items)
+        self.params[title].setEnabled(enabled)
+        self.params[title].setCurrentText(value)
         if enabled and func is not None:
-            self.inputs[title].currentTextChanged.connect(lambda: func(self.inputs[title].currentText()))
-        self.layouts[parent].addRow(title, self.inputs[title])
-
+            self.params[title].currentTextChanged.connect(lambda: func(self.params[title].currentText()))
+        self.layouts[parent].addRow(title, self.params[title])
 
     def update_numeric_field(self, title, value):
         """"Deprecated"""
-        assert title in self.inputs, "Numeric field not found: " + title + "\n"
-        self.inputs[title].setValue(value)
+        assert title in self.params, "Numeric field not found: " + title + "\n"
+        self.params[title].setValue(value)
 
     def update_string_field(self, title, text):
         """"Deprecated"""
-        assert title in self.inputs, "Text field not found: " + title + "\n"
-        self.inputs[title].setText(text)
+        assert title in self.params, "Text field not found: " + title + "\n"
+        self.params[title].setText(text)
 
-    def update(self, title, value):
-        assert title in self.inputs, f"{title} field not found"
-        if isinstance(self.inputs[title], QDoubleSpinBox):
-            self.inputs[title].setValue(value)
-        elif isinstance(self.inputs[title], QLineEdit):
-            self.inputs[title].setText(value)
+    def update_param(self, title, value):
+        assert title in self.params, f"{title} field not found"
+        if isinstance(self.params[title], QDoubleSpinBox):
+            self.params[title].setValue(value)
+        elif isinstance(self.params[title], QLineEdit):
+            self.params[title].setText(value)
