@@ -703,6 +703,7 @@ class CameraFrameGrabbingThread(QThread):
             self.camera.dev_handle.startAcquisition()
         self.logger.info("Camera started")
         start_time = time.time()
+        fps_count_time = start_time
         while (self.camera.status == 'Running') and (self.n_frames_grabbed < self.n_frames_to_grab):
             if self.camera.config['simulation']:
                 self.n_frames_grabbed += 1
@@ -725,6 +726,7 @@ class CameraFrameGrabbingThread(QThread):
         # Clean up after the main cycle is done
         if not self.camera.config['simulation']:
             self.camera.dev_handle.stopAcquisition()
+            self.logger.debug(f"camera finished, mean fps {self.n_frames_to_grab/(time.time() - fps_count_time):2.1f}")
         self.camera.status = 'Idle'
         self.signal_GUI.emit()
 
