@@ -18,8 +18,8 @@ config = {
     'swipe_duration_ms': 1.0,
     'L-galvo_offsets_volts': -0.30,
     'R-galvo_offsets_volts': 0.47,
-    'L-galvo_amp_volts': 0.50,
-    'R-galvo_amp_volts': 0.50,
+    'L-galvo_amp_volts': 0.70,
+    'R-galvo_amp_volts': 0.70,
     'laser_max_volts': 5.0,
     'laser_pow_volts': 5.0,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
