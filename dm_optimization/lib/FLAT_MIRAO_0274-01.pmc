@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PhaseModulCommand xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns="http://imagine-optic.com/ns.xsd" xsi:type="PhaseModulCommand">
+	<phase-modul-name>mirao 52-e</phase-modul-name>
+	<phase-modul-serial-number>0100</phase-modul-serial-number>
+	<number-of-commands>52</number-of-commands>
+	<comment></comment>
+	<command-type>Manual</command-type>
+	<time-stamp>2016-02-02 17:26:33.812500</time-stamp>
+	<prefs>
+		<min-commande>-1</min-commande>
+		<max-commande>1</max-commande>
+		<sleep-after-apply-ms>1</sleep-after-apply-ms>
+		<tab-valid-actuator value="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"></tab-valid-actuator>
+		<tab-offset-commands value="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></tab-offset-commands>
+	</prefs>
+	<command value="0.014647 0.00429169 -0.0100566 0.00450169 -0.000370209 -0.0114392 -0.00389856 -0.0202279 -0.0189575 -0.0129696 0.00810453 -0.0233196 0.00011508 0.00107749 -0.00913688 -0.00804597 -0.000675831 0.0058098 -0.00123001 -0.013666 -0.00825102 0.00237227 -0.00089377 -0.00937762 -0.0158556 0.00805219 0.00653225 -0.00132697 -0.00779912 -0.01104 -0.0081899 -0.00610484 -0.0183881 0.00144267 0.0177037 -0.020475 -0.0104079 -0.00600317 -0.0022333 -0.00285562 -0.00870589 -0.000529425 -0.00365841 -0.0117066 -0.00894723 -0.00154389 -0.00844249 0.00789205 -0.0213046 0.000955931 -0.00711959 -0.0146423"></command>
+</PhaseModulCommand>
