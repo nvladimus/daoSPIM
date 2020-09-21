@@ -1,0 +1,23 @@
+Reference, Value, Footprint, Datasheet, Category, DK_Datasheet_Link, DK_Detail_Page, Description, Digi-Key_PN, Family, MPN, Manufacturer, Status, Height, Manufacturer_Name, Manufacturer_Part_Number, Mouser Part Number, Mouser Price/Stock
+U1,Teensy2.0_(Arduino),teensy_footprints:Teensy2.0,,,,,,,,,,,,,,,
+R1,10k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+J1,Trigger IN,my_components:BNC_female_jack_TE_1-1634505-0, ~,,,,,,,,,,,,,,
+J2,Galvo signal IN,my_components:BNC_female_jack_TE_1-1634505-0, ~,,,,,,,,,,,,,,
+J3,DC bias out,my_components:BNC_female_jack_TE_1-1634505-0, ~,,,,,,,,,,,,,,
+U2,MCP4725_bkt,my_components:MCP4725,,,,,,,,,,,,,,,
+U3,L7805CV,digikey-footprints:TO-220-3,http://www.st.com/content/ccc/resource/technical/document/datasheet/41/4f/b3/b0/12/d4/47/88/CD00000444.pdf/files/CD00000444.pdf/jcr:content/translations/en.CD00000444.pdf,Integrated Circuits (ICs),http://www.st.com/content/ccc/resource/technical/document/datasheet/41/4f/b3/b0/12/d4/47/88/CD00000444.pdf/files/CD00000444.pdf/jcr:content/translations/en.CD00000444.pdf,/product-detail/en/stmicroelectronics/L7805CV/497-1443-5-ND/585964,IC REG LINEAR 5V 1.5A TO220AB,497-1443-5-ND,PMIC - Voltage Regulators - Linear,L7805CV,STMicroelectronics,Active,,,,,
+C1,0.33uF,Capacitor_THT:CP_Radial_Tantal_D4.5mm_P2.50mm,~,,,,,,,,,,,,,,
+U4,ICL7660,Package_DIP:DIP-8_W7.62mm,http://datasheets.maximintegrated.com/en/ds/ICL7660-MAX1044.pdf,,,,,,,,,,,,,,
+C2,10uF,Capacitor_THT:CP_Radial_D4.0mm_P1.50mm,~,,,,,,,,,,,,,,
+C3,10uF,Capacitor_THT:CP_Radial_D4.0mm_P1.50mm,~,,,,,,,,,,,,,,
+IC1,UA741CP,digikey-footprints:DIP-8_W7.62mm,http://www.ti.com/lit/ds/symlink/ua741.pdf,,,,"Single op-amp,UA741CP 1MHz DIP8, tube Texas Instruments UA741CP Op Amp, 1MHz, 8-Pin PDIP",,,,,,5.08,Texas Instruments,UA741CP,595-UA741CP,https://www.mouser.com/Search/Refine.aspx?Keyword=595-UA741CP
+R3,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+R4,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+IC2,UA741CP,digikey-footprints:DIP-8_W7.62mm,http://www.ti.com/lit/ds/symlink/ua741.pdf,,,,"Single op-amp,UA741CP 1MHz DIP8, tube Texas Instruments UA741CP Op Amp, 1MHz, 8-Pin PDIP",,,,,,5.08,Texas Instruments,UA741CP,595-UA741CP,https://www.mouser.com/Search/Refine.aspx?Keyword=595-UA741CP
+J4,(galvo + DC bias) OUT,my_components:BNC_female_jack_TE_1-1634505-0, ~,,,,,,,,,,,,,,
+R6,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+R5,1k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+R2,10k,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,~,,,,,,,,,,,,,,
+RV1,10k,digikey-footprints:PinHeader_1x3_P2.5mm_Drill1.1mm,~,,,,,,,,,,,,,,
+RV2,10k,digikey-footprints:PinHeader_1x3_P2.5mm_Drill1.1mm,~,,,,,,,,,,,,,,
+J5,PJ-202A,digikey-footprints:Barrel_Jack_5.5mmODx2.1mmID_PJ-202A,https://www.cui.com/product/resource/digikeypdf/pj-202a.pdf,"Connectors, Interconnects",https://www.cui.com/product/resource/digikeypdf/pj-202a.pdf,/product-detail/en/cui-inc/PJ-202A/CP-202A-ND/252007,CONN PWR JACK 2X5.5MM KINKED PIN,CP-202A-ND,Barrel - Power Connectors,PJ-202A,CUI Inc.,Active,,,,,
