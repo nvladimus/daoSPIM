@@ -1,19 +1,19 @@
 # Arm switcher
-This is a small Teensy-powered PCB that counts camera pulses and adds a custom voltage bias to the input galvo system after every *N* pulses.
+This is a small Teensy-powered PCB that counts camera pulses and adds a custom voltage bias to the input galvo system after every *N* pulses. This is required for fast switching of light-sheet excitation laser between left and right arms, to be in synch with camera acquisition. The software-based solution (eg in Python) would be too slow, hence this board.
 
 ![PCB](./images/arm_switcher.svg)
 
 ## Inputs
-* camera pulses (digital)
-* galvo voltage *g* (analog)
+* camera exposure pulses *Trig_in* (digital)
+* galvo voltage *g_in* (analog) that makes a swipe motion for light sheet generation.
 
-## Outputs
-* analog signal *g + A* (during first *N* camera pulses), *g + B* (during next *N* pulses), then *g + A* again, etc. This goes directly to galvo controller.
-* analog bias voltage alone *A* or *B* (for debugging).
+## Output
+* analog signal *g_in + V0* (during first *N* camera pulses), *g_in + V1* (during next *N* pulses), then *g_in + V0* again, etc. This goes to galvo controller.
+* (for debugging) analog bias voltage alone: *V0* or *V1* .
 
 ## User-defined parameters:
    - camera pulse count *N* (>=1)
-   - bias voltage *A, B* (-5 to +5 V)
+   - bias voltage *V0, V1* (-5 to +5 V)
 
 
 ## Setting parameters
@@ -23,8 +23,8 @@ Parameters are set via serial communication (baud rate 9600):
 n 10 #set switching period to 10 trigger pulses
 ?n #read the switching period
 reset #reset the counter
-v0 -0.45 #set voltage0 bias
-v1 0.32 #set voltage1 bias
+v0 -0.45 #set voltage0 bias, [Volt]
+v1 0.32 #set voltage1 bias, [Volt]
 ```
 
 ## Bill of materials
