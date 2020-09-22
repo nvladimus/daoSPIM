@@ -1,5 +1,5 @@
 # Arm switcher
-This is a small Teensy-powered PCB that counts camera pulses and adds a custom voltage bias to the input galvo system after every *N* pulses. This is required for fast switching of light-sheet excitation laser between left and right arms, to be in synch with camera acquisition. The software-based solution (eg in Python) would be too slow, hence this board.
+This is a small Teensy-powered PCB that counts camera pulses and adds a user-defined voltage bias to the input signal after every *N* pulses. This is required for fast switching of light-sheet excitation laser (galvo) between left and right arms, to run in synch with camera. The software-based solution (eg in Python) would be too slow, hence this board.
 
 ![PCB](./images/arm_switcher.svg)
 
