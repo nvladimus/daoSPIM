@@ -1,7 +1,7 @@
 # Arm switcher
 This is a small Teensy-powered PCB that counts camera pulses and adds a custom voltage bias to the input galvo system after every *N* pulses.
 
-![PCB](./images/arm_switcher-PCB.JPG)
+![PCB](./images/arm_switcher.svg)
 
 ## Inputs
 * camera pulses (digital)
