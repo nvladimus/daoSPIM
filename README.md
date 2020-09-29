@@ -18,5 +18,4 @@ The microscope is controlled via GUI program (Python Qt5) which links together:
 - deformable mirror (ImagineOptics Mirao52e)
 - electro-tunable lens (Optotune EL-16-40-TC-VIS-5D-C)
 
-## DM optimization
-DM is optimized in a separate Jupyter notebook. The light sheet is generated using the GUI program, and DM is optimized iteratively on a single bead image.
+DM is optimized in a separate Jupyter [notebook](./dm_optimization/) using a fluorescent bead image. The resulting DM command can be loaded in the GUI  [program](./microscope_control) and used thereafter.
