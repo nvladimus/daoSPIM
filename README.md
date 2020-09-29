@@ -11,7 +11,7 @@ The Wiki pages describe microscope implementation:
 * PCB design files for signal mixer (switching light-sheet between the arms)
 
 ## Microscope control software
-The microscope is controlled via GUI program (Python Qt5) which links together:
+The microscope is controlled via [GUI program](./microscope_control) which links together:
 - camera (Hamamatsu Orca Flash4.3)
 - stage (ASI TE2000)
 - light-sheet generator (based on NI PCIe-6321 DAQ board and a custom signal mixer)
