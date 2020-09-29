@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="excitation_switching.svg"
-   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exL3.png"
+   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exR1.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300">
   <defs
@@ -154,7 +154,58 @@
        y1="-300.88232"
        x2="504.34738"
        y2="-322.77875"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(5.625,-3.75)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient4847"
+       gradientUnits="userSpaceOnUse"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875"
+       gradientTransform="translate(1.875,1.875)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient4851"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-4.00857,5.88526)"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient4856"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1,0,0,1,1056.6025,5.55185)"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient4862"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1,0,0,1,1050.8764,1.922728)"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient4868"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1,0,0,1,1047.1264,-1.8272747)"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -163,11 +214,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.73855479"
-     inkscape:cx="293.11158"
-     inkscape:cy="456.42586"
+     inkscape:zoom="2.0889484"
+     inkscape:cx="376.38867"
+     inkscape:cy="771.6628"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer4"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -190,7 +241,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -468,23 +519,14 @@
      inkscape:groupmode="layer"
      id="layer10"
      inkscape:label="ExRight-Pos2"
-     style="display:none"
+     style="display:inline"
      transform="translate(-28.362984,398.77594)">
     <path
        sodipodi:nodetypes="cccccccccccccccccccc"
        inkscape:connector-curvature="0"
        id="path4401"
        d="m 121.87335,322.72772 61.70252,-102.08963 87.87936,-104.33337 89.00121,100.21986 155.36547,116.12694 28.36486,-199.79304 11.73871,-197.64183 78.44768,-10.2745 120.752,-0.1866 -133.26722,-144.36069 -15.66837,16.36237 138.59152,153.23079 -112.78216,-0.19648 -81.17891,-9.33426 12.08344,192.18764 -30.05889,193.58795 -155.56017,-125.78834 -96.10636,-84.88771 -109.56872,91.24494 -50.48388,87.13145"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame2.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
-    <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 511.75781,-325.20797 c 10.21878,21.61784 16.82717,28.19087 39.88312,38.94759 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
-       id="path4431"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cccc"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame2.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
@@ -520,6 +562,15 @@
          d="m -32.534058,671.53859 h 20.941462"
          style="opacity:0.05;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4434"
+       d="m 511.83807,-324.91742 c 10.21878,21.61783 16.82717,28.19086 39.88312,38.94758 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       style="display:inline;fill:url(#linearGradient4847);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -531,24 +582,7 @@
        inkscape:export-ydpi="300"
        inkscape:export-xdpi="300"
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
-       sodipodi:nodetypes="cccc"
-       inkscape:connector-curvature="0"
-       id="path4333"
-       d="m 515.1234,-329.32147 c 10.21878,21.61784 16.82717,28.19087 39.88312,38.94759 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-    <path
-       inkscape:connector-curvature="0"
-       id="path4340"
-       d="m 527.3314,-300.88231 -13.08289,31.33243 -18.24403,-18.24723 z"
-       style="display:inline;opacity:1;fill:#00ff00;fill-rule:evenodd;stroke:#00ff00;stroke-width:1.15522015;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
-    <path
-       inkscape:export-ydpi="300"
-       inkscape:export-xdpi="300"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="m 122.99521,323.10166 70.67744,-91.99285 95.35844,-114.43013 81.89609,89.37518 145.27647,126.92625 16.03536,-199.61157 12.09387,-185.06348 86.30073,-9.52659 118.17969,1.52828 -126.95536,-159.91189 -15.66837,16.36237 L 741.04154,-39.9152 631.62498,-39.73773 541.0972,-49.07199 552.08534,131.304 533.34685,325.22053 386.25932,194.0873 302.86743,115.55682 182.08005,218.0204 121.49939,293.1853"
        id="path4330"
        inkscape:connector-curvature="0"
@@ -585,6 +619,15 @@
          id="path4336"
          inkscape:connector-curvature="0" />
     </g>
+    <path
+       style="display:inline;fill:url(#linearGradient1031);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 515.58807,-330.54242 c 10.21878,21.61783 16.82717,28.19086 39.88312,38.94758 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       id="path4844"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -598,15 +641,6 @@
        id="path6018"
        d="m 120.75148,320.85794 93.11472,-74.41698 106.57709,-130.13623 63.19834,70.67743 132.45901,146.14135 -16.88751,-207.93111 13.58703,-170.26592 -93.96531,8.50891 -109.68098,-10.75453 136.43852,-155.92363 -15.66837,-16.36237 -130.39289,150.39256 119.50182,12.22186 89.5192,6.05698 12.57736,185.88883 12.68855,190.3599 -131.47869,-153.29101 -61.70253,-56.09321 -141.72883,117.42178 -75.16489,63.57229"
        style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
-    <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 539.13461,-328.26377 c -10.21878,21.61784 -16.82717,28.19087 -39.88312,38.94759 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
-       id="path93783-1-6-2"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cccc"
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
@@ -642,6 +676,15 @@
          d="m -32.534058,671.53859 h 20.941462"
          style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exL3.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4865"
+       d="m 537.16331,-328.61969 c -10.21878,21.61783 -16.82717,28.19086 -39.88312,38.94758 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       style="display:inline;fill:url(#linearGradient4868);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -658,15 +701,6 @@
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame2.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
-    <path
-       inkscape:export-ydpi="300"
-       inkscape:export-xdpi="300"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame2.png"
-       sodipodi:nodetypes="cccc"
-       inkscape:connector-curvature="0"
-       id="path4260"
-       d="m 541.28362,-326.11475 c -10.21878,21.61784 -16.82717,28.19087 -39.88312,38.94759 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        style="display:inline"
        transform="rotate(7.5000011,2822.4132,1665.2663)"
@@ -699,6 +733,16 @@
          id="path4298"
          inkscape:connector-curvature="0" />
     </g>
+    <path
+       transform="translate(-9.987312e-8,-2.5622118e-6)"
+       style="display:inline;fill:url(#linearGradient4862);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 540.91331,-324.86969 c -10.21878,21.61783 -16.82717,28.19086 -39.88312,38.94758 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       id="path4859"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -715,15 +759,6 @@
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
-    <path
-       inkscape:export-ydpi="300"
-       inkscape:export-xdpi="300"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
-       sodipodi:nodetypes="cccc"
-       inkscape:connector-curvature="0"
-       id="path4246"
-       d="m 543.39904,-323.32147 c -10.21878,21.61783 -16.82717,28.19086 -39.88312,38.94758 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        id="g4275"
        transform="rotate(12.000001,1775.1468,1225.0937)"
@@ -758,6 +793,15 @@
          d="m -32.534058,671.53859 h 20.941462"
          style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4854"
+       d="m 546.63943,-321.24057 c -10.21878,21.61783 -16.82717,28.19086 -39.88312,38.94758 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       style="display:inline;fill:url(#linearGradient4856);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -816,7 +860,7 @@
      inkscape:groupmode="layer"
      id="layer11"
      inkscape:label="ExRight-Pos3"
-     style="display:inline"
+     style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
        inkscape:export-ydpi="300"
@@ -827,15 +871,6 @@
        id="path4418"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccccccccccccccccc" />
-    <path
-       inkscape:export-ydpi="300"
-       inkscape:export-xdpi="300"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
-       sodipodi:nodetypes="cccc"
-       inkscape:connector-curvature="0"
-       id="path4434"
-       d="m 509.96307,-326.79242 c 10.21878,21.61783 16.82717,28.19086 39.88312,38.94758 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
-       style="display:inline;fill:url(#linearGradient1031);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        style="display:inline"
        transform="rotate(-7.9999994,-2562.2038,-619.01987)"
@@ -871,6 +906,15 @@
          id="path4304"
          inkscape:connector-curvature="0" />
     </g>
+    <path
+       style="display:inline;fill:url(#linearGradient4851);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 505.9545,-320.90716 c 10.21878,21.61783 16.82717,28.19086 39.88312,38.94758 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       id="path4849"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
   </g>
   <g
      inkscape:label="OpticalComponents"
