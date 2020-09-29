@@ -1,0 +1,1532 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="232.88518mm"
+   height="244.08113mm"
+   viewBox="0 0 825.1837 864.85441"
+   id="svg4258"
+   version="1.1"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="excitation_switching.svg"
+   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exL3.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300">
+  <defs
+     id="defs4260">
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1622"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1620"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker1130"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lend"
+       inkscape:collect="always">
+      <path
+         inkscape:connector-curvature="0"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         id="path1128" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker1084"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart">
+      <path
+         inkscape:connector-curvature="0"
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         id="path1082" />
+    </marker>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1029">
+      <stop
+         style="stop-color:#0000ff;stop-opacity:1;"
+         offset="0"
+         id="stop1025" />
+      <stop
+         style="stop-color:#0000ff;stop-opacity:0;"
+         offset="1"
+         id="stop1027" />
+    </linearGradient>
+    <color-profile
+       name="sRGB-IEC61966-2.1"
+       xlink:href="C:\WINDOWS\system32\spool\drivers\color\sRGB Color Space Profile.icm"
+       id="color-profile12" />
+    <marker
+       inkscape:stockid="Arrow2Lstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lstart"
+       style="overflow:visible"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         id="path5303"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend"
+       style="overflow:visible"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         id="path5306"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lstart"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4461"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="matrix(0.8,0,0,0.8,10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6573"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6575"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
+    </marker>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1029"
+       id="linearGradient1031"
+       x1="526.06158"
+       y1="-300.88232"
+       x2="504.34738"
+       y2="-322.77875"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.73855479"
+     inkscape:cx="293.11158"
+     inkscape:cy="456.42586"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:measure-start="219.209,700.464"
+     inkscape:measure-end="218.945,671.642">
+    <inkscape:grid
+       type="xygrid"
+       id="grid6012"
+       originx="-114.80378"
+       originy="-1278.4013" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata4263">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer9"
+     inkscape:label="ConstructionLinesBottom"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 2.00000001;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 761.86985,-66.05108 527.15479,-300.05445"
+       id="path5170"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.99999999, 2.00000001;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 762.27808,-73.35208 -238.99236,-1e-5"
+       id="path5170-5"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.99999999, 1.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 525.32275,-314.423 V 329.42626"
+       id="path5170-5-1"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:#999999;fill-rule:evenodd;stroke:#cccccc;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.99999999, 1.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 290.71222,-73.41001 238.28066,-1e-5"
+       id="path5170-5-6"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1.00000001, 2.00000001;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 295.96705,-71.45872 524.27682,-299.05681"
+       id="path5170-8"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#00ff00;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 2;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 485.62005,-77.53994 484.7814,127.77643 524.8326,329.27931 410.37282,163.91596 265.85261,21.447"
+       id="path4361"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:connector-curvature="0"
+       id="path4295"
+       d="M 617.11059,-210.62758 755.6812,-76.19121 c -1.86978,3.36559 -188.86592,1.97929 -188.86592,1.97929 L 566.13153,133.50663 524.99651,328.33703 358.96062,217.64644 256.49704,115.55682 166,205.30594 122.2473,307.76953"
+       style="display:inline;opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 1;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       style="display:inline;opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 1;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 617.11059,-210.62758 132.58733,147.15083 -196.34501,1.60534 0.17369,194.96706 -28.53009,195.24138 -157.80888,-120.78736 -90.87099,-91.99287 -96.10636,96.10638 -57.96298,96.4803"
+       id="path4297"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccc" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:connector-curvature="0"
+       id="path4299"
+       d="M 617.11059,-210.62758 744.83651,-49.64043 542.88218,-49.90486 542.08891,133.97966 524.99651,328.33703 377.94125,199.19499 295.01438,115.93076 188.06333,224.75158 122.2473,307.76953"
+       style="display:inline;opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 1;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4303"
+       d="m 435.45,-210.36316 -134.06394,144.11212 117.14068,5.08244 h 78.42399 V 141.65316 L 525.31026,329.26433 402.33937,174.64166 344.00244,116.30472 211.99643,249.80655 122.47414,308.17006"
+       style="opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:0.99999994;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 1.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       sodipodi:nodetypes="cccccccccc" />
+    <path
+       sodipodi:nodetypes="cccccccccc"
+       style="opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 2;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 435.45,-209.83431 304.8236,-57.26056 418.79117,-46.7194 h 91.91185 l 0.26443,184.75886 14.19007,190.63899 -130.6712,-145.06188 -64.88114,-67.12487 -124.90087,124.90087 -82.80439,66.44891"
+       id="path4305"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;opacity:1;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 2;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 434.92115,-210.62758 -137.7659,135.24064 h 185.02787 l 0.79328,205.01792 42.50109,198.84169 -113.4153,-163.17988 -50.10993,-48.61411 -138.3137,142.80116 -101.76788,48.42846 53.95122,55.0543"
+       id="path4301"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccc" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#00ff00;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1, 2;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 566.87944,-74.41218 V 133.13268 L 525.37047,329.08494 363.44809,216.89853 217.91085,70.82078"
+       id="path4307"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="display:inline;opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 525.27349,328.72142 238.10694,41.55487"
+       id="path4300"
+       inkscape:connector-curvature="0" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#e6e6e6;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 313.84234,115.55679 121.25889,308.14024"
+       id="path4317"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4331"
+       d="m 530.15395,340.58938 c -31.832,-75.04008 -30.90611,-75.41456 -30.90611,-75.41456"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.99999986, 0.99999997;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 231.06584,120.83082 84.85281,84.85282"
+       id="path4283"
+       inkscape:connector-curvature="0" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="Bottom"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       style="fill:#00ffff;fill-rule:evenodd;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 642.05859,-294.45117 c -3.12048,0.68479 -6.23901,1.37938 -9.37109,2.00976 -3.74396,-0.63074 -7.47515,-1.42416 -11.2751,-1.63111 -1.84834,-0.15499 -3.62811,0.4776 -5.40103,0.89606 -1.58719,0.42401 -3.2304,0.54676 -4.84535,0.82294 -1.56562,0.21031 -3.16703,0.24851 -4.72611,-0.0349 -2.51988,-0.48211 -5.02939,-1.16875 -7.61374,-1.16436 -6.40811,-0.15677 -12.81837,-0.17238 -19.228,-0.20184 -20.70331,-0.0326 -41.40658,0.0342 -62.10982,0.0788 -20.49139,0.0626 -40.98283,0.11084 -61.47418,0.18284 -2.6855,0.0451 -5.37873,-0.0489 -8.0553,0.22259 -2.21514,0.16833 -4.40264,0.56656 -6.59938,0.88112 -1.34467,0.20975 -2.71716,0.28953 -4.06923,0.0987 -2.68854,-0.28501 -5.3213,-1.06673 -8.04087,-1.05043 -1.75218,0.0318 -3.41298,0.64355 -5.06367,1.16688 -1.46676,0.46122 -2.96932,0.90188 -4.52115,0.89454 -2.52917,0.0848 -5.00743,-0.57197 -7.38825,-1.36174 -1.32135,-0.41375 -2.64102,-0.83543 -3.98335,-1.17718 -0.79659,0.0509 -1.37946,0.76002 -1.54464,1.49738 -0.12716,0.95302 -0.0686,1.92931 -0.14073,2.89163 -0.27846,6.94955 -0.48003,13.90184 -0.70721,20.85318 0.26281,1.57533 1.29032,2.87312 2.3678,3.99362 3.23803,3.46823 6.62563,6.79175 9.96868,10.15769 34.49974,34.51823 69.00723,69.02873 103.51837,103.53557 0.76778,0.76778 1.53557,1.53557 2.30335,2.30335 1.85938,0 3.71875,0 5.57813,0 39.45703,-39.45703 78.91406,-78.91406 118.37109,-118.37109 0,-9.17253 0,-18.34505 0,-27.51758 -1.98307,0.008 -3.96614,0.0156 -5.94922,0.0234 z"
+       id="path1074"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ssssscccccsssssss"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.8125;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 406.32634,-337.43164 v 70.40339 l 118.49586,118.49586 h 4.84226 l 118.49586,-118.49586 v -70.40339"
+       id="path1059"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccc"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:#00ff00;fill-rule:evenodd;stroke:#000000;stroke-width:0.64825642px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 474.7253,-296.83314 c 0,0 14.23424,-3.3721 21.48006,-3.96349 11.90861,-0.97201 24.15908,-0.87334 36.06318,-1.29799 7.54948,-0.26931 22.51347,1.39579 31.92627,0.8247 9.41281,-0.57111 13.89418,-1.00036 13.89418,-1.00036 0,0 -4.74193,2.14857 -6.79762,3.23181 -7.47253,3.9376 -13.75434,2.42934 -21.31082,3.14195 -9.4974,0.89563 -38.24343,-0.4615 -47.73728,-0.33599 -15.34291,0.20286 -26.76794,0.98277 -26.76794,0.98277 z"
+       id="path4656-8"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cssscssscc"
+       inkscape:export-filename="C:\Users\vladimirovn\Dropbox\applications\Marie-CurieActions\Figures\Fig2.v3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 116.2124,314.74844 94.7251,95.42627 11.70707,-13.81872 L 116.3012,289.031"
+       id="path6135"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:#ff0000;fill-rule:evenodd;stroke:#ff00ff;stroke-width:2.0926187;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 450.86624,-293.98468 H 600.89168"
+       id="path1057"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <g
+       id="g1072"
+       transform="matrix(1,0,0,1.1829634,0,53.960738)"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <rect
+         y="-327.8812"
+         x="460.13959"
+         height="26.468981"
+         width="134.27312"
+         id="rect1063"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.75;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:6.4371829;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <rect
+         y="-301.4122"
+         x="460.13959"
+         height="6.4857545"
+         width="11.393917"
+         id="rect1065"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.75;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.8125;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <rect
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.75;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.8125;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         id="rect1067"
+         width="11.393917"
+         height="6.4857545"
+         x="583.0188"
+         y="-301.4122" />
+    </g>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker1130)"
+       d="m 481.84123,-348.76143 h 93.79719"
+       id="path1080"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1618"
+       d="M 577.20564,-339.38643 H 483.40845"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker1622)"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="442.50732"
+       y="-359.53238"
+       id="text1716"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan1714"
+         x="442.50732"
+         y="-359.53238"
+         style="font-size:22.5px;stroke-width:0.9375px">sample scanning</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 452.21262,-295.77984 c 0,0 -13.57013,-14.72291 -29.57399,-12.14563 -13.98674,2.25244 -28.56189,5.70036 -42.32746,-0.8314"
+       id="path1718"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="csc"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="274.21094"
+       y="-306.57513"
+       id="text1722"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan1720"
+         x="274.21094"
+         y="-306.57513"
+         style="font-size:22.5px;stroke-width:0.9375px">coverslip</tspan></text>
+    <path
+       sodipodi:nodetypes="csc"
+       inkscape:connector-curvature="0"
+       id="path1726"
+       d="m 649.6611,-306.49191 c 0,0 8.92797,-14.85548 19.45711,-12.25499 9.20205,2.27272 18.79123,5.75169 27.84778,-0.83889"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.76383924px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="701.01056"
+       y="-324.97552"
+       id="text1730"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan1728"
+         x="701.01056"
+         y="-324.97552"
+         style="font-size:22.5px;stroke-width:0.9375px">water-filled </tspan><tspan
+         sodipodi:role="line"
+         x="701.01056"
+         y="-300.46054"
+         style="font-size:22.5px;stroke-width:0.9375px"
+         id="tspan1732">chamber</tspan></text>
+    <path
+       sodipodi:nodetypes="csc"
+       inkscape:connector-curvature="0"
+       id="path1734"
+       d="m 460.08841,-333.95392 c 0,0 -17.62458,-14.62567 -38.41003,-12.06542 -18.16566,2.23757 -37.09553,5.66271 -54.97394,-0.82591"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.06487763px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       id="text1738"
+       y="-344.27353"
+       x="291.26498"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         style="font-size:22.5px;stroke-width:0.9375px"
+         y="-344.27353"
+         x="291.26498"
+         id="tspan1736"
+         sodipodi:role="line">PDMS</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer10"
+     inkscape:label="ExRight-Pos2"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       sodipodi:nodetypes="cccccccccccccccccccc"
+       inkscape:connector-curvature="0"
+       id="path4401"
+       d="m 121.87335,322.72772 61.70252,-102.08963 87.87936,-104.33337 89.00121,100.21986 155.36547,116.12694 28.36486,-199.79304 11.73871,-197.64183 78.44768,-10.2745 120.752,-0.1866 -133.26722,-144.36069 -15.66837,16.36237 138.59152,153.23079 -112.78216,-0.19648 -81.17891,-9.33426 12.08344,192.18764 -30.05889,193.58795 -155.56017,-125.78834 -96.10636,-84.88771 -109.56872,91.24494 -50.48388,87.13145"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame2.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 511.75781,-325.20797 c 10.21878,21.61784 16.82717,28.19087 39.88312,38.94759 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       id="path4431"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame2.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <g
+       id="g4311"
+       transform="rotate(-2.0000002,-10388.563,-3930.7523)"
+       style="display:inline">
+      <g
+         id="g4313"
+         transform="rotate(-179,50.445635,620.4166)"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300"
+         style="display:inline">
+        <rect
+           y="513.43256"
+           x="122.12038"
+           height="104.08901"
+           width="10.559754"
+           id="rect4315"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)" />
+        <path
+           sodipodi:nodetypes="cc"
+           inkscape:connector-curvature="0"
+           id="path4318"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)" />
+      </g>
+      <path
+         inkscape:connector-curvature="0"
+         id="path4320"
+         d="m -32.534058,671.53859 h 20.941462"
+         style="opacity:0.05;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer6"
+     inkscape:label="ExRight-Pos1"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4333"
+       d="m 515.1234,-329.32147 c 10.21878,21.61784 16.82717,28.19087 39.88312,38.94759 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4340"
+       d="m 527.3314,-300.88231 -13.08289,31.33243 -18.24403,-18.24723 z"
+       style="display:inline;opacity:1;fill:#00ff00;fill-rule:evenodd;stroke:#00ff00;stroke-width:1.15522015;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exRight-frame3.png"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 122.99521,323.10166 70.67744,-91.99285 95.35844,-114.43013 81.89609,89.37518 145.27647,126.92625 16.03536,-199.61157 12.09387,-185.06348 86.30073,-9.52659 118.17969,1.52828 -126.95536,-159.91189 -15.66837,16.36237 L 741.04154,-39.9152 631.62498,-39.73773 541.0972,-49.07199 552.08534,131.304 533.34685,325.22053 386.25932,194.0873 302.86743,115.55682 182.08005,218.0204 121.49939,293.1853"
+       id="path4330"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccccccccccccc" />
+    <g
+       style="display:inline"
+       transform="rotate(-0.99999964,-20790.781,-8371.0913)"
+       id="g4327">
+      <g
+         style="display:inline"
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         transform="rotate(-179,50.445635,620.4166)"
+         id="g4329">
+        <rect
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect4331"
+           width="10.559754"
+           height="104.08901"
+           x="122.12038"
+           y="513.43256" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           id="path4334"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+      </g>
+      <path
+         style="opacity:0.05;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m -32.534058,671.53859 h 20.941462"
+         id="path4336"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="ExLeft-Pos3"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       sodipodi:nodetypes="cccccccccccccccccccc"
+       inkscape:connector-curvature="0"
+       id="path6018"
+       d="m 120.75148,320.85794 93.11472,-74.41698 106.57709,-130.13623 63.19834,70.67743 132.45901,146.14135 -16.88751,-207.93111 13.58703,-170.26592 -93.96531,8.50891 -109.68098,-10.75453 136.43852,-155.92363 -15.66837,-16.36237 -130.39289,150.39256 119.50182,12.22186 89.5192,6.05698 12.57736,185.88883 12.68855,190.3599 -131.47869,-153.29101 -61.70253,-56.09321 -141.72883,117.42178 -75.16489,63.57229"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 539.13461,-328.26377 c -10.21878,21.61784 -16.82717,28.19087 -39.88312,38.94759 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       id="path93783-1-6-2"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <g
+       id="g4306"
+       transform="rotate(6.000001,3518.4685,1965.1805)"
+       style="display:inline">
+      <g
+         id="g4308"
+         transform="rotate(-179,50.445635,620.4166)"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300"
+         style="display:inline">
+        <rect
+           y="513.43256"
+           x="122.12038"
+           height="104.08901"
+           width="10.559754"
+           id="rect4310"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)" />
+        <path
+           sodipodi:nodetypes="cc"
+           inkscape:connector-curvature="0"
+           id="path4312"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)" />
+      </g>
+      <path
+         inkscape:connector-curvature="0"
+         id="path4314"
+         d="m -32.534058,671.53859 h 20.941462"
+         style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="ExLeft-Pos2"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 123.24084,295.19117 80.52858,-52.48975 152.57352,-126.39669 51.9797,45.24851 126.24666,163.60261 -26.21645,-193.99829 -14.94827,-196.71469 -75.49637,-7.89293 -121.74783,-3.5891 133.97305,-142.38326 16.66708,15.7308 -141.87194,147.01321 112.745,4.39274 82.38205,-6.06608 -15.79304,189.48142 30.89708,202.28829 L 396.73005,179.12911 333.5317,115.55682 220.97134,257.28564 120.07552,319.18844"
+       id="path5790"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccccccccccccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame2.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame2.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4260"
+       d="m 541.28362,-326.11475 c -10.21878,21.61784 -16.82717,28.19087 -39.88312,38.94759 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       style="display:inline"
+       transform="rotate(7.5000011,2822.4132,1665.2663)"
+       id="g4290">
+      <g
+         style="display:inline"
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         transform="rotate(-179,50.445635,620.4166)"
+         id="g4292">
+        <rect
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect4294"
+           width="10.559754"
+           height="104.08901"
+           x="122.12038"
+           y="513.43256" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           id="path4296"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+      </g>
+      <path
+         style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m -32.534058,671.53859 h 20.941462"
+         id="path4298"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="ExLeft-Pos1"
+     style="display:none"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 123.98875,296.20351 213.8662,252.79819 379.52813,115.93078 421.0371,154.07415 532.8163,326.59055 491.81258,132.63002 478.55922,-78.74653 417.90734,-87.69354 292.33343,-88.76198 431.55326,-221.33401 450.3082,-207.46744 302.01383,-64.8347 417.6894,-63.21034 485.17953,-71.5308 474.29917,132.04467 517.19833,331.8958 404.5831,171.27607 350.73362,115.55682 229.94625,268.13032 119.28224,320.55594"
+       id="path6020"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccccccccccccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4246"
+       d="m 543.39904,-323.32147 c -10.21878,21.61783 -16.82717,28.19086 -39.88312,38.94758 l 10.57594,10.5778 c 10.75484,-23.05999 17.75107,-29.4149 38.94075,-39.89012"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       id="g4275"
+       transform="rotate(12.000001,1775.1468,1225.0937)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <g
+         id="g4237"
+         transform="rotate(-179,50.445635,620.4166)"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300"
+         style="display:inline">
+        <rect
+           y="513.43256"
+           x="122.12038"
+           height="104.08901"
+           width="10.559754"
+           id="rect4239"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)" />
+        <path
+           sodipodi:nodetypes="cc"
+           inkscape:connector-curvature="0"
+           id="path4241"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)" />
+      </g>
+      <path
+         inkscape:connector-curvature="0"
+         id="path4273"
+         d="m -32.534058,671.53859 h 20.941462"
+         style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer8"
+     inkscape:label="DetectLeft"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       sodipodi:nodetypes="ccccccccccccccc"
+       inkscape:connector-curvature="0"
+       id="path4351"
+       d="m 427.02899,-222.22685 -135.26577,133.02204 134.76069,-0.18698 52.36151,9.88465 24.47672,213.23815 33.84704,190.17823 L 424.44971,154.57178 265.78389,21.26661 397.47442,177.27652 511.63341,334.35702 469.2642,131.93965 l 20.99731,-198.74856 -63.23252,7.7217 -124.17455,-1.58656 143.87252,-138.31957"
+       style="fill:none;fill-rule:evenodd;stroke:#808000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4355"
+       d="m 528.60711,-300.88231 -13.08289,31.33243 -18.24403,-18.24723 z"
+       style="display:inline;opacity:0.75;fill:#008000;fill-rule:evenodd;stroke:none;stroke-width:1.15522015;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="DetectRight"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <g
+       id="g5726"
+       style="display:inline;stroke:#808000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       transform="translate(166,-420)">
+      <path
+         sodipodi:nodetypes="ccccccccccccccc"
+         inkscape:connector-curvature="0"
+         id="path5700"
+         d="M 441.94174,221.00666 581.84787,360.91279 H 461.63971 L 396.02735,350.28241 415.48804,553.00725 371.61484,744.25629 207.78332,623.26732 54.681862,488.65178 186.53328,650.40766 345.63665,754.25071 385.5522,552.3635 406.08132,339.69958 462.14479,330.60821 H 594.47477 L 461.63971,197.77315"
+         style="fill:none;fill-rule:evenodd;stroke:#808000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <path
+       style="display:inline;opacity:0.75;fill:#008000;fill-rule:evenodd;stroke:none;stroke-width:1.15522015;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 526.06159,-300.88231 13.08289,31.33243 18.24403,-18.24723 z"
+       id="path93850-6-9"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer11"
+     inkscape:label="ExRight-Pos3"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 125.06525,325.70056 47.66593,-114.03739 89.53878,-96.43357 92.36681,108.51699 161.5591,108.53098 39.8855,-199.09885 13.68043,-211.79839 63.4895,-6.908914 125.23945,-0.186599 -136.25886,-135.385777 -14.17255,15.98842 142.33108,141.264237 -117.26963,0.55143 -69.58631,-6.716577 12.37443,202.21191 L 533.07142,325.69624 366.81367,209.7934 268.18312,115.60355 157.773,201.5664 120.44169,293.49509"
+       id="path4418"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccccccccccccc" />
+    <path
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4434"
+       d="m 509.96307,-326.79242 c 10.21878,21.61783 16.82717,28.19086 39.88312,38.94758 l -10.57594,10.5778 c -10.75484,-23.05999 -17.75107,-29.4149 -38.94075,-39.89012"
+       style="display:inline;fill:url(#linearGradient1031);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       style="display:inline"
+       transform="rotate(-7.9999994,-2562.2038,-619.01987)"
+       id="g4294"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png">
+      <g
+         style="display:inline"
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame1.png"
+         transform="rotate(-179,50.445635,620.4166)"
+         id="g4296">
+        <rect
+           transform="matrix(0.99982531,0.01869063,0.01869063,0.99982531,0,0)"
+           style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1.0003494;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect4298"
+           width="10.559754"
+           height="104.08901"
+           x="122.12038"
+           y="513.43256" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)"
+           d="m 155.75783,544.37803 c 19.4048,18.0497 12.60761,31.73241 0,44.44671"
+           id="path4302"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+      </g>
+      <path
+         style="opacity:0.1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m -32.534058,671.53859 h 20.941462"
+         id="path4304"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+  <g
+     inkscape:label="OpticalComponents"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <g
+       id="g93763-1"
+       style="fill:#b3b3b3;stroke:#000000"
+       transform="matrix(0.5134593,-0.5134593,-0.5134593,-0.5134593,401.67037,43.98171)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="744.46594"
+       y="333.55273"
+       id="text6159"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb3-R3.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6161"
+         x="744.46594"
+         y="333.55273"
+         style="font-size:12.5px;line-height:1.25"> </tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2, 2;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 575.93824,-22.40026 H 475.82601 v -0.47447"
+       id="path6024"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:16, 4, 2, 4;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 206.75974,80.56724 70.79004,-70.79004 0.3355,0.3355"
+       id="path6024-5"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="447.83252"
+       y="-220.72687"
+       id="text6057"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6059"
+         x="447.83252"
+         y="-220.72687"
+         style="font-size:17.5px;line-height:1.25">O1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="584.47864"
+       y="-220.72687"
+       id="text6061"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6063"
+         x="584.47864"
+         y="-220.72687"
+         style="font-size:17.5px;line-height:1.25">O2</tspan></text>
+    <rect
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#e6e6e6;stroke-width:0.46875;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect6141"
+       width="824.71497"
+       height="864.38568"
+       x="28.597359"
+       y="-398.54156"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <ellipse
+       style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none"
+       id="path5818-6"
+       transform="scale(-1)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       cx="-419.05063"
+       cy="74.436951"
+       rx="6.1515322"
+       ry="39.596451" />
+    <rect
+       style="display:inline;opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:0.27500001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect5148-6"
+       width="13.131983"
+       height="79.802048"
+       x="-303.1301"
+       y="4.6205864"
+       transform="matrix(-0.92387953,0.38268343,0.38268343,0.92387953,0,0)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="display:inline;opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:0.27500001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 596.04407,-103.11465 -70.51622,70.51622 -70.51622,-70.51623 z"
+       id="rect5167"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <ellipse
+       style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none"
+       id="path5818"
+       transform="scale(1,-1)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       cx="633.22797"
+       cy="74.379028"
+       rx="6.1515322"
+       ry="39.596451" />
+    <rect
+       style="display:inline;opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:0.27500001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect5148"
+       width="13.131983"
+       height="79.802048"
+       x="669.07062"
+       y="-398.01556"
+       transform="rotate(22.5)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <ellipse
+       style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none"
+       id="path5818-1"
+       transform="matrix(0,-1,-1,0,0,0)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       cx="-132.12787"
+       cy="-526.12231"
+       rx="10"
+       ry="64.368439" />
+    <rect
+       style="display:inline;opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect5211"
+       width="7.2818432"
+       height="161.00963"
+       x="107.76074"
+       y="-388.45856"
+       transform="rotate(90)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <g
+       style="stroke:#000000;stroke-width:1.09914577;stroke-miterlimit:4;stroke-dasharray:none"
+       id="g3218-4"
+       transform="matrix(-0.7365707,0.74434708,0.55953075,0.55832558,468.67666,-907.81792)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <rect
+         transform="matrix(3.6472346e-4,-0.99999993,0.99999768,-0.00215286,0,0)"
+         y="742.53931"
+         x="-640.31848"
+         height="108.25318"
+         width="24.243725"
+         id="rect5864-1"
+         style="fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:1.09914744;stroke-miterlimit:4;stroke-dasharray:none" />
+      <rect
+         transform="rotate(-90)"
+         ry="15.033123"
+         y="731.93726"
+         x="-632.69122"
+         height="130.59743"
+         width="106.35377"
+         id="rect5862-2"
+         style="fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:1.09914577;stroke-miterlimit:4;stroke-dasharray:none" />
+    </g>
+    <g
+       id="g93763-5-7-3"
+       style="fill:#b3b3b3;stroke:#000000;stroke-width:1.21519661"
+       transform="matrix(-0.97614922,-0.97632021,-0.97614922,0.97632021,1076.8216,-138.61229)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <rect
+         y="165.0437"
+         x="271.33728"
+         height="68.208405"
+         width="37.981236"
+         id="rect93740-2-7-7"
+         style="opacity:1;fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:0.78834158;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path93761-9-7-4"
+         d="m 309.10176,165.94486 36.62794,23.38761 v 19.40675 l -36.88055,23.3876 z"
+         style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:1.20634317px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+    <g
+       style="display:inline"
+       id="g6137"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       transform="translate(166,-420)">
+      <rect
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
+         transform="matrix(0.70704486,-0.7071687,-0.70704486,-0.7071687,0,0)"
+         y="-386.98517"
+         x="42.961643"
+         height="94.188522"
+         width="50.144272"
+         id="rect93740-5-3"
+         style="opacity:1;fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:1.06443858;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0" />
+      <path
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
+         inkscape:connector-curvature="0"
+         id="path93761-7-3"
+         d="m 338.40771,206.8792 12.92454,-58.59439 -18.94389,-18.9472 -58.83071,13.17344 z"
+         style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:1.66548288px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+    <ellipse
+       style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none"
+       id="path5818-1-9"
+       transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       cx="-407.94708"
+       cy="-138.98335"
+       rx="10"
+       ry="64.368439" />
+    <g
+       id="g4333"
+       transform="rotate(-22.5,-602.88477,146.96601)"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <rect
+         y="746.85797"
+         x="311.13031"
+         height="40.387108"
+         width="118.16969"
+         id="rect4323"
+         style="opacity:1;fill:#999999;fill-opacity:1;stroke:#666666;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    </g>
+    <ellipse
+       ry="64.368439"
+       rx="10"
+       cy="302.86621"
+       cx="26.678413"
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       transform="matrix(-0.70710678,0.70710678,0.70710678,0.70710678,0,0)"
+       id="ellipse4281"
+       style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none" />
+    <path
+       style="fill:#ffffff;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 512.28205,335.2552 c 15.238,-1.18439 20.42199,-5.70976 25.42892,-10.84469"
+       id="path4315"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <g
+       transform="rotate(45,259.57144,372.31924)"
+       id="g1066"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <g
+         style="fill:#808080"
+         id="g1060"
+         transform="translate(0,-1.0579014)">
+        <rect
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.9375;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+           id="rect1056"
+           width="22.513624"
+           height="16.482563"
+           x="178.66422"
+           y="396.3591" />
+        <rect
+           y="437.6091"
+           x="178.66422"
+           height="16.482563"
+           width="22.513624"
+           id="rect1042"
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.9375;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      </g>
+      <rect
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.9375;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         id="rect1044"
+         width="9.648695"
+         height="40.397156"
+         x="185.09668"
+         y="403.9689" />
+    </g>
+    <g
+       transform="rotate(45,220.16124,419.18174)"
+       id="g1025"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <path
+         transform="translate(0,-3.8757931e-6)"
+         style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 202.62975,400.84754 51.21912,9.65331 -51.21912,9.49705"
+         id="path1019"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccc" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path1013"
+         d="m 204.26901,410.50085 h 41.89498"
+         style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:0.23437499;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.23437499, 0.70312497;stroke-dashoffset:0;stroke-opacity:1" />
+      <ellipse
+         ry="26.20219"
+         rx="4.0706577"
+         cy="410.50085"
+         cx="-205.51068"
+         inkscape:export-ydpi="300"
+         inkscape:export-xdpi="300"
+         inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+         transform="scale(-1,1)"
+         id="path5818-1-9-1"
+         style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.99999994" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer12"
+     inkscape:label="TextLabels"
+     style="display:inline"
+     transform="translate(-28.362984,398.77594)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="54.276886"
+       y="243.0246"
+       id="text6049"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6051"
+         x="54.276886"
+         y="243.0246"
+         style="font-size:22.5px;line-height:1.25">M-scan</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="214.71573"
+       y="-120.52039"
+       id="text6081"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6083"
+         x="214.71573"
+         y="-120.52039"
+         style="font-size:22.5px;line-height:1.25">M-fold-1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="739.53351"
+       y="-119.05695"
+       id="text6085"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6087"
+         x="739.53351"
+         y="-119.05695"
+         style="font-size:22.5px;line-height:1.25">M-fold-2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="386.94617"
+       y="-118.68546"
+       id="text6089"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6091"
+         x="386.94617"
+         y="-118.68546"
+         style="font-size:20px;line-height:1.25">TubeL1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="597.63171"
+       y="-118.57437"
+       id="text6093"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6095"
+         x="597.63171"
+         y="-118.57437"
+         style="font-size:20px;line-height:1.25">TubeL2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="250.17654"
+       y="287.72961"
+       id="text6097"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6099"
+         x="250.17654"
+         y="287.72961"
+         style="font-size:22.5px;line-height:1.25">L3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="329.60977"
+       y="256.16357"
+       id="text6101"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6103"
+         x="329.60977"
+         y="256.16357"
+         style="font-size:22.5px;line-height:1.25">L2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="387.43051"
+       y="101.05646"
+       id="text6105"
+       inkscape:transform-center-x="-13.285036"
+       inkscape:transform-center-y="-1.8978622"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan6107"
+         x="387.43051"
+         y="101.05646"
+         style="font-size:22.5px;line-height:1.25">M-poly</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="98.795471"
+       y="155.07629"
+       id="text4326"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       transform="rotate(-45)"><tspan
+         sodipodi:role="line"
+         id="tspan4328"
+         x="98.795471"
+         y="155.07629"
+         style="font-size:20px;line-height:1.25">Camera</tspan></text>
+    <text
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       id="text4340"
+       y="-235.04906"
+       x="276.11523"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         y="-235.04906"
+         x="276.11523"
+         id="tspan4342"
+         sodipodi:role="line"
+         style="font-size:22.5px;line-height:1.25">L-objective</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="658.12817"
+       y="-235.04906"
+       id="text4344"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan4346"
+         x="658.12817"
+         y="-235.04906"
+         style="font-size:22.5px;line-height:1.25">R-objective</tspan></text>
+    <text
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       id="text4442"
+       y="139.8161"
+       x="604.61267"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         y="139.8161"
+         x="604.61267"
+         id="tspan4444"
+         sodipodi:role="line"
+         style="font-size:22.5px;line-height:1.25">L1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="546.80713"
+       y="399.12387"
+       id="text4446"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan4448"
+         x="546.80713"
+         y="399.12387"
+         style="font-size:25px;line-height:1.25">Deformable mirror</tspan></text>
+    <text
+       id="text4474"
+       y="421.82428"
+       x="264.12854"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         y="421.82428"
+         x="264.12854"
+         id="tspan4476"
+         sodipodi:role="line"
+         style="font-size:20px;line-height:1.25">Laser SM fiber</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="482.1178"
+       y="-109.18876"
+       id="text4446-2"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan4448-7"
+         x="482.1178"
+         y="-109.18876"
+         style="font-size:22.5px;line-height:1.25">M-prism</tspan></text>
+    <text
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="116.71406"
+       y="402.91522"
+       id="text1079"><tspan
+         style="font-size:17.5px;line-height:1.25"
+         sodipodi:role="line"
+         id="tspan1077"
+         x="116.71406"
+         y="402.91522">ETL</tspan></text>
+    <text
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
+       id="text1083"
+       y="381.93134"
+       x="241.25217"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         style="font-size:22.5px;line-height:1.25"
+         y="381.93134"
+         x="241.25217"
+         id="tspan1081"
+         sodipodi:role="line">L4</tspan></text>
+    <g
+       id="g1091"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <path
+         sodipodi:nodetypes="csszc"
+         inkscape:connector-curvature="0"
+         id="path1087"
+         d="m 338.38252,438.68754 c 0,0 -22.21919,7.47969 -29.9958,7.43699 -8.39964,-0.0461 -17.63775,-5.82907 -26.02944,-6.19748 -5.95874,-0.2616 -14.74915,3.63715 -20.0996,4.30815 -5.35045,0.67101 -12.13737,-7.37103 -12.13737,-7.37103"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.875;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <ellipse
+         ry="2.7268922"
+         rx="2.4789927"
+         cy="437.07623"
+         cx="250.3783"
+         id="path1085"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.9375;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.99107139;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="580.1452"
+       y="-13.986271"
+       id="text1013"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan1011"
+         x="580.1452"
+         y="-13.986271"
+         style="font-size:22.5px;stroke-width:0.9375px">int.im.plane</tspan></text>
+    <g
+       id="g1021"
+       transform="translate(-3.75,5.625)"
+       style="stroke:#000000;stroke-width:1.96875;stroke-miterlimit:4;stroke-dasharray:5.90625005, 1.96875002;stroke-dashoffset:0"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300">
+      <path
+         inkscape:connector-curvature="0"
+         id="path1015"
+         d="M 448.97632,340.34073 607.07465,306.73591"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.96875;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.90625005, 1.96875002;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.96875;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.90625005, 1.96875002;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 607.07465,340.34073 448.97632,306.73591"
+         id="path1017"
+         inkscape:connector-curvature="0" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="607.53162"
+       y="316.5679"
+       id="text1025"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan1023"
+         x="607.53162"
+         y="316.5679"
+         style="font-size:20px;stroke-width:0.9375px">L-obj. pupil plane</tspan></text>
+    <text
+       id="text1029"
+       y="352.1929"
+       x="607.53162"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         style="font-size:20px;stroke-width:0.9375px"
+         y="352.1929"
+         x="607.53162"
+         id="tspan1027"
+         sodipodi:role="line">R-obj. pupil plane</tspan></text>
+  </g>
+</svg>
