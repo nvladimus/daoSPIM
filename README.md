@@ -3,7 +3,7 @@
 ![Optical layout: chamber](/wiki/images/ChamberOpticalLayout.png)
 
 ## System overview
-The [Wiki](https://github.com/nvladimus/daoSPIM/wiki) pages provide a high-level microscope overview and implementation details:
+The [Wiki](https://github.com/nvladimus/daoSPIM/wiki) pages provide a high-level system overview along with implementation details:
 * optical and mechanical design 
 * electronic wiring diagram 
 * BOM
