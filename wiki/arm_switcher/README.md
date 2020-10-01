@@ -28,4 +28,6 @@ v1 0.32 #set voltage1 bias, [Volt]
 ```
 
 ## Bill of materials
+The PCB can be ordered from [Aisler](https://aisler.net/p/MTFTDGBD) (min. order 3 boards)
+
 [Parts list](BOM.xlsx)

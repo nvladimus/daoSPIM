@@ -5,10 +5,10 @@
 ## Hardware overview
 The [Wiki](https://github.com/nvladimus/daoSPIM/wiki) page provides a high-level system overview. 
 
-The [wiki](./wiki) folder contains implementation details:
+The [/wiki](./wiki) folder contains implementation details:
 * [BOM](./wiki/BOM.xlsx)
-* [CAD](./wiki/custom_parts_cad) files for custom-made mechanical parts.
-* [PCB](./wiki/arm_switcher) design files for arm switcher board.
+* [CAD](./wiki/custom_parts_cad) files for custom-made mechanical parts
+* [PCB](./wiki/arm_switcher) design files for arm switcher board
 
 ## Microscope control software
 The microscope is controlled via [GUI program](./microscope_control) which links together:
