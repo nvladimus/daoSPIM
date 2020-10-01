@@ -1,6 +1,6 @@
 ## daoSPIM control
 The software provides GUI for microscope control:
-- advanced camera control (input and output triggers), 
+- advanced camera control (input and output triggers, acq. modes), 
 - light sheet generation via galvo scanning (NI DAQmx task configuration)
 - stage scanning (with TTL pulses at defined spatial intervals)
 - deformable mirror control (loading and applying commands from file)
