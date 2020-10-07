@@ -38,4 +38,7 @@ from the command line to launch.
 The code is still in development, but the author tried to keep it maximally modular and reusable. Each device is represented by a single file with GUI, controller and configuration code, independent from other devices. The main program file `dao_spim_control.py` connects these modules into a system. The GUI building is simplified by using a local library [widget.py](./src/widget.py) which takes care of PyQt5 low-level code.
 See [device_template.py](./src/device_template.py) for example. 
 
-The module files for these and other devices are further available at [kekse](https://github.com/nvladimus/kekse) repo.
+The module files for these and other devices are independently available at [kekse](https://github.com/nvladimus/kekse) repo.
+
+The camera control code was adapted from H.Babcock's [storm-control](https://github.com/ZhuangLab/storm-control/tree/master/storm_control/sc_hardware/hamamatsu) software.
+
