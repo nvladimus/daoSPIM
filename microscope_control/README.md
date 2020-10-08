@@ -17,20 +17,12 @@ Python 3.6
  - deformable mirror ImagineOptics Mirao52e.
 
 ### Installation
-The following libraries need to be installed via `pip install`: 
-- pyqtgraph
-- PyQt5
-- npy2bdv
-- ctypes
-- serial
-- PyDAQmx
-
-When these libraries are installed, run
+- Install the required libraries via `pip install -r requirements.txt`
+- run
 ```
 python dao_spim_control.py
 ```
-from the command line to launch.
-
+from the command line
 ### GUI overview
 ![GUI](./images/GUI0.png)
 
