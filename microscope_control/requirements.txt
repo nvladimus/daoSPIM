@@ -2,6 +2,7 @@ h5py==2.7.1
 nidaqmx==0.5.7
 npy2bdv==2020.6.25
 numpy==1.15.1
+matplotlib==2.2.2
 PyDAQmx==1.4.1
 pyqtgraph==0.10.0
 pyserial==3.4
