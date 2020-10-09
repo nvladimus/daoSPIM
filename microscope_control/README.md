@@ -10,19 +10,27 @@ The software provides GUI for microscope control:
 Python 3.6
 
 ## Hardware requirements
+ - PC with Windows 10, 64 bit.
  - camera Hamamatsu Orca Flash4.3.
  - NI DAQmx PCIe board with at least 2 AO channels for galvo and laser modulation (e.g. PCIe-6321).
  - XY stage from ASI (MS-2000 controller).
  - ETL Optotune EL-16-40-TC-VIS-5D-C.
  - deformable mirror ImagineOptics Mirao52e.
 
-### Installation
-- Install the required libraries via `pip install -r requirements.txt`
-- run
+### Installation 
+(optional) Create and activate local environment from the command line
 ```
+C:\Users\user\daoSPIM> cd microscope_control
+C:\Users\user\daoSPIM>python -m venv venv
+C:\Users\user\daoSPIM>microscope_control\Scripts\activate.bat
+(venv) C:\Users\user\daoSPIM>
+```
+Install dependencies and launch the program
+```
+pip install -r requirements.txt
 python dao_spim_control.py
 ```
-from the command line
+
 ### GUI overview
 ![GUI](./images/GUI0.png)
 
