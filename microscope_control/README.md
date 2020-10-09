@@ -18,16 +18,20 @@ Python 3.6
  - deformable mirror ImagineOptics Mirao52e.
 
 ### Installation 
-(optional) Create and activate local environment from the command line
+(optional) Create and activate local environment from the command line, to keep things tidy
 ```
 C:\Users\user\daoSPIM> cd microscope_control
-C:\Users\user\daoSPIM>python -m venv venv
-C:\Users\user\daoSPIM>microscope_control\Scripts\activate.bat
+C:\Users\user\daoSPIM> python -m venv venv
+C:\Users\user\daoSPIM> venv\Scripts\activate.bat
 (venv) C:\Users\user\daoSPIM>
 ```
-Install dependencies and launch the program
+Install dependencies 
 ```
+pip install --upgrade pip
 pip install -r requirements.txt
+```
+Launch the program
+```
 python dao_spim_control.py
 ```
 
