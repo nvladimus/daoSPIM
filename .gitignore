@@ -1,5 +1,9 @@
 .idea/
 
+# proprietory drivers
+*.dll
+mirao52e.*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

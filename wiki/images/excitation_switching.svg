@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="excitation_switching.svg"
-   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exL3.png"
+   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exR3.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300">
   <defs
@@ -214,9 +214,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.7690839"
-     inkscape:cx="456.1223"
-     inkscape:cy="687.75354"
+     inkscape:zoom="2.5018624"
+     inkscape:cx="463.10602"
+     inkscape:cy="773.11412"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
@@ -800,7 +800,7 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="ExLeft-Pos1"
-     style="display:inline"
+     style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
        style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
