@@ -1,6 +1,6 @@
 # daoSPIM
 **D**ual-view **a**daptive **o**ptics **s**elected **p**lane **i**llumination **m**icroscope makes multiview light-sheet microscopy compatible with microfluidic devices, by correcting optical aberrations with a deformable mirror (DM). Its unique optical design allows correcting aberrations in two arms with a single DM simultaneously.
-![Optical layout: chamber](/wiki/images/ChamberOpticalLayout.png)
+![Optical layout: chamber](/wiki/images/excitation-switching-w800.gif)
 
 ## Hardware overview
 The [Wiki](https://github.com/nvladimus/daoSPIM/wiki) page provides a high-level system overview. 
