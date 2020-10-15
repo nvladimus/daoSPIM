@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="excitation_switching.svg"
-   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exR3.png"
+   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exR2.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300">
   <defs
@@ -83,7 +83,7 @@
     <color-profile
        name="sRGB-IEC61966-2.1"
        xlink:href="C:\WINDOWS\system32\spool\drivers\color\sRGB Color Space Profile.icm"
-       id="color-profile12" />
+       id="color-profile11" />
     <marker
        inkscape:stockid="Arrow2Lstart"
        orient="auto"
@@ -206,6 +206,21 @@
        y1="-300.88232"
        x2="504.34738"
        y2="-322.77875" />
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker4709-2"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lend">
+      <path
+         inkscape:connector-curvature="0"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         id="path4711-2" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -214,11 +229,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.5018624"
-     inkscape:cx="463.10602"
-     inkscape:cy="773.11412"
+     inkscape:zoom="0.62546561"
+     inkscape:cx="403.2239"
+     inkscape:cy="407.14089"
      inkscape:document-units="px"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer10"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -514,12 +529,45 @@
          x="291.26498"
          id="tspan1736"
          sodipodi:role="line">PDMS</tspan></text>
+    <g
+       id="g1178"
+       transform="translate(45.574436,-102.80745)">
+      <text
+         id="text5202"
+         y="56.14698"
+         x="731.12146"
+         style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           style="font-size:20px;line-height:1.25"
+           y="56.14698"
+           x="731.12146"
+           id="tspan5204"
+           sodipodi:role="line">90<tspan
+   id="tspan5206"
+   style="font-size:64.99999762%;baseline-shift:super">o</tspan></tspan></text>
+      <g
+         style="stroke-width:1.40536129"
+         transform="matrix(1,0,0,0.50631879,0,4.4329202)"
+         id="g1152">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.71278405;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4709-2)"
+           d="m 790.32875,81.05317 c -30.7148,64.69183 -37.271,-131.6552 2.3736,-53.29385"
+           id="path4504"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.63505244;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2.63505242, 5.27010485;stroke-dashoffset:0;stroke-opacity:1"
+           d="m 746.00105,51.66907 h 49.7121"
+           id="path8330"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer10"
      inkscape:label="ExRight-Pos2"
-     style="display:none"
+     style="display:inline"
      transform="translate(-28.362984,398.77594)">
     <path
        sodipodi:nodetypes="cccccccccccccccccccc"
@@ -640,7 +688,7 @@
        inkscape:connector-curvature="0"
        id="path6018"
        d="m 120.75148,320.85794 93.11472,-74.41698 106.57709,-130.13623 63.19834,70.67743 132.45901,146.14135 -16.88751,-207.93111 13.58703,-170.26592 -93.96531,8.50891 -109.68098,-10.75453 136.43852,-155.92363 -15.66837,-16.36237 -130.39289,150.39256 119.50182,12.22186 89.5192,6.05698 12.57736,185.88883 12.68855,190.3599 -131.47869,-153.29101 -61.70253,-56.09321 -141.72883,117.42178 -75.16489,63.57229"
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\Patents\Invention-BeamImageSplitting\Figures\Frames\Emb1_exLeft-frame3.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
@@ -693,7 +741,7 @@
      style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 123.24084,295.19117 80.52858,-52.48975 152.57352,-126.39669 51.9797,45.24851 126.24666,163.60261 -26.21645,-193.99829 -14.94827,-196.71469 -75.49637,-7.89293 -121.74783,-3.5891 133.97305,-142.38326 16.66708,15.7308 -141.87194,147.01321 112.745,4.39274 82.38205,-6.06608 -15.79304,189.48142 30.89708,202.28829 L 396.73005,179.12911 333.5317,115.55682 220.97134,257.28564 120.07552,319.18844"
        id="path5790"
        inkscape:connector-curvature="0"
@@ -803,7 +851,7 @@
      style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="display:inline;fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="m 123.98875,296.20351 89.87745,-43.40532 165.66193,-136.86741 41.50897,38.14337 111.7792,172.5164 -41.00372,-193.96053 -9.31879,-208.378783 -64.21173,-9.883812 -125.76127,1.367245 139.03247,-137.06868 18.75494,13.86657 -148.29437,142.63274 115.67557,1.62436 70.30054,-6.634216 L 474.29917,132.04467 517.19833,331.8958 404.5831,171.27607 350.73362,115.55682 229.94625,268.13032 119.28224,320.55594"
        id="path6020"
        inkscape:connector-curvature="0"
@@ -859,7 +907,7 @@
      inkscape:groupmode="layer"
      id="layer11"
      inkscape:label="ExRight-Pos3"
-     style="display:inline"
+     style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
        inkscape:export-ydpi="300"
@@ -986,16 +1034,6 @@
          x="584.47864"
          y="-220.72687"
          style="font-size:17.5px;line-height:1.25">O2</tspan></text>
-    <rect
-       style="opacity:1;fill:none;fill-opacity:1;stroke:#e6e6e6;stroke-width:0.46875;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       id="rect6141"
-       width="824.71497"
-       height="864.38568"
-       x="28.597359"
-       y="-398.54156"
-       inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\paper-tiltedSlideSPIM\figs\Emb3-R1.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
     <ellipse
        style="display:inline;fill:#b3b3b3;fill-opacity:1;stroke:none"
        id="path5818-6"
