@@ -3,7 +3,7 @@
 ![Optical layout: chamber](/wiki/images/excitation-switching-w800.gif)
 
 ## Hardware overview
-The [Wiki](https://github.com/nvladimus/daoSPIM/wiki) page provides a high-level system overview. 
+The [Wiki](https://github.com/nvladimus/daoSPIM/wiki/daoSPIM) page provides a high-level system overview. 
 
 The [/wiki](./wiki) folder contains implementation details:
 * [BOM](./wiki/BOM.xlsx)
