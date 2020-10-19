@@ -17,9 +17,9 @@
    version="1.1"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="excitation_switching.svg"
-   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exR2.png"
-   inkscape:export-xdpi="300"
-   inkscape:export-ydpi="300">
+   inkscape:export-filename="C:\Users\nvladim\Documents\Nikita-MDC\myManuscipts\daoSPIM\figs\animations\OpticalLayout-exL3.png"
+   inkscape:export-xdpi="65.456108"
+   inkscape:export-ydpi="65.456108">
   <defs
      id="defs4260">
     <marker
@@ -83,7 +83,7 @@
     <color-profile
        name="sRGB-IEC61966-2.1"
        xlink:href="C:\WINDOWS\system32\spool\drivers\color\sRGB Color Space Profile.icm"
-       id="color-profile11" />
+       id="color-profile12" />
     <marker
        inkscape:stockid="Arrow2Lstart"
        orient="auto"
@@ -230,10 +230,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.62546561"
-     inkscape:cx="403.2239"
-     inkscape:cy="407.14089"
+     inkscape:cx="86.339587"
+     inkscape:cy="572.57467"
      inkscape:document-units="px"
-     inkscape:current-layer="layer10"
+     inkscape:current-layer="layer5"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -562,12 +562,43 @@
            inkscape:connector-curvature="0" />
       </g>
     </g>
+    <path
+       style="fill:#008000;fill-rule:evenodd;stroke:#808000;stroke-width:1.99968755;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 172.9171,-345.57622 h 44.51458"
+       id="path1079"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1081"
+       d="m 172.9171,-320.23481 h 44.51457"
+       style="fill:#008000;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.99968755;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18.75px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.9375px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="55.367496"
+       y="-338.81497"
+       id="text1085"><tspan
+         sodipodi:role="line"
+         id="tspan1083"
+         x="55.367496"
+         y="-338.81497"
+         style="font-size:22.5px;stroke-width:0.9375px">detection</tspan><tspan
+         sodipodi:role="line"
+         x="55.367496"
+         y="-314.29999"
+         style="font-size:22.5px;stroke-width:0.9375px"
+         id="tspan1087">excitation</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#999999;stroke-width:1.87500004;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 52.345119,-295.35428 H 239.70554 v -77.94194"
+       id="path1091"
+       inkscape:connector-curvature="0" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer10"
      inkscape:label="ExRight-Pos2"
-     style="display:inline"
+     style="display:none"
      transform="translate(-28.362984,398.77594)">
     <path
        sodipodi:nodetypes="cccccccccccccccccccc"
@@ -907,7 +938,7 @@
      inkscape:groupmode="layer"
      id="layer11"
      inkscape:label="ExRight-Pos3"
-     style="display:none"
+     style="display:inline"
      transform="translate(-28.362984,398.77594)">
     <path
        inkscape:export-ydpi="300"
