@@ -1,10 +1,12 @@
 ## Deformable mirror shape optimization 
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ### Software requirements
-- Python 3.6, 64 bit (e.g. Anaconda)
+- Python 3.6, x64 (e.g. Anaconda)
 - (optional) create and activate [local environment](/microscope_control#installation)
 - Hamamatsu DCAM drivers
-- Mirao52e dll drivers (64 bit)
+- Mirao52e dll drivers (x64)
 
 ### Hardware requirements
 - PC with OS Windows 7/10
