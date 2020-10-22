@@ -1,4 +1,6 @@
 # daoSPIM
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 **D**ual-view **a**daptive **o**ptics **s**elected **p**lane **i**llumination **m**icroscope makes multiview light-sheet microscopy compatible with microfluidic devices, by correcting optical aberrations with a deformable mirror (DM). Its unique optical design allows correcting aberrations in two arms with a single DM simultaneously.
 ![Optical layout: chamber](/wiki/images/excitation-switching-w800.gif)
 
@@ -21,8 +23,7 @@ The microscope is controlled via [GUI program](./microscope_control) which links
 DM is optimized in a separate Jupyter [notebook](./dm_optimization/) using a fluorescent bead image. The resulting DM command can be loaded in the GUI  [program](./microscope_control) and used thereafter.
 
 ## Citation
-If you use any of the code or materials from this repo, please cite it as
-** Dual-view light-sheet imaging through tilted glass interface using a deformable mirror **
+If you use any code or materials from this repo in your work, please cite our work as
 
-Nikita Vladimirov, Friedrich Preusser, Jan Wisniewski, Ziv Yaniv, Ravi Anand Desai, Andrew Woehler, Stephan Preibisch
-* bioRxiv 2020.10.20.345306;* doi: https://doi.org/10.1101/2020.10.20.345306
+**Dual-view light-sheet imaging through tilted glass interface using a deformable mirror** \
+Nikita Vladimirov, Friedrich Preusser, Jan Wisniewski, Ziv Yaniv, Ravi Anand Desai, Andrew Woehler, Stephan Preibisch. *bioRxiv 2020.10.20.345306;* doi: https://doi.org/10.1101/2020.10.20.345306
