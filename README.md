@@ -19,3 +19,10 @@ The microscope is controlled via [GUI program](./microscope_control) which links
 - electro-tunable lens (Optotune EL-16-40-TC-VIS-5D-C)
 
 DM is optimized in a separate Jupyter [notebook](./dm_optimization/) using a fluorescent bead image. The resulting DM command can be loaded in the GUI  [program](./microscope_control) and used thereafter.
+
+## Citation
+If you use any of the code or materials from this repo, please cite it as
+** Dual-view light-sheet imaging through tilted glass interface using a deformable mirror **
+
+Nikita Vladimirov, Friedrich Preusser, Jan Wisniewski, Ziv Yaniv, Ravi Anand Desai, Andrew Woehler, Stephan Preibisch
+* bioRxiv 2020.10.20.345306;* doi: https://doi.org/10.1101/2020.10.20.345306

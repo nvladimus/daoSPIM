@@ -7,10 +7,11 @@ The software provides GUI for microscope control:
 - electrotunable lens control (manual offsetting the ETL power)
 - streaming images into HDF5 file (Fiji/BigDataViewer flavor) at high speed (currently up to 60Hz)
 
-Python 3.6
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Hardware requirements
- - PC with Windows 10, 64 bit.
+ - PC with Windows 7/10, x64.
  - camera Hamamatsu Orca Flash4.3.
  - NI DAQmx PCIe board with at least 2 AO channels for galvo and laser modulation (e.g. PCIe-6321).
  - XY stage from ASI (MS-2000 controller).
