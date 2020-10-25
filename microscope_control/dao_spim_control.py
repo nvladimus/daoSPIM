@@ -653,7 +653,7 @@ class LiveImagingWorker(QtCore.QObject):
     def update(self):
         while self.camera.status == 'Running':
             self.parent_window.button_snap_clicked()
-            time.sleep(0.2)
+            time.sleep(0.2) # Todo: Replace with QTimer!!!
         self.sig_finished.emit()
 
 
@@ -682,7 +682,7 @@ class StageScanningWorker(QtCore.QObject):
             response = self.dev_stage.write_with_response(b'/')
             while response[0] != 'N':
                 response = self.dev_stage.write_with_response(b'/')
-                time.sleep(0.05)
+                time.sleep(0.05) # Todo: replace with Timer!!!
             self.dev_stage.logger.debug(f"move complete")
             # return to scan start position
             self.dev_stage.move_abs((self.dev_stage.scan_limits_xx_yy[0], self.dev_stage.scan_limits_xx_yy[2]))
@@ -821,7 +821,7 @@ class SavingStacksWorker(QtCore.QObject):
                 self.stack_counter += 1
                 self.angle_counter = (self.angle_counter + 1) % self.n_angles
             else:
-                time.sleep(0.02)
+                time.sleep(0.02) # Todo: Replace with QTimer!!!
         # clean-up:
         if self.parent_window.file_format == "HDF5":
             if not self.parent_window.abort_pressed:
