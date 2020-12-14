@@ -13,9 +13,13 @@ import os
 import numpy as np
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal
+from functools import partial
 
 config = {'dll_path': "./src/deformable_mirror/mirao52e.dll",
-          'flat_file': './src/deformable_mirror/flat.mro'}
+          'flat_file': './src/deformable_mirror/flat.mro',
+          'saved_cmd_file': 'C:/Users/Nikita/Pictures/Water/' \
+                            'SPGD-beads-water/2020-05-25_optimize_GreenFromZeroDM_dynGain/' \
+                            'DMcmd_run2(it60-80ave)BEST_IN_SESSION.npy'}
 logging.basicConfig()
 
 
@@ -30,10 +34,8 @@ class DmController(QtCore.QObject):
         super().__init__()
         self.errors = {}
         self.initialize_err_codes(self.errors)
-        self.dll_path = config['dll_path']
-        self.flat_file = config['flat_file']
-        self.cmd_flat = None
-        self.dev_handle = None
+        self.config = config
+        self.cmd_flat = self.dev_handle = None
         self.n_actuators = 52
         self.diameter_mm = 15.0
         self.command = np.zeros(self.n_actuators)
@@ -51,17 +53,17 @@ class DmController(QtCore.QObject):
             self.sig_update_gui.connect(self._update_gui)
 
     def check_files(self):
-        if not os.path.exists(self.dll_path):
-            self.logger.error(f"DLL file does not exist at {self.dll_path}.")
+        if not os.path.exists(self.config['dll_path']):
+            self.logger.error(f"DLL file does not exist at {self.config['dll_path']}.")
         else:
             try:
-                self.dev_handle = ctypes.windll.LoadLibrary(self.dll_path)
+                self.dev_handle = ctypes.windll.LoadLibrary(self.config['dll_path'])
             except Exception as e:
-                self.logger.error(f"Could not load DLL file from {self.dll_path}: {e}")
-            if os.path.exists(self.flat_file):
-                self.cmd_flat = self.read_mro_file(self.flat_file)
+                self.logger.error(f"Could not load DLL file from {self.config['dll_path']}: {e}")
+            if os.path.exists(self.config['flat_file']):
+                self.cmd_flat = self.read_mro_file(self.config['flat_file'])
             else:
-                self.logger.error(f"Flat-command file does not exist at {self.dll_path}.")
+                self.logger.error(f"Flat-command file does not exist at {self.config['dll_path']}.")
 
     def initialize(self):
         """Open deformable mirror session"""
@@ -79,7 +81,7 @@ class DmController(QtCore.QObject):
     def apply_flat(self):
         """Apply factory-supplied flat command from .mro file"""
         if self.dev_handle is not None:
-            self.cmd_flat = self.read_mro_file(self.flat_file)
+            self.cmd_flat = self.read_mro_file(self.config['flat_file'])
             try:
                 self.dev_handle.mro_applySmoothCommand(self.cmd_flat.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                                                        self._trigger, ctypes.byref(self._status))
@@ -107,18 +109,22 @@ class DmController(QtCore.QObject):
             if self.gui_on:
                 self.sig_update_gui.emit()
 
-    def read_npy_file(self, filepath=''):
+    def read_npy_file(self, filepath, dialog=True):
         """Read command from .npy file and apply immediately.
         If self.gui_on, open a file dialog. Otherwise, take filepath from arguments.
         """
-        if self.gui_on:
+        if dialog:
             filepath, _filter = QtWidgets.QFileDialog.getOpenFileName(self.gui, "Open .npy file", "./",
                                                                       "Numpy files (*.npy)")
         try:
             self.command = np.load(filepath)
             self.apply_cmd(self.command)
+            self.logger.info(f"Command from {filepath} applied")
         except Exception as e:
             self.logger.error(f'Numpy file {filepath} failed to open.')
+
+    def apply_saved_cmd(self):
+        self.read_npy_file(self.config['saved_cmd_file'], dialog=False)
 
     def read_mro_file(self, filepath: str) -> np.ndarray:
         if self.dev_handle is not None:
@@ -220,14 +226,15 @@ class DmController(QtCore.QObject):
 
         groupbox_name = 'Commands'
         self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
-        self.gui.add_button('Apply flat', groupbox_name, lambda: self.apply_flat())
-        self.gui.add_button('Load from .npy file', groupbox_name, lambda: self.read_npy_file())
+        self.gui.add_button('Apply flat command', groupbox_name, self.apply_flat)
+        self.gui.add_button('Apply saved command', groupbox_name, self.apply_saved_cmd)
+        self.gui.add_button('Load from .npy file', groupbox_name, self.read_npy_file)
 
         tab_name = 'Config'
         groupbox_name = 'Required files'
         self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
-        self.gui.add_string_field('DLL path', groupbox_name, value=self.dll_path, enabled=False)
-        self.gui.add_string_field('Flat file', groupbox_name, value=self.flat_file, enabled=False)
+        self.gui.add_string_field('DLL path', groupbox_name, value=self.config['dll_path'], enabled=False)
+        self.gui.add_string_field('Flat file', groupbox_name, value=self.config['flat_file'], enabled=False)
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
