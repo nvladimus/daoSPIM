@@ -9,6 +9,7 @@ import os
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.uic import loadUi
 import pyqtgraph as pg
 import numpy as np
 from skimage.external import tifffile
@@ -192,19 +193,17 @@ class MainWindow(QtWidgets.QWidget):
 
         # stage widgets
         self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
+        self.gui_stage = loadUi("gui/stage_scanning.ui")
+        # self.groupbox_scanning = QtWidgets.QGroupBox("Scanning")
+        # self.gui_stage.checkbox_stage_use_fixed_range = QtWidgets.QCheckBox("Use fixed range, um")
+        # self.gui_stage.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
+        # self.gui_stage.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
+        # self.gui_stage.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
+        # self.gui_stage.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
 
-        self.groupbox_scanning = QtWidgets.QGroupBox("Scanning")
         self.button_stage_x_move_right = QtWidgets.QPushButton("move ->")
         self.button_stage_x_move_left = QtWidgets.QPushButton("<- move")
         self.spinbox_stage_x_move_step = QtWidgets.QSpinBox(suffix=" um")
-        self.button_stage_pos_start = QtWidgets.QPushButton("Mark x-start")
-        self.button_stage_pos_stop = QtWidgets.QPushButton("Mark x-stop")
-        self.button_stage_start_scan = QtWidgets.QPushButton("Start scan cycle")
-        self.checkbox_stage_use_fixed_range = QtWidgets.QCheckBox("Use fixed range, um")
-        self.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
-        self.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
-        self.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
-        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
         self.label_stage_start_pos = QtWidgets.QLabel("0.0")
         self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
 
@@ -295,44 +294,14 @@ class MainWindow(QtWidgets.QWidget):
         self.dev_etl.gui.setFixedWidth(300)
         self.tab_etl.setLayout(self.tab_etl.layout)
 
-        #LIGHTSHEET tab
+        # LIGHTSHEET tab
         self.tab_lightsheet.layout.addWidget(self.ls_generator.gui)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
-        self.dev_stage.gui.setFixedWidth(300)
-        self.button_stage_pos_start.setFixedWidth(80)
-        self.button_stage_pos_stop.setFixedWidth(80)
-
         self.label_stage_start_pos.setFixedWidth(60)
         self.label_stage_stop_pos.setFixedWidth(60)
-
-        self.button_stage_start_scan.setFixedWidth(240)
-        self.checkbox_stage_use_fixed_range.setChecked(True)
-
-        self.spinbox_stage_speed_x.setValue(0.2)
-        self.spinbox_stage_speed_x.setMinimum(0.01)
-        self.spinbox_stage_speed_x.setFixedWidth(160)
-        self.spinbox_stage_speed_x.setDecimals(3)
-        self.spinbox_stage_speed_x.setEnabled(False)
-
-        self.spinbox_stage_step_x.setDecimals(3)
-        self.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
-        self.spinbox_stage_step_x.setMinimum(0.022)
-        self.spinbox_stage_step_x.setFixedWidth(160)
-        self.spinbox_stage_step_x.setSingleStep(0.022)
-
-        self.spinbox_stage_n_cycles.setValue(1)
-        self.spinbox_stage_n_cycles.setMinimum(1)
-        self.spinbox_stage_n_cycles.setMaximum(1000)
-        self.spinbox_stage_n_cycles.setFixedWidth(160)
-        self.spinbox_stage_n_cycles.setEnabled(False)
-
-        self.spinbox_stage_range_x.setValue(50)
-        self.spinbox_stage_range_x.setFixedWidth(160)
-        self.spinbox_stage_range_x.setDecimals(0)
-        self.spinbox_stage_range_x.setSingleStep(1)
-        self.spinbox_stage_range_x.setRange(1, 1000)
+        self.gui_stage.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
 
         self.button_stage_x_move_right.setFixedWidth(80)
         self.button_stage_x_move_left.setFixedWidth(80)
@@ -342,23 +311,15 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_stage_x_move_step.setRange(1, 500)
 
         layout_stage_start_stop = QtWidgets.QGridLayout()
-        layout_stage_start_stop.addWidget(self.button_stage_pos_start, 0, 0)
         layout_stage_start_stop.addWidget(self.label_stage_start_pos, 0, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_pos_stop, 0, 2)
         layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 3)
         layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 1, 0)
         layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 1, 1)
         layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 1, 2)
 
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_speed_x)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_step_x)
-        self.tab_stage.layout.addWidget(self.checkbox_stage_use_fixed_range)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_range_x)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_n_cycles)
+        self.tab_stage.layout.addWidget(self.gui_stage)
         self.tab_stage.layout.addRow(layout_stage_start_stop)
-        self.tab_stage.layout.addRow(self.button_stage_start_scan)
-
         self.tab_stage.setLayout(self.tab_stage.layout)
 
         # CAMERA window
@@ -431,13 +392,13 @@ class MainWindow(QtWidgets.QWidget):
         # Signals Stage control
         self.button_stage_x_move_right.clicked.connect(self.stage_x_move_right)
         self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
-        self.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
-        self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
-        self.button_stage_start_scan.clicked.connect(self.start_scan)
+        self.gui_stage.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
+        self.gui_stage.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
+        self.gui_stage.button_stage_start_scan.clicked.connect(self.start_scan)
 
         self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
-        self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
-        self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
+        self.gui_stage.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
+        self.gui_stage.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
@@ -477,9 +438,9 @@ class MainWindow(QtWidgets.QWidget):
     def stage_mark_stop_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            if self.checkbox_stage_use_fixed_range.isChecked():
+            if self.gui_stage.checkbox_stage_use_fixed_range.isChecked():
                 start = float(self.label_stage_start_pos.text().strip())
-                pos = start + self.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
+                pos = start + self.gui_stage.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
                 self.label_stage_stop_pos.setText(f'{pos:.4f}')
             else:
                 pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
@@ -492,27 +453,27 @@ class MainWindow(QtWidgets.QWidget):
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
         if self.dev_cam.exposure_ms != 0:
-            stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
-            self.spinbox_stage_speed_x.setValue(stage_speed_x)
+            stage_speed_x = self.gui_stage.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
+            self.gui_stage.spinbox_stage_speed_x.setValue(stage_speed_x)
 
         if self.spinbox_n_timepoints.value() != 0:
-            self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
+            self.gui_stage.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
 
         # feed the trigger interval to the stage settings
         if self.dev_stage.initialized:
-            stage_step_x_mm = 0.001 * self.spinbox_stage_step_x.value()
+            stage_step_x_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value()
             self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
             self.dev_stage.set_speed(stage_speed_x, axis='X')
 
-        if self.spinbox_stage_speed_x.value() != 0:
-            exposure_ms = self.spinbox_stage_step_x.value() / self.spinbox_stage_speed_x.value()
+        if self.gui_stage.spinbox_stage_speed_x.value() != 0:
+            exposure_ms = self.gui_stage.spinbox_stage_step_x.value() / self.gui_stage.spinbox_stage_speed_x.value()
             if self.dev_cam is not None:
                 self.dev_cam.set_exposure(exposure_ms)
 
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
-        if self.spinbox_stage_step_x.value() != 0:
-            n_triggers = int((self.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
-                             / self.spinbox_stage_step_x.value())
+        if self.gui_stage.spinbox_stage_step_x.value() != 0:
+            n_triggers = int((self.gui_stage.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
+                             / self.gui_stage.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
             if self.ls_generator.initialized:
                 self.ls_generator.set_switching_period(n_triggers)
@@ -796,7 +757,7 @@ class SavingStacksWorker(QtCore.QObject):
                     self.frames_saved += 1
                 #self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
                 if self.parent_window.file_format == "HDF5":
-                    z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
+                    z_voxel_size = self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
                     z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
                     affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
                                               (0.0, 1.0, -z_anisotropy, 0.0),
