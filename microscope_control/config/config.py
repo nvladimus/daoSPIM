@@ -7,7 +7,7 @@ camera = {
 }
 
 scanning = {
-    'step_x_um': 2.82
+    'step_x_um': 5.0
 }
 # deformable mirror
 dm = {'diameter_mm': 15.0}
@@ -17,6 +17,7 @@ saving = {
 }
 
 microscope = {
-    'pixel_size_um': 0.14625
+    'pixel_size_um': 0.14625,
+    'FOV_y_um': 100
 }
 

@@ -23,6 +23,7 @@ import etl_controller_Optotune as etl
 import stage_ASI_MS2000 as stage
 import scipy.optimize as opt
 import logging
+from functools import partial
 logging.basicConfig()
 
 
@@ -194,18 +195,6 @@ class MainWindow(QtWidgets.QWidget):
         # stage widgets
         self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
         self.gui_stage = loadUi("gui/stage_scanning.ui")
-        # self.groupbox_scanning = QtWidgets.QGroupBox("Scanning")
-        # self.gui_stage.checkbox_stage_use_fixed_range = QtWidgets.QCheckBox("Use fixed range, um")
-        # self.gui_stage.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
-        # self.gui_stage.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
-        # self.gui_stage.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
-        # self.gui_stage.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
-
-        self.button_stage_x_move_right = QtWidgets.QPushButton("move ->")
-        self.button_stage_x_move_left = QtWidgets.QPushButton("<- move")
-        self.spinbox_stage_x_move_step = QtWidgets.QSpinBox(suffix=" um")
-        self.label_stage_start_pos = QtWidgets.QLabel("0.0")
-        self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
 
         # camera widgets
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
@@ -299,27 +288,9 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
 
         # Stage tab
-        self.label_stage_start_pos.setFixedWidth(60)
-        self.label_stage_stop_pos.setFixedWidth(60)
         self.gui_stage.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
-
-        self.button_stage_x_move_right.setFixedWidth(80)
-        self.button_stage_x_move_left.setFixedWidth(80)
-
-        self.spinbox_stage_x_move_step.setValue(5)
-        self.spinbox_stage_x_move_step.setFixedWidth(60)
-        self.spinbox_stage_x_move_step.setRange(1, 500)
-
-        layout_stage_start_stop = QtWidgets.QGridLayout()
-        layout_stage_start_stop.addWidget(self.label_stage_start_pos, 0, 1)
-        layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 3)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 1, 0)
-        layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 1, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 1, 2)
-
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
         self.tab_stage.layout.addWidget(self.gui_stage)
-        self.tab_stage.layout.addRow(layout_stage_start_stop)
         self.tab_stage.setLayout(self.tab_stage.layout)
 
         # CAMERA window
@@ -390,11 +361,14 @@ class MainWindow(QtWidgets.QWidget):
         self.button_exit.clicked.connect(self.button_exit_clicked)
 
         # Signals Stage control
-        self.button_stage_x_move_right.clicked.connect(self.stage_x_move_right)
-        self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
+        self.gui_stage.button_stage_x_move_right.clicked.connect(partial(self.stage_move, direction=(-1, 0)))
+        self.gui_stage.button_stage_x_move_left.clicked.connect(partial(self.stage_move, direction=(1,0)))
+        self.gui_stage.button_stage_y_move_up.clicked.connect(partial(self.stage_move, direction=(0,-1)))
+        self.gui_stage.button_stage_y_move_down.clicked.connect(partial(self.stage_move, direction=(0,1)))
         self.gui_stage.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
         self.gui_stage.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
         self.gui_stage.button_stage_start_scan.clicked.connect(self.start_scan)
+        self.gui_stage.button_set_center.clicked.connect(self.stage_setup_scan_range)
 
         self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.gui_stage.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
@@ -402,26 +376,37 @@ class MainWindow(QtWidgets.QWidget):
         self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
+        self.stage_setup_scan_range()
         self.worker_stage_scanning.setup(self.dev_stage, self.n_stacks_to_grab)
         self.thread_stage_scanning.start()
 
-    def stage_x_move_right(self):
+    def stage_setup_scan_range(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
-            self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
+            if self.gui_stage.checkbox_scan_around.isChecked():
+                x_range = self.gui_stage.spinbox_stage_range_x.value()
+                y_range = self.gui_stage.spinbox_stage_range_y.value()
+                xstart = self.dev_stage.position_x_mm - 0.001*x_range / 2 - self.dev_stage.backlash_mm
+                xstop  = self.dev_stage.position_x_mm + 0.001*x_range / 2 + self.dev_stage.backlash_mm
+                if y_range > config.microscope['FOV_y_um']:
+                    ystart = self.dev_stage.position_y_mm - 0.001*y_range / 2 - self.dev_stage.backlash_mm
+                    ystop  = self.dev_stage.position_y_mm + 0.001*y_range / 2 + self.dev_stage.backlash_mm
+                else:
+                    ystart = ystop = self.dev_stage.position_y_mm
+                self.dev_stage.set_scan_region(xstart, scan_boundary='x_start')
+                self.dev_stage.set_scan_region(xstop, scan_boundary='x_stop')
+                self.dev_stage.set_scan_region(ystart, scan_boundary='y_start')
+                self.dev_stage.set_scan_region(ystop, scan_boundary='y_stop')
         else:
             self.logger.error("Please activate stage first")
 
-    def stage_x_move_left(self):
+    def stage_move(self, direction=(1, 1)):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x = pos_x + direction[0] * 0.001 * self.gui_stage.spinbox_stage_move_step.value()
+            new_y = pos_y + direction[1] * 0.001 * self.gui_stage.spinbox_stage_move_step.value()
             self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
@@ -429,24 +414,15 @@ class MainWindow(QtWidgets.QWidget):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos = self.dev_stage.position_x_mm - self.dev_stage.backlash_mm
-            self.label_stage_start_pos.setText(f'{pos:.4f}')
             self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
-            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_start')
         else:
             self.logger.error("Please activate stage first")
 
     def stage_mark_stop_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            if self.gui_stage.checkbox_stage_use_fixed_range.isChecked():
-                start = float(self.label_stage_start_pos.text().strip())
-                pos = start + self.gui_stage.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
-                self.label_stage_stop_pos.setText(f'{pos:.4f}')
-            else:
-                pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
-                self.label_stage_stop_pos.setText(f'{pos:.4f}')
+            pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
-            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_stop')
         else:
             self.logger.error("Please activate stage first")
 

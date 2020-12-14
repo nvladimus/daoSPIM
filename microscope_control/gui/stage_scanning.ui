@@ -20,7 +20,7 @@
       <string>Scanning</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
+      <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="spinbox_stage_speed_x">
         <property name="enabled">
          <bool>false</bool>
@@ -36,28 +36,6 @@
         </property>
         <property name="minimum">
          <double>0.100000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="spinbox_stage_step_x">
-        <property name="prefix">
-         <string>Trig. intvl: </string>
-        </property>
-        <property name="suffix">
-         <string> um</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>0.022000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.022000000000000</double>
-        </property>
-        <property name="value">
-         <double>5.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -80,6 +58,28 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QDoubleSpinBox" name="spinbox_stage_step_x">
+        <property name="prefix">
+         <string>Trig. intvl: </string>
+        </property>
+        <property name="suffix">
+         <string> um</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>0.022000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.022000000000000</double>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -89,17 +89,23 @@
       <string>Scan range</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="0">
+      <item row="5" column="0">
        <widget class="QPushButton" name="button_stage_pos_start">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Mark X-start</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="3" column="0">
        <widget class="QSpinBox" name="spinbox_stage_range_x">
         <property name="suffix">
-         <string> um (range X)</string>
+         <string> um</string>
+        </property>
+        <property name="prefix">
+         <string>range X: </string>
         </property>
         <property name="minimum">
          <number>1</number>
@@ -112,10 +118,13 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="3" column="1">
        <widget class="QSpinBox" name="spinbox_stage_range_y">
         <property name="suffix">
-         <string> um (range Y)</string>
+         <string> um</string>
+        </property>
+        <property name="prefix">
+         <string>range Y: </string>
         </property>
         <property name="minimum">
          <number>1</number>
@@ -124,38 +133,54 @@
          <number>1000</number>
         </property>
         <property name="value">
-         <number>50</number>
+         <number>100</number>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="6" column="0">
        <widget class="QPushButton" name="button_stage_pos_stop">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Mark X-stop</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QPushButton" name="button_stage_posy_start">
-        <property name="text">
-         <string>Mark Y-start</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
+      <item row="6" column="1">
        <widget class="QPushButton" name="button_stage_posy_stop">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Mark Y-stop</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QCheckBox" name="checkbox_stage_use_fixed_range">
+      <item row="5" column="1">
+       <widget class="QPushButton" name="button_stage_posy_start">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
-         <string>use predefined (X, Y) range</string>
+         <string>Mark Y-start</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="checkbox_scan_around">
+        <property name="text">
+         <string>scan around center position</string>
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="button_set_center">
+        <property name="text">
+         <string>Set center position</string>
         </property>
        </widget>
       </item>
@@ -167,6 +192,71 @@
      <property name="text">
       <string>Start scanning</string>
      </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupbox_manual_move">
+     <property name="title">
+      <string>Manual move</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="button_stage_x_move_right">
+        <property name="toolTip">
+         <string>X-move: right</string>
+        </property>
+        <property name="text">
+         <string>►</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QDoubleSpinBox" name="spinbox_stage_move_step">
+        <property name="prefix">
+         <string>step: </string>
+        </property>
+        <property name="suffix">
+         <string> um</string>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="button_stage_x_move_left">
+        <property name="toolTip">
+         <string>X-move: left</string>
+        </property>
+        <property name="text">
+         <string>◄</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="button_stage_y_move_up">
+        <property name="toolTip">
+         <string>Y-move: up</string>
+        </property>
+        <property name="text">
+         <string>▲</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="button_stage_y_move_down">
+        <property name="toolTip">
+         <string>Y-move: down</string>
+        </property>
+        <property name="text">
+         <string>▼</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
