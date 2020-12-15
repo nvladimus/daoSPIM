@@ -234,9 +234,14 @@ class MotionController(QtCore.QObject):
                   f'Z={self.n_scan_lines}'
         self.logger.debug(command)
         _ = self.write_with_response(command.encode())
-        # set RASTER (0) or SERPENTINE (1) scan mode:
-        _ = self.write_with_response(b'SCAN F=1')
+        self._set_scan_mode()
         _ = self.write_with_response(b'TTL X=1')
+
+    def _set_scan_mode(self, raster=True):
+        """set RASTER (0) or SERPENTINE (1) scan mode"""
+        mode = 0 if raster else 1
+        _ = self.write_with_response(f'SCAN F={mode}'.encode())
+        self.logger.debug(f'scan mode {mode}')
 
     def start_scan(self):
         """Scan the stage with ENC_INT module.
@@ -284,6 +289,8 @@ class MotionController(QtCore.QObject):
                                    func=self.set_speed, **{'axis': 'Y'})
 
         tab_name = 'Scanning'
+        self.gui.add_combobox("Scan mode", tab_name, ['Raster', 'Serpentine'], value='Raster',
+                              func=lambda x: self._set_scan_mode(x == 'Raster'))
         groupbox_name = 'Scan region'
         self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('X start, mm', groupbox_name,
@@ -304,9 +311,9 @@ class MotionController(QtCore.QObject):
         self.gui.add_numeric_field('Num. of lines', groupbox_name,
                                    value=self.n_scan_lines, vmin=0, vmax=10000, decimals=0,
                                    func=self.set_n_scan_lines)
-        self.gui.add_numeric_field('Backlash margin, mm', groupbox_name,
+        self.gui.add_numeric_field('Backlash margin, mm', tab_name,
                                    value=self.backlash_mm, vmin=0, vmax=0.05, decimals=3, enabled=False)
-        self.gui.add_button('Start scanning', groupbox_name, func=self.start_scan)
+        self.gui.add_button('Start scanning', tab_name, func=self.start_scan)
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
