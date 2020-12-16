@@ -386,11 +386,11 @@ class MainWindow(QtWidgets.QWidget):
             if self.gui_stage.checkbox_scan_around.isChecked():
                 x_range = self.gui_stage.spinbox_stage_range_x.value()
                 y_range = self.gui_stage.spinbox_stage_range_y.value()
-                xstart = self.dev_stage.position_x_mm - 0.001*x_range / 2 - self.dev_stage.backlash_mm
-                xstop  = self.dev_stage.position_x_mm + 0.001*x_range / 2 + self.dev_stage.backlash_mm
+                xstart = self.dev_stage.position_x_mm - 0.001*x_range / 2
+                xstop  = self.dev_stage.position_x_mm + 0.001*x_range / 2
                 if y_range > config.microscope['FOV_y_um']:
-                    ystart = self.dev_stage.position_y_mm - 0.001*y_range / 2 - self.dev_stage.backlash_mm
-                    ystop  = self.dev_stage.position_y_mm + 0.001*y_range / 2 + self.dev_stage.backlash_mm
+                    ystart = self.dev_stage.position_y_mm - 0.001*y_range / 2
+                    ystop  = self.dev_stage.position_y_mm + 0.001*y_range / 2
                 else:
                     ystart = ystop = self.dev_stage.position_y_mm
                 self.dev_stage.set_scan_region(xstart, scan_boundary='x_start')
@@ -413,7 +413,7 @@ class MainWindow(QtWidgets.QWidget):
     def stage_mark_start_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos = self.dev_stage.position_x_mm - self.dev_stage.backlash_mm
+            pos = self.dev_stage.position_x_mm
             self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
         else:
             self.logger.error("Please activate stage first")
@@ -421,7 +421,7 @@ class MainWindow(QtWidgets.QWidget):
     def stage_mark_stop_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
+            pos = self.dev_stage.position_x_mm
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
         else:
             self.logger.error("Please activate stage first")
@@ -448,8 +448,7 @@ class MainWindow(QtWidgets.QWidget):
 
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
         if self.gui_stage.spinbox_stage_step_x.value() != 0:
-            n_triggers = int((self.gui_stage.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
-                             / self.gui_stage.spinbox_stage_step_x.value())
+            n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.gui_stage.spinbox_stage_step_x.value())
             self.spinbox_frames_per_stack.setValue(n_triggers)
             if self.ls_generator.initialized:
                 self.ls_generator.set_switching_period(n_triggers)
@@ -758,7 +757,7 @@ class SavingStacksWorker(QtCore.QObject):
                 self.stack_counter += 1
                 self.angle_counter = (self.angle_counter + 1) % self.n_angles
             else:
-                time.sleep(0.02) # Todo: Replace with QTimer!!!
+                time.sleep(0.02) # Todo: Replace with QTimer
         # clean-up:
         if self.parent_window.file_format == "HDF5":
             if not self.parent_window.abort_pressed:
