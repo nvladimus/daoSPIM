@@ -700,7 +700,7 @@ class SavingStacksWorker(QtCore.QObject):
         self.camera = camera
         self.logger = logger
         self.frame_queue = frame_queue
-        self.frames_to_save = self.frames_per_stack = self.n_angles = self.frames_saved = None
+        self.frames_to_save = self.frames_per_stack = self.n_angles = self.frame_counter = None
         self.stack_counter = self.angle_counter = self.bdv_writer = self.stack = self.cam_image_height = None
         self.sig_update_GUI.connect(self.parent_window.button_acquire_reset)
 
@@ -708,67 +708,54 @@ class SavingStacksWorker(QtCore.QObject):
         self.frames_to_save = frames_to_save
         self.frames_per_stack = frames_per_stack
         self.n_angles = n_angles
-        self.frames_saved = 0
+        self.frame_counter = 0
         self.stack_counter = 0
         self.angle_counter = 0
+        self.planes_interleaved = False
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
+        if self.parent_window.file_format == "HDF5":
+            self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
+                                                nangles=self.n_angles)
+            z_voxel_size = self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
+            z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
+            self.affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
+                                      (0.0, 1.0, -z_anisotropy, 0.0),
+                                      (0.0, 0.0, 1.0, 0.0)))
+            self.voxel_size = (config.microscope['pixel_size_um'], config.microscope['pixel_size_um'], z_voxel_size)
+        elif self.parent_window.file_format == "TIFF":
+            raise ValueError("TIFF support is deprecated")
 
     @QtCore.pyqtSlot()
     def run(self):
         self.parent_window.file_save_running = True
-        if self.parent_window.file_format == "HDF5":
-            self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
-                                                nangles=self.n_angles,
-                                                subsamp=((1, 1, 1),))
-        elif self.parent_window.file_format == "TIFF":
-            pass
-
-        while (self.frames_saved < self.frames_to_save) and not self.parent_window.abort_pressed:
-            if len(self.frame_queue) >= self.frames_per_stack:
-                for iframe in range(self.frames_per_stack):
-                    plane = self.frame_queue.popleft()
-                    self.stack[iframe, :, :] = np.reshape(plane, (self.cam_image_height, 2048))
-                    self.frames_saved += 1
-                #self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
-                if self.parent_window.file_format == "HDF5":
-                    z_voxel_size = self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
-                    z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
-                    affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
-                                              (0.0, 1.0, -z_anisotropy, 0.0),
-                                              (0.0, 0.0, 1.0, 0.0)))
-                    voxel_size = (config.microscope['pixel_size_um'], config.microscope['pixel_size_um'], z_voxel_size)
-                    self.bdv_writer.append_view(self.stack,
-                                                time=int(self.stack_counter / self.n_angles),
-                                                angle=self.angle_counter,
-                                                m_affine=affine_matrix,
-                                                name_affine="unshearing transformation",
-                                                calibration=(1, 1, 1),
-                                                voxel_size_xyz=voxel_size,
-                                                exposure_time=self.camera.exposure_ms
-                                                )
-                elif self.parent_window.file_format == "TIFF":
-                    file_name = self.parent_window.file_path + \
-                                "_t{:05d}a{:01d}.tiff".format(self.stack_counter, self.angle_counter)
-                    tifffile.imsave(file_name, self.stack)
-                else:
-                    self.logger.error(f"unknown format:{self.parent_window.file_format}")
-
-                self.stack_counter += 1
-                self.angle_counter = (self.angle_counter + 1) % self.n_angles
+        while (self.frame_counter < self.frames_to_save) and not self.parent_window.abort_pressed:
+            while len(self.frame_queue) > 0:
+                plane = np.reshape(self.frame_queue.popleft(), (self.cam_image_height, 2048))
+                if not self.planes_interleaved:
+                    if self.frame_counter % self.frames_per_stack == 0:  # begin new stack
+                        time_index = int(self.stack_counter / self.n_angles)
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    time=time_index,
+                                                    angle=self.angle_counter,
+                                                    m_affine=self.affine_matrix,
+                                                    name_affine="unshearing transformation",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.stack_counter += 1
+                        self.angle_counter = (self.angle_counter + 1) % self.n_angles
+                    self.bdv_writer.append_plane(plane, time=time_index, angle=self.angle_counter)
+                self.frame_counter += 1
             else:
-                time.sleep(0.02) # Todo: Replace with QTimer
+                time.sleep(0.02)  # Todo: Replace with QTimer
         # clean-up:
-        if self.parent_window.file_format == "HDF5":
-            if not self.parent_window.abort_pressed:
-                self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles),
-                                               camera_name="Hamamatsu OrcaFlash 4.3")
-            self.bdv_writer.close()
-        elif self.parent_window.file_format == "TIFF":
-            pass
+        self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles), camera_name="OrcaFlash 4.3")
+        self.bdv_writer.close()
         self.frame_queue.clear()
         self.parent_window.file_save_running = False
-        self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks with {self.n_angles} angles")
+        self.logger.info(f"Saved {self.frame_counter} images in {self.stack_counter} stacks with {self.n_angles} angles")
         self.sig_update_GUI.emit()
         self.sig_finished.emit()
 
