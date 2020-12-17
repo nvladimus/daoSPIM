@@ -732,9 +732,9 @@ class SavingStacksWorker(QtCore.QObject):
         while (self.frame_counter < self.frames_to_save) and not self.parent_window.abort_pressed:
             while len(self.frame_queue) > 0:
                 plane = np.reshape(self.frame_queue.popleft(), (self.cam_image_height, 2048))
-                if not self.planes_interleaved:
+                if not self.planes_interleaved: # planes are from L,L,L,L..., R,R,R,.. views
+                    time_index = int(self.stack_counter / self.n_angles)
                     if self.frame_counter % self.frames_per_stack == 0:  # begin new stack
-                        time_index = int(self.stack_counter / self.n_angles)
                         self.bdv_writer.append_view(None,
                                                     virtual_stack_dim=(self.frames_per_stack, plane.shape[1], plane.shape[0]),
                                                     time=time_index,
@@ -746,6 +746,27 @@ class SavingStacksWorker(QtCore.QObject):
                                                     )
                         self.stack_counter += 1
                         self.angle_counter = (self.angle_counter + 1) % self.n_angles
+                    self.bdv_writer.append_plane(plane, time=time_index, angle=self.angle_counter)
+                else:  # planes interleaved, from L, R, L, R, .. views
+                    if self.frame_counter % (self.n_angles * self.frames_per_stack) == 0:  # begin 2 new stacks
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(
+                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    time=time_index, angle=0,
+                                                    m_affine=self.affine_matrix, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(
+                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    time=time_index, angle=1,
+                                                    m_affine=self.affine_matrix, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.stack_counter += 2
+                    self.angle_counter = self.frame_counter % self.n_angles
                     self.bdv_writer.append_plane(plane, time=time_index, angle=self.angle_counter)
                 self.frame_counter += 1
             else:
