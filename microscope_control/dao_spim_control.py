@@ -710,7 +710,7 @@ class SavingStacksWorker(QtCore.QObject):
         self.n_angles = n_angles
         self.frame_counter = 0
         self.stack_counter = 0
-        self.angle_counter = 0
+        self.angle_counter = -1
         self.planes_interleaved = False
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
@@ -729,12 +729,16 @@ class SavingStacksWorker(QtCore.QObject):
     @QtCore.pyqtSlot()
     def run(self):
         self.parent_window.file_save_running = True
-        while (self.frame_counter < self.frames_to_save) and not self.parent_window.abort_pressed:
-            while len(self.frame_queue) > 0:
+        while not self.parent_window.abort_pressed and self.frame_counter < self.frames_to_save:
+            if len(self.frame_queue) > 0:
                 plane = np.reshape(self.frame_queue.popleft(), (self.cam_image_height, 2048))
-                if not self.planes_interleaved: # planes are from L,L,L,L..., R,R,R,.. views
-                    time_index = int(self.stack_counter / self.n_angles)
+                if not self.planes_interleaved:  # planes are from L,L,L,L..., R,R,R,.. views
                     if self.frame_counter % self.frames_per_stack == 0:  # begin new stack
+                        time_index = int(self.stack_counter / self.n_angles)
+                        plane_index_L = plane_index_R = -1
+                        self.angle_counter = (self.angle_counter + 1) % self.n_angles
+                        self.stack_counter += 1
+                        #print(f"Started new stack, time {time_index}, angle {self.angle_counter}")
                         self.bdv_writer.append_view(None,
                                                     virtual_stack_dim=(self.frames_per_stack, plane.shape[1], plane.shape[0]),
                                                     time=time_index,
@@ -744,30 +748,37 @@ class SavingStacksWorker(QtCore.QObject):
                                                     voxel_size_xyz=self.voxel_size,
                                                     exposure_time=self.camera.exposure_ms
                                                     )
-                        self.stack_counter += 1
-                        self.angle_counter = (self.angle_counter + 1) % self.n_angles
-                    self.bdv_writer.append_plane(plane, time=time_index, angle=self.angle_counter)
                 else:  # planes interleaved, from L, R, L, R, .. views
                     if self.frame_counter % (self.n_angles * self.frames_per_stack) == 0:  # begin 2 new stacks
-                        self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(
-                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
-                                                    time=time_index, angle=0,
-                                                    m_affine=self.affine_matrix, name_affine="unshearing",
-                                                    voxel_size_xyz=self.voxel_size,
-                                                    exposure_time=self.camera.exposure_ms
-                                                    )
-                        self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(
-                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
-                                                    time=time_index, angle=1,
-                                                    m_affine=self.affine_matrix, name_affine="unshearing",
-                                                    voxel_size_xyz=self.voxel_size,
-                                                    exposure_time=self.camera.exposure_ms
-                                                    )
+                        plane_index_L = plane_index_R = -1
                         self.stack_counter += 2
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(
+                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    time=time_index,
+                                                    angle=0,
+                                                    m_affine=self.affine_matrix, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(
+                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    time=time_index,
+                                                    angle=1,
+                                                    m_affine=self.affine_matrix, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
                     self.angle_counter = self.frame_counter % self.n_angles
-                    self.bdv_writer.append_plane(plane, time=time_index, angle=self.angle_counter)
+                if self.angle_counter % 2 == 0:
+                    plane_index_L += 1
+                    plane_index = plane_index_L
+                else:
+                    plane_index_R += 1
+                    plane_index = plane_index_R
+                # print(f"Plane shape: {plane.shape}, angle counter {self.angle_counter}, time index {time_index}")
+                self.bdv_writer.append_plane(plane, plane_index=plane_index, time=time_index, angle=self.angle_counter)
                 self.frame_counter += 1
             else:
                 time.sleep(0.02)  # Todo: Replace with QTimer
