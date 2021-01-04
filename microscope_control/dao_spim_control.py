@@ -217,6 +217,7 @@ class MainWindow(QtWidgets.QWidget):
         self.file_save_running = self.abort_pressed = False
         self.root_folder = config.saving['root_folder']
         self.dir_path = self.file_path = None
+        self.plane_order = 'interleaved'
         self.file_format = "HDF5"
         # Set up threads and signals
         self.thread_live_mode = QtCore.QThread()
@@ -291,6 +292,7 @@ class MainWindow(QtWidgets.QWidget):
         self.gui_expt.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
         self.gui_expt.button_save_folder.clicked.connect(self.button_save_folder_clicked)
         self.gui_expt.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
+        self.gui_expt.combo_plane_order.currentIndexChanged.connect(self.set_plane_order)
         self.button_exit.clicked.connect(self.button_exit_clicked)
         # Signals Camera control
         self.cam_window.button_cam_snap.clicked.connect(self.button_snap_clicked)
@@ -358,6 +360,13 @@ class MainWindow(QtWidgets.QWidget):
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
         else:
             self.logger.error("Please activate stage first")
+
+    def set_plane_order(self):
+        if self.gui_expt.combo_plane_order.currentIndex() == 0:
+            self.plane_order = 'interleaved'
+        else:
+            self.plane_order = 'sequential'
+        self.logger.debug(f"Index {self.gui_expt.combo_plane_order.currentIndex()}, Plane order: {self.plane_order}")
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
@@ -638,7 +647,7 @@ class SavingStacksWorker(QtCore.QObject):
         self.frame_counter = 0
         self.stack_counter = 0
         self.angle_counter = -1
-        self.planes_interleaved = False
+        self.planes_interleaved = True if self.parent_window.plane_order == "interleaved" else False
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
         if self.parent_window.file_format == "HDF5":
@@ -677,11 +686,11 @@ class SavingStacksWorker(QtCore.QObject):
                                                     )
                 else:  # planes interleaved, from L, R, L, R, .. views
                     if self.frame_counter % (self.n_angles * self.frames_per_stack) == 0:  # begin 2 new stacks
+                        time_index = int(self.stack_counter / self.n_angles)
                         plane_index_L = plane_index_R = -1
                         self.stack_counter += 2
                         self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(
-                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
                                                     time=time_index,
                                                     angle=0,
                                                     m_affine=self.affine_matrix, name_affine="unshearing",
@@ -690,7 +699,7 @@ class SavingStacksWorker(QtCore.QObject):
                                                     )
                         self.bdv_writer.append_view(None,
                                                     virtual_stack_dim=(
-                                                        self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                        self.frames_per_stack, plane.shape[0], plane.shape[1]),
                                                     time=time_index,
                                                     angle=1,
                                                     m_affine=self.affine_matrix, name_affine="unshearing",
