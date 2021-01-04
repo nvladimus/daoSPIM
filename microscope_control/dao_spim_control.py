@@ -180,48 +180,31 @@ class MainWindow(QtWidgets.QWidget):
         self.frame_queue = deque([])
         # tabs
         self.tabs = QtWidgets.QTabWidget()
+        self.tab_expt = QtWidgets.QWidget()
         self.tab_camera = QtWidgets.QWidget()
         self.tab_stage = QtWidgets.QWidget()
         self.tab_lightsheet = QtWidgets.QWidget()
         self.tab_defm = QtWidgets.QWidget()
         self.tab_etl = QtWidgets.QWidget()
 
+        # experiment control
+        self.gui_expt = loadUi("gui/experiment.ui")
         # deformable mirror widgets
         self.dev_dm = def_mirror.DmController(logger_name=self.logger.name + '.DM')
-
         # light-sheet widget
         self.ls_generator = lsg.LightsheetGenerator()
-
         # stage widgets
         self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
         self.gui_stage = loadUi("gui/stage_scanning.ui")
-
         # camera widgets
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
-
         # ETL widget
         self.dev_etl = etl.ETL_controller(logger_name=self.logger.name + '.ETL')
-
-        # acquisition
-        self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
-        self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        self.spinbox_n_timepoints = QtWidgets.QSpinBox()
-        self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
-        self.spinbox_nangles = QtWidgets.QSpinBox()
-
-        # saving
-        self.groupbox_saving = QtWidgets.QGroupBox("Saving")
-
-        self.button_save_folder = QtWidgets.QPushButton(get_dirname(config.saving['root_folder']))
-        self.line_subfolder = QtWidgets.QLineEdit("subfolder")
-        self.line_prefix = QtWidgets.QLineEdit("stack")
-        self.combobox_file_format = QtWidgets.QComboBox()
-        self.checkbox_simulation = QtWidgets.QCheckBox("Simulation mode")
-
         self.button_exit = QtWidgets.QPushButton('Exit')
 
         # GUI layouts
         self.layout = QtWidgets.QVBoxLayout(self)
+        self.tab_expt.layout = QtWidgets.QFormLayout()
         self.tab_camera.layout = QtWidgets.QFormLayout()
         self.tab_stage.layout = QtWidgets.QFormLayout()
         self.tab_lightsheet.layout = QtWidgets.QFormLayout()
@@ -254,7 +237,6 @@ class MainWindow(QtWidgets.QWidget):
         self.thread_frame_grabbing.started.connect(self.worker_grabbing.run)
         self.worker_grabbing.sig_save_data.connect(self.append_new_data)
         self.worker_grabbing.sig_finished.connect(self.thread_frame_grabbing.quit)
- #       self.worker_grabbing.sig_dummy_send.connect(self.dummy_receive)
 
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self, self.logger)
@@ -265,86 +247,39 @@ class MainWindow(QtWidgets.QWidget):
     def initUI(self):
         self.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.setWindowTitle("Microscope control")
-        self.move(50, 100)
+        self.move(50, 50)
         # set up Tabs
+        self.tabs.addTab(self.tab_expt, "Experiment")
         self.tabs.addTab(self.tab_camera, "Camera")
         self.tabs.addTab(self.tab_stage, "Stage")
         self.tabs.addTab(self.tab_lightsheet, "Light sheet")
         self.tabs.addTab(self.tab_defm, "Def. mirror")
         self.tabs.addTab(self.tab_etl, "ETL")
-
-        # DEFORMABLE Mirror tab
+        # Experiment tab
+        self.tab_expt.layout.addWidget(self.gui_expt)
+        self.tab_expt.setLayout(self.tab_expt.layout)
+        self.gui_expt.button_save_folder.setText(get_dirname(config.saving['root_folder']))
+        # DM tab
         self.tab_defm.layout.addWidget(self.dev_dm.gui)
-        self.dev_dm.gui.setFixedWidth(300)
         self.tab_defm.setLayout(self.tab_defm.layout)
-
         # ETL tab
         self.tab_etl.layout.addWidget(self.dev_etl.gui)
-        self.dev_etl.gui.setFixedWidth(300)
         self.tab_etl.setLayout(self.tab_etl.layout)
-
         # LIGHTSHEET tab
         self.tab_lightsheet.layout.addWidget(self.ls_generator.gui)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
-
         # Stage tab
         self.gui_stage.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
         self.tab_stage.layout.addWidget(self.gui_stage)
         self.tab_stage.setLayout(self.tab_stage.layout)
+        # Camera tab
+        self.tab_camera.layout.addWidget(self.dev_cam.gui)
+        self.tab_camera.setLayout(self.tab_camera.layout)
 
         # CAMERA window
         self.cam_window = CameraWindow(self)
         self.cam_window.show()
-
-        # acquisition params
-        self.groupbox_acq_params.setFixedWidth(300)
-
-        self.spinbox_n_timepoints.setValue(1)
-        self.spinbox_n_timepoints.setFixedWidth(60)
-        self.spinbox_n_timepoints.setMaximum(10000)
-        self.spinbox_n_timepoints.setMinimum(1)
-
-        self.spinbox_frames_per_stack.setValue(40)
-        self.spinbox_frames_per_stack.setFixedWidth(60)
-        self.spinbox_frames_per_stack.setRange(1, 1000)
-
-        self.spinbox_nangles.setValue(2)
-        self.spinbox_nangles.setEnabled(False)
-        self.spinbox_nangles.setFixedWidth(60)
-
-        layout_acquisition = QtWidgets.QFormLayout()
-        layout_acquisition.addRow("Images per stack:", self.spinbox_frames_per_stack)
-        layout_acquisition.addRow("Time points:", self.spinbox_n_timepoints)
-        layout_acquisition.addRow("n(angles):", self.spinbox_nangles)
-        self.groupbox_acq_params.setLayout(layout_acquisition)
-
-        # saving, layouts
-        self.groupbox_saving.setFixedWidth(300)
-        self.line_subfolder.setAlignment(QtCore.Qt.AlignRight)
-        self.line_prefix.setAlignment(QtCore.Qt.AlignRight)
-        self.combobox_file_format.setFixedWidth(80)
-        self.combobox_file_format.addItem("HDF5")
-        self.combobox_file_format.addItem("TIFF")
-
-        layout_files = QtWidgets.QFormLayout()
-        layout_files.addRow(self.button_save_folder)
-        layout_files.addRow(self.line_subfolder)
-        layout_files.addRow(self.line_prefix)
-        layout_files.addRow("Format", self.combobox_file_format)
-        self.groupbox_saving.setLayout(layout_files)
-
-        # Camera controls layout
-        self.dev_cam.gui.setFixedWidth(300)
-        self.button_cam_acquire.setFixedWidth(300)
-        # self.checkbox_with_scanning.setChecked(True)
-        # self.checkbox_with_scanning.setToolTip('Start scanning cycle after camera started')
-
-        self.tab_camera.layout.addWidget(self.dev_cam.gui)
-        self.tab_camera.layout.addWidget(self.groupbox_acq_params)
-        self.tab_camera.layout.addWidget(self.button_cam_acquire)
-        self.tab_camera.layout.addWidget(self.groupbox_saving)
-        self.tab_camera.setLayout(self.tab_camera.layout)
 
         # global layout
         self.button_exit.setFixedWidth(120)
@@ -352,14 +287,15 @@ class MainWindow(QtWidgets.QWidget):
         self.layout.addWidget(self.button_exit)
         self.setLayout(self.layout)
 
+        # Signals experiment control
+        self.gui_expt.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
+        self.gui_expt.button_save_folder.clicked.connect(self.button_save_folder_clicked)
+        self.gui_expt.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
+        self.button_exit.clicked.connect(self.button_exit_clicked)
         # Signals Camera control
         self.cam_window.button_cam_snap.clicked.connect(self.button_snap_clicked)
         self.cam_window.button_cam_live.clicked.connect(self.button_live_clicked)
-        self.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
-        self.button_save_folder.clicked.connect(self.button_save_folder_clicked)
-        self.combobox_file_format.currentTextChanged.connect(self.set_file_format)
-        self.button_exit.clicked.connect(self.button_exit_clicked)
-
+        self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
         # Signals Stage control
         self.gui_stage.button_stage_x_move_right.clicked.connect(partial(self.stage_move, direction=(-1, 0)))
         self.gui_stage.button_stage_x_move_left.clicked.connect(partial(self.stage_move, direction=(1,0)))
@@ -369,11 +305,8 @@ class MainWindow(QtWidgets.QWidget):
         self.gui_stage.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
         self.gui_stage.button_stage_start_scan.clicked.connect(self.start_scan)
         self.gui_stage.button_set_center.clicked.connect(self.stage_setup_scan_range)
-
-        self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
         self.gui_stage.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
         self.gui_stage.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
-        self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
         self.stage_setup_scan_range()
@@ -432,8 +365,8 @@ class MainWindow(QtWidgets.QWidget):
             stage_speed_x = self.gui_stage.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
             self.gui_stage.spinbox_stage_speed_x.setValue(stage_speed_x)
 
-        if self.spinbox_n_timepoints.value() != 0:
-            self.gui_stage.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
+        if self.gui_expt.spinbox_n_timepoints.value() != 0:
+            self.gui_stage.spinbox_stage_n_cycles.setValue(self.gui_expt.spinbox_n_timepoints.value())
 
         # feed the trigger interval to the stage settings
         if self.dev_stage.initialized:
@@ -449,7 +382,7 @@ class MainWindow(QtWidgets.QWidget):
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
         if self.gui_stage.spinbox_stage_step_x.value() != 0:
             n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.gui_stage.spinbox_stage_step_x.value())
-            self.spinbox_frames_per_stack.setValue(n_triggers)
+            self.gui_expt.spinbox_frames_per_stack.setValue(n_triggers)
             if self.ls_generator.initialized:
                 self.ls_generator.set_switching_period(n_triggers)
 
@@ -500,10 +433,10 @@ class MainWindow(QtWidgets.QWidget):
             self.check_cam_initialized()
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
-            self.n_frames_per_stack = int(self.spinbox_frames_per_stack.value())
-            self.n_stacks_to_grab = int(self.spinbox_n_timepoints.value() * self.spinbox_nangles.value())
+            self.n_frames_per_stack = int(self.gui_expt.spinbox_frames_per_stack.value())
+            self.n_stacks_to_grab = int(self.gui_expt.spinbox_n_timepoints.value() * self.gui_expt.spinbox_nangles.value())
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
-            self.n_angles = int(self.spinbox_nangles.value())
+            self.n_angles = int(self.gui_expt.spinbox_nangles.value())
             self.dev_cam.setup()
             self.ls_generator.setup()
             self.worker_grabbing.setup(self.n_frames_to_grab)
@@ -530,24 +463,24 @@ class MainWindow(QtWidgets.QWidget):
 
     def create_folder(self):
         """Create new folder for acquisition."""
-        self.dir_path = self.root_folder + "/" + self.line_subfolder.text()
+        self.dir_path = self.root_folder + "/" + self.gui_expt.line_subfolder.text()
         i_dir = 0
         while os.path.exists(self.dir_path + f'_v{i_dir}'): i_dir += 1
         self.dir_path += f'_v{i_dir}'
         os.mkdir(self.dir_path)
-        self.file_path = self.dir_path + "/" + self.line_prefix.text()
+        self.file_path = self.dir_path + "/" + self.gui_expt.line_prefix.text()
         self.logger.info("Experiment folder: " + self.dir_path)
 
     def button_acquire_reset(self):
         if (not self.dev_cam.status == 'Running') and (not self.file_save_running):
-            self.button_cam_acquire.setText("Acquire and save")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: black;}')
+            self.gui_expt.button_cam_acquire.setText("Acquire and save")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: black;}')
         if (not self.dev_cam.status == 'Running') and self.file_save_running:
-            self.button_cam_acquire.setText("Saving...")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: blue;}')
+            self.gui_expt.button_cam_acquire.setText("Saving...")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: blue;}')
         if self.dev_cam.status == 'Running':
-            self.button_cam_acquire.setText("Abort")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
+            self.gui_expt.button_cam_acquire.setText("Abort")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
 
     def button_save_folder_clicked(self):
         file_dialog = QtWidgets.QFileDialog()
@@ -555,15 +488,9 @@ class MainWindow(QtWidgets.QWidget):
         folder = file_dialog.getExistingDirectory(self, "Save to folder", self.root_folder)
         if folder:
             self.root_folder = folder
-            self.button_save_folder.setText(get_dirname(folder))
+            self.gui_expt.button_save_folder.setText(get_dirname(folder))
             self.logger.info("Root folder for saving: " + self.root_folder)
 
-    def set_file_format(self, new_format):
-        self.file_format = new_format
-
-    # @QtCore.pyqtSlot()
-    # def dummy_receive(self):
-    #     self.logger.debug("dummy received")
 
     @QtCore.pyqtSlot(object)
     def append_new_data(self, obj_list):
@@ -740,7 +667,7 @@ class SavingStacksWorker(QtCore.QObject):
                         self.stack_counter += 1
                         #print(f"Started new stack, time {time_index}, angle {self.angle_counter}")
                         self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[1], plane.shape[0]),
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
                                                     time=time_index,
                                                     angle=self.angle_counter,
                                                     m_affine=self.affine_matrix,
