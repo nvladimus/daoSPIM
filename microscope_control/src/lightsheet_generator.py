@@ -21,11 +21,11 @@ config = {
     'L-galvo_amp_volts': 0.70,
     'R-galvo_amp_volts': 0.70,
     'laser_max_volts': 1.0, #Check your laser modulation voltage!!! Laser can be damaged by high voltage.
-    'laser_pow_volts': 0.6,
+    'laser_pow_volts': 0.8,
     'arduino_switcher_port': 'COM6', # set None is no arduino board is used.
     'active_arm': 'left',
     'switch_auto': True,
-    'switch_every_n_pulses': 100,
+    'switch_every_n_pulses': 1,
     'DAQ_trig_in_ch': '/Dev1/PFI0',
     'DAQ_AO_ch': '/Dev1/ao0:1',
     'DAQ_sample_rate_Hz': 20000

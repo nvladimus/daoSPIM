@@ -12,7 +12,7 @@ const float VCC = 5.0; // power supply voltage. Don't use USB power, it's noisy 
 const float opAmp_gain = 2.0; // multiplication factor of the opAmp, equal to 1 + R1/R2, where R1, R2 are resistor values.
 const byte interruptPin = 7; // Teensy 2.0, interrupt pins are: 5, 6, 7, 8. This digital pin must be capable of Interrupt mode.
 const byte ledPin = 11; // blink every time a pulse is detected
-const char _version[16] = "2019.11.01";
+const char _version[16] = "2021.01";
 
 volatile int counter;
 volatile int counter_old;
@@ -20,6 +20,8 @@ volatile byte ledState;
 Adafruit_MCP4725 dac; // constructor
 float voltage_out_0 = -0.42;
 float voltage_out_1 = 0.35;
+int swipe_ms = 1; // galvo swipe duration, used to delay switching
+int debounce_delay_ms = 1; // minimum input trigger duration, for digital debouncing
 int n_pulses_switch_period = 10; // DAC output will alternate between voltage_out_0 and voltage_out_1 with this period
 uint16_t dac_value; 
 uint16_t dac_value_0; 
@@ -48,6 +50,7 @@ void loop() {
     counter_old = counter;
     digitalWrite(ledPin, ledState);
     if(counter_old % n_pulses_switch_period == 0){
+      delay(swipe_ms);
       if(dac_value == dac_value_0) dac_value = dac_value_1;
       else dac_value = dac_value_0;
     }
@@ -57,8 +60,11 @@ void loop() {
 }
 
 void count() {
-  counter++;
-  ledState = !ledState;
+  delay(debounce_delay_ms);
+  if (digitalRead(interruptPin) == HIGH) {
+    counter++;
+    ledState = !ledState;
+  }
 }
 
 uint16_t volts2dac_value(float volts_out){

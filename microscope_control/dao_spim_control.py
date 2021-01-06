@@ -392,8 +392,6 @@ class MainWindow(QtWidgets.QWidget):
         if self.gui_stage.spinbox_stage_step_x.value() != 0:
             n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.gui_stage.spinbox_stage_step_x.value())
             self.gui_expt.spinbox_frames_per_stack.setValue(n_triggers)
-            if self.ls_generator.initialized:
-                self.ls_generator.set_switching_period(n_triggers)
 
     def button_exit_clicked(self):
         if self.dev_cam.dev_handle is not None:
@@ -689,23 +687,15 @@ class SavingStacksWorker(QtCore.QObject):
                         time_index = int(self.stack_counter / self.n_angles)
                         plane_index_L = plane_index_R = -1
                         self.stack_counter += 2
-                        self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
-                                                    time=time_index,
-                                                    angle=0,
-                                                    m_affine=self.affine_matrix, name_affine="unshearing",
-                                                    voxel_size_xyz=self.voxel_size,
-                                                    exposure_time=self.camera.exposure_ms
-                                                    )
-                        self.bdv_writer.append_view(None,
-                                                    virtual_stack_dim=(
-                                                        self.frames_per_stack, plane.shape[0], plane.shape[1]),
-                                                    time=time_index,
-                                                    angle=1,
-                                                    m_affine=self.affine_matrix, name_affine="unshearing",
-                                                    voxel_size_xyz=self.voxel_size,
-                                                    exposure_time=self.camera.exposure_ms
-                                                    )
+                        for i_angle in range(self.n_angles):
+                            self.bdv_writer.append_view(None,
+                                                        virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
+                                                        time=time_index,
+                                                        angle=i_angle,
+                                                        m_affine=self.affine_matrix, name_affine="unshearing",
+                                                        voxel_size_xyz=self.voxel_size,
+                                                        exposure_time=self.camera.exposure_ms
+                                                        )
                     self.angle_counter = self.frame_counter % self.n_angles
                 if self.angle_counter % 2 == 0:
                     plane_index_L += 1
