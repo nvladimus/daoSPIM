@@ -12,7 +12,6 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.uic import loadUi
 import pyqtgraph as pg
 import numpy as np
-from skimage.external import tifffile
 import time
 from collections import deque
 import hamamatsu_camera as cam
@@ -292,6 +291,7 @@ class MainWindow(QtWidgets.QWidget):
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.button_exit)
         self.setLayout(self.layout)
+        self.update_calculator()
 
         # Signals experiment control
         self.gui_expt.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
@@ -377,6 +377,7 @@ class MainWindow(QtWidgets.QWidget):
             self.plane_order = 'interleaved'
         else:
             self.plane_order = 'sequential'
+        self.update_calculator()
         self.logger.debug(f"Index {self.gui_expt.combo_plane_order.currentIndex()}, Plane order: {self.plane_order}")
 
     def update_calculator(self):
@@ -385,8 +386,6 @@ class MainWindow(QtWidgets.QWidget):
         self.trigger_interval_um = self.gui_stage.spinbox_stage_step_x.value()
         if self.dev_cam.exposure_ms != 0:
             stage_speed_x = self.trigger_interval_um / self.dev_cam.exposure_ms
-            if self.plane_order == 'interleaved':
-                stage_speed_x /= 2.0
             self.gui_stage.spinbox_stage_speed_x.setValue(stage_speed_x)
             if self.dev_stage.initialized:
                 self.dev_stage.set_speed(stage_speed_x, axis='X')
@@ -394,15 +393,10 @@ class MainWindow(QtWidgets.QWidget):
         if self.n_timepoints != 0:
             self.gui_stage.spinbox_stage_n_cycles.setValue(self.gui_expt.spinbox_n_timepoints.value())
 
-        if stage_speed_x != 0:
-            exposure_ms = self.trigger_interval_um / stage_speed_x
-            if self.dev_cam is not None:
-                self.dev_cam.set_exposure(exposure_ms)
-
-        # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
         if self.trigger_interval_um != 0:
             n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.trigger_interval_um)
-            self.gui_expt.spinbox_frames_per_stack.setValue(n_triggers)
+            self.n_frames_per_stack = n_triggers // 2 if self.plane_order == 'interleaved' else n_triggers
+            self.gui_expt.spinbox_frames_per_stack.setValue(self.n_frames_per_stack)
 
     def button_exit_clicked(self):
         if self.dev_cam.dev_handle is not None:

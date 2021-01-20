@@ -60,6 +60,9 @@
       </item>
       <item row="1" column="0">
        <widget class="QDoubleSpinBox" name="spinbox_stage_step_x">
+        <property name="toolTip">
+         <string>Physical distance between triggers. In the interlaved imaging mode, distance between / and  planes.</string>
+        </property>
         <property name="prefix">
          <string>Trig. intvl: </string>
         </property>
