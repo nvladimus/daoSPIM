@@ -20,7 +20,7 @@ volatile byte ledState;
 Adafruit_MCP4725 dac; // constructor
 float voltage_out_0 = -0.42;
 float voltage_out_1 = 0.35;
-int swipe_ms = 1; // galvo swipe duration, used to delay switching
+int swipe_ms = 2; // galvo swipe duration, used to delay switching (switching AFTER galvo swipe is complete)
 int debounce_delay_ms = 1; // minimum input trigger duration, for digital debouncing
 int n_pulses_switch_period = 10; // DAC output will alternate between voltage_out_0 and voltage_out_1 with this period
 uint16_t dac_value; 
@@ -60,7 +60,7 @@ void loop() {
 }
 
 void count() {
-  delay(debounce_delay_ms);
+  delay(debounce_delay_ms); // filter out fluke sub-ms pulses
   if (digitalRead(interruptPin) == HIGH) {
     counter++;
     ledState = !ledState;

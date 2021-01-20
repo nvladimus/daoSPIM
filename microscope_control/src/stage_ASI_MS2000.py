@@ -228,6 +228,7 @@ class MotionController(QtCore.QObject):
                   f'Y={self.scan_limits_xx_yy[1]:.4f} ' \
                   f'Z={self.enc_counts_per_pulse}'
         _ = self.write_with_response(command.encode())
+        self.logger.debug(command)
         # set y-limits and the number of lines
         command = f'SCANV X={self.scan_limits_xx_yy[2]:.4f} ' \
                   f'Y={self.scan_limits_xx_yy[3]:.4f} ' \

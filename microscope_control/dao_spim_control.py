@@ -178,6 +178,18 @@ class MainWindow(QtWidgets.QWidget):
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
         self.frame_queue = deque([])
+
+        # State parameters
+        self.n_frames_per_stack = self.n_stacks_to_grab = self.n_frames_to_grab = None
+        self.trigger_interval_um = config.scanning['step_x_um']
+        self.n_timepoints = 1
+        self.n_angles = 2
+        self.file_save_running = self.abort_pressed = False
+        self.root_folder = config.saving['root_folder']
+        self.dir_path = self.file_path = None
+        self.plane_order = 'interleaved'
+        self.file_format = "HDF5"
+
         # tabs
         self.tabs = QtWidgets.QTabWidget()
         self.tab_expt = QtWidgets.QWidget()
@@ -212,13 +224,6 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_etl.layout = QtWidgets.QFormLayout()
         self.initUI()
 
-        # Internal parameters
-        self.n_frames_per_stack = self.n_stacks_to_grab = self.n_frames_to_grab = self.n_angles = None
-        self.file_save_running = self.abort_pressed = False
-        self.root_folder = config.saving['root_folder']
-        self.dir_path = self.file_path = None
-        self.plane_order = 'interleaved'
-        self.file_format = "HDF5"
         # Set up threads and signals
         self.thread_live_mode = QtCore.QThread()
         self.worker_live_mode = LiveImagingWorker(self, self.dev_cam)
@@ -270,7 +275,7 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_lightsheet.layout.addWidget(self.ls_generator.gui)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
         # Stage tab
-        self.gui_stage.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
+        self.gui_stage.spinbox_stage_step_x.setValue(self.trigger_interval_um)
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
         self.tab_stage.layout.addWidget(self.gui_stage)
         self.tab_stage.setLayout(self.tab_stage.layout)
@@ -312,7 +317,13 @@ class MainWindow(QtWidgets.QWidget):
 
     def start_scan(self):
         self.stage_setup_scan_range()
-        self.worker_stage_scanning.setup(self.dev_stage, self.n_stacks_to_grab)
+        if self.plane_order == 'interleaved':
+            n_scans = self.n_timepoints
+            trig_intv_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value() / 2
+        else:
+            n_scans = self.n_timepoints * self.n_angles
+            trig_intv_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value()
+        self.worker_stage_scanning.setup(self.dev_stage, n_scans, trig_intv_mm)
         self.thread_stage_scanning.start()
 
     def stage_setup_scan_range(self):
@@ -370,27 +381,27 @@ class MainWindow(QtWidgets.QWidget):
 
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
+        self.n_timepoints = int(self.gui_expt.spinbox_n_timepoints.value())
+        self.trigger_interval_um = self.gui_stage.spinbox_stage_step_x.value()
         if self.dev_cam.exposure_ms != 0:
-            stage_speed_x = self.gui_stage.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
+            stage_speed_x = self.trigger_interval_um / self.dev_cam.exposure_ms
+            if self.plane_order == 'interleaved':
+                stage_speed_x /= 2.0
             self.gui_stage.spinbox_stage_speed_x.setValue(stage_speed_x)
+            if self.dev_stage.initialized:
+                self.dev_stage.set_speed(stage_speed_x, axis='X')
 
-        if self.gui_expt.spinbox_n_timepoints.value() != 0:
+        if self.n_timepoints != 0:
             self.gui_stage.spinbox_stage_n_cycles.setValue(self.gui_expt.spinbox_n_timepoints.value())
 
-        # feed the trigger interval to the stage settings
-        if self.dev_stage.initialized:
-            stage_step_x_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value()
-            self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
-            self.dev_stage.set_speed(stage_speed_x, axis='X')
-
-        if self.gui_stage.spinbox_stage_speed_x.value() != 0:
-            exposure_ms = self.gui_stage.spinbox_stage_step_x.value() / self.gui_stage.spinbox_stage_speed_x.value()
+        if stage_speed_x != 0:
+            exposure_ms = self.trigger_interval_um / stage_speed_x
             if self.dev_cam is not None:
                 self.dev_cam.set_exposure(exposure_ms)
 
         # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
-        if self.gui_stage.spinbox_stage_step_x.value() != 0:
-            n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.gui_stage.spinbox_stage_step_x.value())
+        if self.trigger_interval_um != 0:
+            n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.trigger_interval_um)
             self.gui_expt.spinbox_frames_per_stack.setValue(n_triggers)
 
     def button_exit_clicked(self):
@@ -441,9 +452,8 @@ class MainWindow(QtWidgets.QWidget):
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
             self.n_frames_per_stack = int(self.gui_expt.spinbox_frames_per_stack.value())
-            self.n_stacks_to_grab = int(self.gui_expt.spinbox_n_timepoints.value() * self.gui_expt.spinbox_nangles.value())
+            self.n_stacks_to_grab = int(self.n_timepoints * self.n_angles)
             self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
-            self.n_angles = int(self.gui_expt.spinbox_nangles.value())
             self.dev_cam.setup()
             self.ls_generator.setup()
             self.worker_grabbing.setup(self.n_frames_to_grab)
@@ -540,9 +550,10 @@ class StageScanningWorker(QtCore.QObject):
         self.dev_stage = None
 
     @QtCore.pyqtSlot()
-    def setup(self, dev_stage, n_lines):
+    def setup(self, dev_stage, n_lines, trig_int_mm):
         self.dev_stage = dev_stage
         self.dev_stage.set_n_scan_lines(n_lines)
+        self.dev_stage.set_trigger_intervals(trig_int_mm, trigger_axis='X')
 
     @QtCore.pyqtSlot()
     def scan(self):
