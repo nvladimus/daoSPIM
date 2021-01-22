@@ -317,13 +317,8 @@ class MainWindow(QtWidgets.QWidget):
 
     def start_scan(self):
         self.stage_setup_scan_range()
-        if self.plane_order == 'interleaved':
-            n_scans = self.n_timepoints
-            trig_intv_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value() / 2
-        else:
-            n_scans = self.n_timepoints * self.n_angles
-            trig_intv_mm = 0.001 * self.gui_stage.spinbox_stage_step_x.value()
-        self.worker_stage_scanning.setup(self.dev_stage, n_scans, trig_intv_mm)
+        n_scans = self.n_timepoints if self.plane_order == 'interleaved' else self.n_timepoints * self.n_angles
+        self.worker_stage_scanning.setup(self.dev_stage, n_scans, 0.001 * self.trigger_interval_um)
         self.thread_stage_scanning.start()
 
     def stage_setup_scan_range(self):
