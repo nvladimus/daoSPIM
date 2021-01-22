@@ -327,6 +327,7 @@ class MotionController(QtCore.QObject):
         self.gui.update_numeric_field('Y start, mm', self.scan_limits_xx_yy[2])
         self.gui.update_numeric_field('Y stop, mm', self.scan_limits_xx_yy[3])
         self.gui.update_numeric_field('Trigger interval X, mm', self.pulse_intervals_x)
+        self.gui.update_numeric_field('Num. of lines', self.n_scan_lines)
 
 
 # run if the module is launched as a standalone program

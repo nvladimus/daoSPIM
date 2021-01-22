@@ -179,9 +179,9 @@ class MainWindow(QtWidgets.QWidget):
         self.frame_queue = deque([])
 
         # State parameters
-        self.n_frames_per_stack = self.n_stacks_to_grab = self.n_frames_to_grab = None
+        self.n_frames_per_stack = self.n_frames_to_grab = None
         self.trigger_interval_um = config.scanning['step_x_um']
-        self.n_timepoints = 1
+        self.n_timepoints = self.n_tiles = 1
         self.n_angles = 2
         self.file_save_running = self.abort_pressed = False
         self.root_folder = config.saving['root_folder']
@@ -317,8 +317,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def start_scan(self):
         self.stage_setup_scan_range()
-        n_scans = self.n_timepoints if self.plane_order == 'interleaved' else self.n_timepoints * self.n_angles
-        self.worker_stage_scanning.setup(self.dev_stage, n_scans, 0.001 * self.trigger_interval_um)
+        self.worker_stage_scanning.setup(self.dev_stage)
         self.thread_stage_scanning.start()
 
     def stage_setup_scan_range(self):
@@ -327,17 +326,24 @@ class MainWindow(QtWidgets.QWidget):
             if self.gui_stage.checkbox_scan_around.isChecked():
                 x_range = self.gui_stage.spinbox_stage_range_x.value()
                 y_range = self.gui_stage.spinbox_stage_range_y.value()
+                y_tile_overlap = 0.5
                 xstart = self.dev_stage.position_x_mm - 0.001*x_range / 2
                 xstop  = self.dev_stage.position_x_mm + 0.001*x_range / 2
                 if y_range > config.microscope['FOV_y_um']:
-                    ystart = self.dev_stage.position_y_mm - 0.001*y_range / 2
-                    ystop  = self.dev_stage.position_y_mm + 0.001*y_range / 2
+                    ystart = self.dev_stage.position_y_mm - 0.001*y_range / 2 * (1 - y_tile_overlap)
+                    ystop  = self.dev_stage.position_y_mm + 0.001*y_range / 2 * (1 - y_tile_overlap)
+                    self.n_tiles = y_range // config.microscope['FOV_y_um']
+                    self.gui_expt.spinbox_n_tiles.setValue(self.n_tiles)
                 else:
                     ystart = ystop = self.dev_stage.position_y_mm
                 self.dev_stage.set_scan_region(xstart, scan_boundary='x_start')
                 self.dev_stage.set_scan_region(xstop, scan_boundary='x_stop')
                 self.dev_stage.set_scan_region(ystart, scan_boundary='y_start')
                 self.dev_stage.set_scan_region(ystop, scan_boundary='y_stop')
+                #n_scans = self.n_timepoints if self.plane_order == 'interleaved' else self.n_timepoints * self.n_angles
+                n_scans = self.n_tiles if self.plane_order == 'interleaved' else self.n_tiles * self.n_angles
+                self.dev_stage.set_n_scan_lines(n_scans)
+                self.dev_stage.set_trigger_intervals(0.001 * self.trigger_interval_um, trigger_axis='X')
         else:
             self.logger.error("Please activate stage first")
 
@@ -441,13 +447,12 @@ class MainWindow(QtWidgets.QWidget):
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
             self.n_frames_per_stack = int(self.gui_expt.spinbox_frames_per_stack.value())
-            self.n_stacks_to_grab = int(self.n_timepoints * self.n_angles)
-            self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
+            self.n_frames_to_grab = self.n_timepoints * self.n_angles * self.n_tiles * self.n_frames_per_stack
             self.dev_cam.setup()
             self.ls_generator.setup()
             self.worker_grabbing.setup(self.n_frames_to_grab)
             self.worker_saving.setup(self.n_frames_to_grab, self.n_frames_per_stack,
-                                     self.n_angles, self.dev_cam.frame_height_px)
+                                     self.n_angles, self.n_tiles, self.dev_cam.frame_height_px)
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
             if not self.dev_cam.config['simulation']:
@@ -539,10 +544,8 @@ class StageScanningWorker(QtCore.QObject):
         self.dev_stage = None
 
     @QtCore.pyqtSlot()
-    def setup(self, dev_stage, n_lines, trig_int_mm):
+    def setup(self, dev_stage):
         self.dev_stage = dev_stage
-        self.dev_stage.set_n_scan_lines(n_lines)
-        self.dev_stage.set_trigger_intervals(trig_int_mm, trigger_axis='X')
 
     @QtCore.pyqtSlot()
     def scan(self):
@@ -552,7 +555,7 @@ class StageScanningWorker(QtCore.QObject):
             response = self.dev_stage.write_with_response(b'/')
             while response[0] != 'N':
                 response = self.dev_stage.write_with_response(b'/')
-                time.sleep(0.05) # Todo: replace with Timer!!!
+                time.sleep(0.05) # Todo: replace with Timer!
             self.dev_stage.logger.debug(f"move complete")
             # return to scan start position
             self.dev_stage.move_abs((self.dev_stage.scan_limits_xx_yy[0], self.dev_stage.scan_limits_xx_yy[2]))
@@ -638,19 +641,21 @@ class SavingStacksWorker(QtCore.QObject):
         self.stack_counter = self.angle_counter = self.bdv_writer = self.stack = self.cam_image_height = None
         self.sig_update_GUI.connect(self.parent_window.button_acquire_reset)
 
-    def setup(self, frames_to_save, frames_per_stack, n_angles, image_height):
+    def setup(self, frames_to_save, frames_per_stack, n_angles, n_tiles, image_height):
         self.frames_to_save = frames_to_save
         self.frames_per_stack = frames_per_stack
         self.n_angles = n_angles
+        self.n_tiles = n_tiles
         self.frame_counter = 0
         self.stack_counter = 0
         self.angle_counter = -1
+        self.tile_counter = -1
         self.planes_interleaved = True if self.parent_window.plane_order == "interleaved" else False
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
         if self.parent_window.file_format == "HDF5":
             self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
-                                                nangles=self.n_angles)
+                                                nangles=self.n_angles, ntiles=self.n_tiles)
             z_voxel_size = self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
             z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
             self.affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
@@ -668,15 +673,17 @@ class SavingStacksWorker(QtCore.QObject):
                 plane = np.reshape(self.frame_queue.popleft(), (self.cam_image_height, 2048))
                 if not self.planes_interleaved:  # planes are from L,L,L,L..., R,R,R,.. views
                     if self.frame_counter % self.frames_per_stack == 0:  # begin new stack
-                        time_index = int(self.stack_counter / self.n_angles)
+                        time_index = int(self.stack_counter / self.n_angles / self.n_tiles)
                         plane_index_L = plane_index_R = -1
                         self.angle_counter = (self.angle_counter + 1) % self.n_angles
                         self.stack_counter += 1
-                        #print(f"Started new stack, time {time_index}, angle {self.angle_counter}")
+                        if self.n_tiles > 1:
+                            self.tile_counter += 1
                         self.bdv_writer.append_view(None,
                                                     virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
                                                     time=time_index,
                                                     angle=self.angle_counter,
+                                                    tile=self.tile_counter,
                                                     m_affine=self.affine_matrix,
                                                     name_affine="unshearing transformation",
                                                     voxel_size_xyz=self.voxel_size,
@@ -684,32 +691,38 @@ class SavingStacksWorker(QtCore.QObject):
                                                     )
                 else:  # planes interleaved, from L, R, L, R, .. views
                     if self.frame_counter % (self.n_angles * self.frames_per_stack) == 0:  # begin 2 new stacks
-                        time_index = int(self.stack_counter / self.n_angles)
+                        time_index = int(self.stack_counter / self.n_angles / self.n_tiles)
                         plane_index_L = plane_index_R = -1
                         self.stack_counter += 2
+                        if self.n_tiles > 1:
+                            self.tile_counter += 1
                         for i_angle in range(self.n_angles):
                             self.bdv_writer.append_view(None,
                                                         virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
                                                         time=time_index,
                                                         angle=i_angle,
+                                                        tile=self.tile_counter,
                                                         m_affine=self.affine_matrix, name_affine="unshearing",
                                                         voxel_size_xyz=self.voxel_size,
                                                         exposure_time=self.camera.exposure_ms
                                                         )
                     self.angle_counter = self.frame_counter % self.n_angles
+                # common block for both plane interleave modes:
                 if self.angle_counter % 2 == 0:
                     plane_index_L += 1
                     plane_index = plane_index_L
                 else:
                     plane_index_R += 1
                     plane_index = plane_index_R
-                # print(f"Plane shape: {plane.shape}, angle counter {self.angle_counter}, time index {time_index}")
-                self.bdv_writer.append_plane(plane, plane_index=plane_index, time=time_index, angle=self.angle_counter)
+                #print(f"plane {plane_index}, time {time_index}, tile {self.tile_counter}")
+                self.bdv_writer.append_plane(plane, plane_index=plane_index, time=time_index,
+                                             tile=self.tile_counter, angle=self.angle_counter)
                 self.frame_counter += 1
             else:
                 time.sleep(0.02)  # Todo: Replace with QTimer
         # clean-up:
-        self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles), camera_name="OrcaFlash 4.3")
+        self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles / self.n_tiles),
+                                       camera_name="OrcaFlash 4.3")
         self.bdv_writer.close()
         self.frame_queue.clear()
         self.parent_window.file_save_running = False
