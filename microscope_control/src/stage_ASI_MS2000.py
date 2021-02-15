@@ -51,7 +51,7 @@ class MotionController(QtCore.QObject):
         # logger setup
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.ERROR)
         # GUI setup
         self.gui_on = gui_on
         if self.gui_on:
@@ -212,7 +212,7 @@ class MotionController(QtCore.QObject):
             if self.gui_on:
                 self.sig_update_gui.emit()
         else:
-            self.logger.error("set_scan_region(): keyword /'scan_boundary/' is misssing.")
+            self.logger.error("set_scan_region(): keyword /'scan_boundary/' is missing.")
 
     def set_n_scan_lines(self, n):
         self.n_scan_lines = n
