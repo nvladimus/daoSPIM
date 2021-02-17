@@ -51,7 +51,7 @@ class MotionController(QtCore.QObject):
         # logger setup
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.ERROR)
         # GUI setup
         self.gui_on = gui_on
         if self.gui_on:
@@ -212,7 +212,7 @@ class MotionController(QtCore.QObject):
             if self.gui_on:
                 self.sig_update_gui.emit()
         else:
-            self.logger.error("set_scan_region(): keyword /'scan_boundary/' is misssing.")
+            self.logger.error("set_scan_region(): keyword /'scan_boundary/' is missing.")
 
     def set_n_scan_lines(self, n):
         self.n_scan_lines = n
@@ -228,15 +228,21 @@ class MotionController(QtCore.QObject):
                   f'Y={self.scan_limits_xx_yy[1]:.4f} ' \
                   f'Z={self.enc_counts_per_pulse}'
         _ = self.write_with_response(command.encode())
+        self.logger.debug(command)
         # set y-limits and the number of lines
         command = f'SCANV X={self.scan_limits_xx_yy[2]:.4f} ' \
                   f'Y={self.scan_limits_xx_yy[3]:.4f} ' \
                   f'Z={self.n_scan_lines}'
         self.logger.debug(command)
         _ = self.write_with_response(command.encode())
-        # set RASTER (0) or SERPENTINE (1) scan mode:
-        _ = self.write_with_response(b'SCAN F=1')
+        self._set_scan_mode()
         _ = self.write_with_response(b'TTL X=1')
+
+    def _set_scan_mode(self, raster=True):
+        """set RASTER (0) or SERPENTINE (1) scan mode"""
+        mode = 0 if raster else 1
+        _ = self.write_with_response(f'SCAN F={mode}'.encode())
+        self.logger.debug(f'scan mode {mode}')
 
     def start_scan(self):
         """Scan the stage with ENC_INT module.
@@ -284,6 +290,8 @@ class MotionController(QtCore.QObject):
                                    func=self.set_speed, **{'axis': 'Y'})
 
         tab_name = 'Scanning'
+        self.gui.add_combobox("Scan mode", tab_name, ['Raster', 'Serpentine'], value='Raster',
+                              func=lambda x: self._set_scan_mode(x == 'Raster'))
         groupbox_name = 'Scan region'
         self.gui.add_groupbox(label=groupbox_name, parent=tab_name)
         self.gui.add_numeric_field('X start, mm', groupbox_name,
@@ -304,9 +312,9 @@ class MotionController(QtCore.QObject):
         self.gui.add_numeric_field('Num. of lines', groupbox_name,
                                    value=self.n_scan_lines, vmin=0, vmax=10000, decimals=0,
                                    func=self.set_n_scan_lines)
-        self.gui.add_numeric_field('Backlash margin, mm', groupbox_name,
+        self.gui.add_numeric_field('Backlash margin, mm', tab_name,
                                    value=self.backlash_mm, vmin=0, vmax=0.05, decimals=3, enabled=False)
-        self.gui.add_button('Start scanning', groupbox_name, func=self.start_scan)
+        self.gui.add_button('Start scanning', tab_name, func=self.start_scan)
 
     @QtCore.pyqtSlot()
     def _update_gui(self):
@@ -319,6 +327,7 @@ class MotionController(QtCore.QObject):
         self.gui.update_numeric_field('Y start, mm', self.scan_limits_xx_yy[2])
         self.gui.update_numeric_field('Y stop, mm', self.scan_limits_xx_yy[3])
         self.gui.update_numeric_field('Trigger interval X, mm', self.pulse_intervals_x)
+        self.gui.update_numeric_field('Num. of lines', self.n_scan_lines)
 
 
 # run if the module is launched as a standalone program

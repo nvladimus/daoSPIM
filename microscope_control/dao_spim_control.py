@@ -9,9 +9,9 @@ import os
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.uic import loadUi
 import pyqtgraph as pg
 import numpy as np
-from skimage.external import tifffile
 import time
 from collections import deque
 import hamamatsu_camera as cam
@@ -22,6 +22,7 @@ import etl_controller_Optotune as etl
 import stage_ASI_MS2000 as stage
 import scipy.optimize as opt
 import logging
+from functools import partial
 logging.basicConfig()
 
 
@@ -64,8 +65,8 @@ class CameraWindow(QtWidgets.QWidget):
         """Overlay ROIs on top of image display"""
         roi_height_um = 50
         grid_spacing_um = 50
-        roi_height_px = int(roi_height_um / config.microscope['pixel_size_um'])
-        grid_spacing_px = int(grid_spacing_um / config.microscope['pixel_size_um'])
+        roi_height_px = int(roi_height_um / config.microscope['um_per_px'])
+        grid_spacing_px = int(grid_spacing_um / config.microscope['um_per_px'])
         dm_diameter_px = int(1000. * config.dm['diameter_mm'] / config.camera['pixel_um'])
         roi_L = pg.RectROI([self.cam_sensor_dims[1]/8.0,
                             self.cam_sensor_dims[0]/2.0 - int(roi_height_px / 2)],
@@ -121,7 +122,7 @@ class CameraWindow(QtWidgets.QWidget):
                 _, fwhm = self.compute_fwhm_1d(avg_array)
             except ValueError as e:
                 fwhm = 0
-            fwhm_um = fwhm * config.microscope['pixel_size_um']
+            fwhm_um = fwhm * config.microscope['um_per_px']
             self.roi_fwhm_text.setText(f"FWHM: {fwhm_um:.2f} um")
             roi_pos = self.roi_line_fwhm.pos()
             self.roi_fwhm_text.setPos(roi_pos)
@@ -176,64 +177,46 @@ class MainWindow(QtWidgets.QWidget):
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(logging.DEBUG)
         self.frame_queue = deque([])
+
+        # State parameters
+        self.n_frames_per_stack = self.n_frames_to_grab = None
+        self.trigger_interval_um = config.scanning['step_x_um']
+        self.n_timepoints = self.n_tiles = 1
+        self.n_angles = 2
+        self.tile_step_um = config.microscope['FOV_x_um'] * (1 - config.scanning['tile_overlap_ratio'])
+        self.file_save_running = self.abort_pressed = False
+        self.root_folder = config.saving['root_folder']
+        self.dir_path = self.file_path = None
+        self.plane_order = 'interleaved'
+        self.file_format = "HDF5"
+
         # tabs
         self.tabs = QtWidgets.QTabWidget()
+        self.tab_expt = QtWidgets.QWidget()
         self.tab_camera = QtWidgets.QWidget()
         self.tab_stage = QtWidgets.QWidget()
         self.tab_lightsheet = QtWidgets.QWidget()
         self.tab_defm = QtWidgets.QWidget()
         self.tab_etl = QtWidgets.QWidget()
 
+        # experiment control
+        self.gui_expt = loadUi("gui/experiment.ui")
         # deformable mirror widgets
         self.dev_dm = def_mirror.DmController(logger_name=self.logger.name + '.DM')
-
         # light-sheet widget
         self.ls_generator = lsg.LightsheetGenerator()
-
         # stage widgets
         self.dev_stage = stage.MotionController(logger_name=self.logger.name + '.stage')
-
-        self.groupbox_scanning = QtWidgets.QGroupBox("Scanning")
-        self.button_stage_x_move_right = QtWidgets.QPushButton("move ->")
-        self.button_stage_x_move_left = QtWidgets.QPushButton("<- move")
-        self.spinbox_stage_x_move_step = QtWidgets.QSpinBox(suffix=" um")
-        self.button_stage_pos_start = QtWidgets.QPushButton("Mark x-start")
-        self.button_stage_pos_stop = QtWidgets.QPushButton("Mark x-stop")
-        self.button_stage_start_scan = QtWidgets.QPushButton("Start scan cycle")
-        self.checkbox_stage_use_fixed_range = QtWidgets.QCheckBox("Use fixed range, um")
-        self.spinbox_stage_speed_x = QtWidgets.QDoubleSpinBox(suffix=' mm/s (speed)')
-        self.spinbox_stage_step_x = QtWidgets.QDoubleSpinBox(suffix=' um (trig. intvl)')
-        self.spinbox_stage_range_x = QtWidgets.QDoubleSpinBox(suffix=' um (range)')
-        self.spinbox_stage_n_cycles = QtWidgets.QSpinBox(suffix=' cycles (time pts)')
-        self.label_stage_start_pos = QtWidgets.QLabel("0.0")
-        self.label_stage_stop_pos = QtWidgets.QLabel("0.0")
-
+        self.gui_stage = loadUi("gui/stage_scanning.ui")
         # camera widgets
         self.dev_cam = cam.CamController(logger_name=self.logger.name + '.camera')
-
         # ETL widget
         self.dev_etl = etl.ETL_controller(logger_name=self.logger.name + '.ETL')
-
-        # acquisition
-        self.groupbox_acq_params = QtWidgets.QGroupBox("Acquisition")
-        self.button_cam_acquire = QtWidgets.QPushButton('Acquire and save')
-        self.spinbox_n_timepoints = QtWidgets.QSpinBox()
-        self.spinbox_frames_per_stack = QtWidgets.QSpinBox()
-        self.spinbox_nangles = QtWidgets.QSpinBox()
-
-        # saving
-        self.groupbox_saving = QtWidgets.QGroupBox("Saving")
-
-        self.button_save_folder = QtWidgets.QPushButton(get_dirname(config.saving['root_folder']))
-        self.line_subfolder = QtWidgets.QLineEdit("subfolder")
-        self.line_prefix = QtWidgets.QLineEdit("stack")
-        self.combobox_file_format = QtWidgets.QComboBox()
-        self.checkbox_simulation = QtWidgets.QCheckBox("Simulation mode")
-
         self.button_exit = QtWidgets.QPushButton('Exit')
 
         # GUI layouts
         self.layout = QtWidgets.QVBoxLayout(self)
+        self.tab_expt.layout = QtWidgets.QFormLayout()
         self.tab_camera.layout = QtWidgets.QFormLayout()
         self.tab_stage.layout = QtWidgets.QFormLayout()
         self.tab_lightsheet.layout = QtWidgets.QFormLayout()
@@ -241,12 +224,6 @@ class MainWindow(QtWidgets.QWidget):
         self.tab_etl.layout = QtWidgets.QFormLayout()
         self.initUI()
 
-        # Internal parameters
-        self.n_frames_per_stack = self.n_stacks_to_grab = self.n_frames_to_grab = self.n_angles = None
-        self.file_save_running = self.abort_pressed = False
-        self.root_folder = config.saving['root_folder']
-        self.dir_path = self.file_path = None
-        self.file_format = "HDF5"
         # Set up threads and signals
         self.thread_live_mode = QtCore.QThread()
         self.worker_live_mode = LiveImagingWorker(self, self.dev_cam)
@@ -266,7 +243,6 @@ class MainWindow(QtWidgets.QWidget):
         self.thread_frame_grabbing.started.connect(self.worker_grabbing.run)
         self.worker_grabbing.sig_save_data.connect(self.append_new_data)
         self.worker_grabbing.sig_finished.connect(self.thread_frame_grabbing.quit)
- #       self.worker_grabbing.sig_dummy_send.connect(self.dummy_receive)
 
         self.thread_stage_scanning = QtCore.QThread()
         self.worker_stage_scanning = StageScanningWorker(self, self.logger)
@@ -277,245 +253,150 @@ class MainWindow(QtWidgets.QWidget):
     def initUI(self):
         self.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.setWindowTitle("Microscope control")
-        self.move(50, 100)
+        self.move(50, 50)
         # set up Tabs
+        self.tabs.addTab(self.tab_expt, "Experiment")
         self.tabs.addTab(self.tab_camera, "Camera")
         self.tabs.addTab(self.tab_stage, "Stage")
         self.tabs.addTab(self.tab_lightsheet, "Light sheet")
         self.tabs.addTab(self.tab_defm, "Def. mirror")
         self.tabs.addTab(self.tab_etl, "ETL")
-
-        # DEFORMABLE Mirror tab
+        # Experiment tab
+        self.tab_expt.layout.addWidget(self.gui_expt)
+        self.tab_expt.setLayout(self.tab_expt.layout)
+        self.gui_expt.button_save_folder.setText(get_dirname(config.saving['root_folder']))
+        # DM tab
         self.tab_defm.layout.addWidget(self.dev_dm.gui)
-        self.dev_dm.gui.setFixedWidth(300)
         self.tab_defm.setLayout(self.tab_defm.layout)
-
         # ETL tab
         self.tab_etl.layout.addWidget(self.dev_etl.gui)
-        self.dev_etl.gui.setFixedWidth(300)
         self.tab_etl.setLayout(self.tab_etl.layout)
-
-        #LIGHTSHEET tab
+        # LIGHTSHEET tab
         self.tab_lightsheet.layout.addWidget(self.ls_generator.gui)
         self.tab_lightsheet.setLayout(self.tab_lightsheet.layout)
-
         # Stage tab
-        self.dev_stage.gui.setFixedWidth(300)
-        self.button_stage_pos_start.setFixedWidth(80)
-        self.button_stage_pos_stop.setFixedWidth(80)
-
-        self.label_stage_start_pos.setFixedWidth(60)
-        self.label_stage_stop_pos.setFixedWidth(60)
-
-        self.button_stage_start_scan.setFixedWidth(240)
-        self.checkbox_stage_use_fixed_range.setChecked(True)
-
-        self.spinbox_stage_speed_x.setValue(0.2)
-        self.spinbox_stage_speed_x.setMinimum(0.01)
-        self.spinbox_stage_speed_x.setFixedWidth(160)
-        self.spinbox_stage_speed_x.setDecimals(3)
-        self.spinbox_stage_speed_x.setEnabled(False)
-
-        self.spinbox_stage_step_x.setDecimals(3)
-        self.spinbox_stage_step_x.setValue(config.scanning['step_x_um'])
-        self.spinbox_stage_step_x.setMinimum(0.022)
-        self.spinbox_stage_step_x.setFixedWidth(160)
-        self.spinbox_stage_step_x.setSingleStep(0.022)
-
-        self.spinbox_stage_n_cycles.setValue(1)
-        self.spinbox_stage_n_cycles.setMinimum(1)
-        self.spinbox_stage_n_cycles.setMaximum(1000)
-        self.spinbox_stage_n_cycles.setFixedWidth(160)
-        self.spinbox_stage_n_cycles.setEnabled(False)
-
-        self.spinbox_stage_range_x.setValue(50)
-        self.spinbox_stage_range_x.setFixedWidth(160)
-        self.spinbox_stage_range_x.setDecimals(0)
-        self.spinbox_stage_range_x.setSingleStep(1)
-        self.spinbox_stage_range_x.setRange(1, 1000)
-
-        self.button_stage_x_move_right.setFixedWidth(80)
-        self.button_stage_x_move_left.setFixedWidth(80)
-
-        self.spinbox_stage_x_move_step.setValue(5)
-        self.spinbox_stage_x_move_step.setFixedWidth(60)
-        self.spinbox_stage_x_move_step.setRange(1, 500)
-
-        layout_stage_start_stop = QtWidgets.QGridLayout()
-        layout_stage_start_stop.addWidget(self.button_stage_pos_start, 0, 0)
-        layout_stage_start_stop.addWidget(self.label_stage_start_pos, 0, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_pos_stop, 0, 2)
-        layout_stage_start_stop.addWidget(self.label_stage_stop_pos, 0, 3)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_right, 1, 0)
-        layout_stage_start_stop.addWidget(self.spinbox_stage_x_move_step, 1, 1)
-        layout_stage_start_stop.addWidget(self.button_stage_x_move_left, 1, 2)
-
+        self.gui_stage.spinbox_stage_step_x.setValue(self.trigger_interval_um)
         self.tab_stage.layout.addWidget(self.dev_stage.gui)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_speed_x)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_step_x)
-        self.tab_stage.layout.addWidget(self.checkbox_stage_use_fixed_range)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_range_x)
-        self.tab_stage.layout.addWidget(self.spinbox_stage_n_cycles)
-        self.tab_stage.layout.addRow(layout_stage_start_stop)
-        self.tab_stage.layout.addRow(self.button_stage_start_scan)
-
+        self.tab_stage.layout.addWidget(self.gui_stage)
         self.tab_stage.setLayout(self.tab_stage.layout)
+        # Camera tab
+        self.tab_camera.layout.addWidget(self.dev_cam.gui)
+        self.tab_camera.setLayout(self.tab_camera.layout)
 
         # CAMERA window
         self.cam_window = CameraWindow(self)
         self.cam_window.show()
-
-        # acquisition params
-        self.groupbox_acq_params.setFixedWidth(300)
-
-        self.spinbox_n_timepoints.setValue(1)
-        self.spinbox_n_timepoints.setFixedWidth(60)
-        self.spinbox_n_timepoints.setMaximum(10000)
-        self.spinbox_n_timepoints.setMinimum(1)
-
-        self.spinbox_frames_per_stack.setValue(40)
-        self.spinbox_frames_per_stack.setFixedWidth(60)
-        self.spinbox_frames_per_stack.setRange(1, 1000)
-
-        self.spinbox_nangles.setValue(2)
-        self.spinbox_nangles.setEnabled(False)
-        self.spinbox_nangles.setFixedWidth(60)
-
-        layout_acquisition = QtWidgets.QFormLayout()
-        layout_acquisition.addRow("Images per stack:", self.spinbox_frames_per_stack)
-        layout_acquisition.addRow("Time points:", self.spinbox_n_timepoints)
-        layout_acquisition.addRow("n(angles):", self.spinbox_nangles)
-        self.groupbox_acq_params.setLayout(layout_acquisition)
-
-        # saving, layouts
-        self.groupbox_saving.setFixedWidth(300)
-        self.line_subfolder.setAlignment(QtCore.Qt.AlignRight)
-        self.line_prefix.setAlignment(QtCore.Qt.AlignRight)
-        self.combobox_file_format.setFixedWidth(80)
-        self.combobox_file_format.addItem("HDF5")
-        self.combobox_file_format.addItem("TIFF")
-
-        layout_files = QtWidgets.QFormLayout()
-        layout_files.addRow(self.button_save_folder)
-        layout_files.addRow(self.line_subfolder)
-        layout_files.addRow(self.line_prefix)
-        layout_files.addRow("Format", self.combobox_file_format)
-        self.groupbox_saving.setLayout(layout_files)
-
-        # Camera controls layout
-        self.dev_cam.gui.setFixedWidth(300)
-        self.button_cam_acquire.setFixedWidth(300)
-        # self.checkbox_with_scanning.setChecked(True)
-        # self.checkbox_with_scanning.setToolTip('Start scanning cycle after camera started')
-
-        self.tab_camera.layout.addWidget(self.dev_cam.gui)
-        self.tab_camera.layout.addWidget(self.groupbox_acq_params)
-        self.tab_camera.layout.addWidget(self.button_cam_acquire)
-        self.tab_camera.layout.addWidget(self.groupbox_saving)
-        self.tab_camera.setLayout(self.tab_camera.layout)
 
         # global layout
         self.button_exit.setFixedWidth(120)
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.button_exit)
         self.setLayout(self.layout)
+        self.update_calculator()
 
+        # Signals experiment control
+        self.gui_expt.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
+        self.gui_expt.button_save_folder.clicked.connect(self.button_save_folder_clicked)
+        self.gui_expt.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
+        self.gui_expt.combo_plane_order.currentIndexChanged.connect(self.set_plane_order)
+        self.button_exit.clicked.connect(self.button_exit_clicked)
         # Signals Camera control
         self.cam_window.button_cam_snap.clicked.connect(self.button_snap_clicked)
         self.cam_window.button_cam_live.clicked.connect(self.button_live_clicked)
-        self.button_cam_acquire.clicked.connect(self.button_acquire_clicked)
-        self.button_save_folder.clicked.connect(self.button_save_folder_clicked)
-        self.combobox_file_format.currentTextChanged.connect(self.set_file_format)
-        self.button_exit.clicked.connect(self.button_exit_clicked)
-
-        # Signals Stage control
-        self.button_stage_x_move_right.clicked.connect(self.stage_x_move_right)
-        self.button_stage_x_move_left.clicked.connect(self.stage_x_move_left)
-        self.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
-        self.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
-        self.button_stage_start_scan.clicked.connect(self.start_scan)
-
         self.dev_cam.gui.params['Exposure, ms'].editingFinished.connect(self.update_calculator)
-        self.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
-        self.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
-        self.spinbox_n_timepoints.valueChanged.connect(self.update_calculator)
+        # Signals Stage control
+        self.gui_stage.button_stage_x_move_right.clicked.connect(partial(self.stage_move, direction=(-1, 0)))
+        self.gui_stage.button_stage_x_move_left.clicked.connect(partial(self.stage_move, direction=(1,0)))
+        self.gui_stage.button_stage_y_move_up.clicked.connect(partial(self.stage_move, direction=(0,-1)))
+        self.gui_stage.button_stage_y_move_down.clicked.connect(partial(self.stage_move, direction=(0,1)))
+        self.gui_stage.button_stage_pos_start.clicked.connect(self.stage_mark_start_pos)
+        self.gui_stage.button_stage_pos_stop.clicked.connect(self.stage_mark_stop_pos)
+        self.gui_stage.button_stage_start_scan.clicked.connect(self.start_scan)
+        self.gui_stage.button_set_center.clicked.connect(self.stage_setup_scan_range)
+        self.gui_stage.spinbox_stage_step_x.valueChanged.connect(self.update_calculator)
+        self.gui_stage.spinbox_stage_range_x.valueChanged.connect(self.update_calculator)
 
     def start_scan(self):
-        self.worker_stage_scanning.setup(self.dev_stage, self.n_stacks_to_grab)
+        self.stage_setup_scan_range()
+        self.worker_stage_scanning.setup(self.dev_stage)
         self.thread_stage_scanning.start()
 
-    def stage_x_move_right(self):
+    def stage_setup_scan_range(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x - 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
-            self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
+            if self.gui_stage.checkbox_scan_around.isChecked():
+                x_range = self.gui_stage.spinbox_stage_range_x.value()
+                y_range = self.gui_stage.spinbox_stage_range_y.value()
+                xstart = self.dev_stage.position_x_mm - 0.001*x_range / 2
+                xstop  = self.dev_stage.position_x_mm + 0.001*x_range / 2
+                if y_range > config.microscope['FOV_x_um']: # stage Y is image X axis
+                    ystart = self.dev_stage.position_y_mm - 0.001*(y_range + config.microscope['FOV_x_um']) / 2.0
+                    ystop  = self.dev_stage.position_y_mm + 0.001*(y_range - config.microscope['FOV_x_um']) / 2.0
+                    self.n_tiles = int(np.ceil(y_range/(config.microscope['FOV_x_um'] * (1 - config.scanning['tile_overlap_ratio']))))
+                    self.gui_expt.spinbox_n_tiles.setValue(self.n_tiles)
+                else:
+                    ystart = ystop = self.dev_stage.position_y_mm
+                self.dev_stage.set_scan_region(xstart, scan_boundary='x_start')
+                self.dev_stage.set_scan_region(xstop, scan_boundary='x_stop')
+                self.dev_stage.set_scan_region(ystart, scan_boundary='y_start')
+                self.dev_stage.set_scan_region(ystop, scan_boundary='y_stop')
+                n_scans = self.n_tiles if self.plane_order == 'interleaved' else self.n_tiles * self.n_angles
+                self.dev_stage.set_n_scan_lines(n_scans)
+                self.dev_stage.set_trigger_intervals(0.001 * self.trigger_interval_um, trigger_axis='X')
         else:
             self.logger.error("Please activate stage first")
 
-    def stage_x_move_left(self):
+    def stage_move(self, direction=(1, 1)):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
             pos_x, pos_y = self.dev_stage.position_x_mm, self.dev_stage.position_y_mm
-            new_x, new_y = pos_x + 0.001 * self.spinbox_stage_x_move_step.value(), pos_y
+            new_x = pos_x + direction[0] * 0.001 * self.gui_stage.spinbox_stage_move_step.value()
+            new_y = pos_y + direction[1] * 0.001 * self.gui_stage.spinbox_stage_move_step.value()
             self.dev_stage.move_abs((new_x, new_y))
-            self.logger.debug(f'new_x:{new_x:.4f}')
         else:
             self.logger.error("Please activate stage first")
 
     def stage_mark_start_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            pos = self.dev_stage.position_x_mm - self.dev_stage.backlash_mm
-            self.label_stage_start_pos.setText(f'{pos:.4f}')
+            pos = self.dev_stage.position_x_mm
             self.dev_stage.set_scan_region(pos, scan_boundary='x_start')
-            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_start')
         else:
             self.logger.error("Please activate stage first")
 
     def stage_mark_stop_pos(self):
         if self.dev_stage.initialized:
             self.dev_stage.get_position()
-            if self.checkbox_stage_use_fixed_range.isChecked():
-                start = float(self.label_stage_start_pos.text().strip())
-                pos = start + self.spinbox_stage_range_x.value()/1000. + 2*self.dev_stage.backlash_mm
-                self.label_stage_stop_pos.setText(f'{pos:.4f}')
-            else:
-                pos = self.dev_stage.position_x_mm + self.dev_stage.backlash_mm
-                self.label_stage_stop_pos.setText(f'{pos:.4f}')
+            pos = self.dev_stage.position_x_mm
             self.dev_stage.set_scan_region(pos, scan_boundary='x_stop')
-            self.dev_stage.set_scan_region(self.dev_stage.position_y_mm, scan_boundary='y_stop')
         else:
             self.logger.error("Please activate stage first")
 
+    def set_plane_order(self):
+        if self.gui_expt.combo_plane_order.currentIndex() == 0:
+            self.plane_order = 'interleaved'
+        else:
+            self.plane_order = 'sequential'
+        self.update_calculator()
+        self.logger.debug(f"Index {self.gui_expt.combo_plane_order.currentIndex()}, Plane order: {self.plane_order}")
+
     def update_calculator(self):
         # speed = (stepX) / (timing between steps, trigger-coupled to exposure)
+        self.n_timepoints = int(self.gui_expt.spinbox_n_timepoints.value())
+        self.trigger_interval_um = self.gui_stage.spinbox_stage_step_x.value()
         if self.dev_cam.exposure_ms != 0:
-            stage_speed_x = self.spinbox_stage_step_x.value() / self.dev_cam.exposure_ms
-            self.spinbox_stage_speed_x.setValue(stage_speed_x)
+            stage_speed_x = self.trigger_interval_um / self.dev_cam.exposure_ms
+            self.gui_stage.spinbox_stage_speed_x.setValue(stage_speed_x)
+            if self.dev_stage.initialized:
+                self.dev_stage.set_speed(stage_speed_x, axis='X')
 
-        if self.spinbox_n_timepoints.value() != 0:
-            self.spinbox_stage_n_cycles.setValue(self.spinbox_n_timepoints.value())
+        if self.n_timepoints != 0:
+            self.gui_stage.spinbox_stage_n_cycles.setValue(self.gui_expt.spinbox_n_timepoints.value())
 
-        # feed the trigger interval to the stage settings
-        if self.dev_stage.initialized:
-            stage_step_x_mm = 0.001 * self.spinbox_stage_step_x.value()
-            self.dev_stage.set_trigger_intervals(stage_step_x_mm, trigger_axis='X')
-            self.dev_stage.set_speed(stage_speed_x, axis='X')
-
-        if self.spinbox_stage_speed_x.value() != 0:
-            exposure_ms = self.spinbox_stage_step_x.value() / self.spinbox_stage_speed_x.value()
-            if self.dev_cam is not None:
-                self.dev_cam.set_exposure(exposure_ms)
-
-        # n(trigger pulses, coupled to exposure) = (scan range) / (stepX)
-        if self.spinbox_stage_step_x.value() != 0:
-            n_triggers = int((self.spinbox_stage_range_x.value() + 1000 * 2 * self.dev_stage.backlash_mm)
-                             / self.spinbox_stage_step_x.value())
-            self.spinbox_frames_per_stack.setValue(n_triggers)
-            if self.ls_generator.initialized:
-                self.ls_generator.set_switching_period(n_triggers)
+        if self.trigger_interval_um != 0:
+            n_triggers = int(self.gui_stage.spinbox_stage_range_x.value() / self.trigger_interval_um)
+            self.n_frames_per_stack = n_triggers // 2 if self.plane_order == 'interleaved' else n_triggers
+            self.gui_expt.spinbox_frames_per_stack.setValue(self.n_frames_per_stack)
 
     def button_exit_clicked(self):
         if self.dev_cam.dev_handle is not None:
@@ -564,15 +445,13 @@ class MainWindow(QtWidgets.QWidget):
             self.check_cam_initialized()
             self.dev_cam.status = 'Running'
             self.button_acquire_reset()
-            self.n_frames_per_stack = int(self.spinbox_frames_per_stack.value())
-            self.n_stacks_to_grab = int(self.spinbox_n_timepoints.value() * self.spinbox_nangles.value())
-            self.n_frames_to_grab = self.n_stacks_to_grab * self.n_frames_per_stack
-            self.n_angles = int(self.spinbox_nangles.value())
+            self.n_frames_per_stack = int(self.gui_expt.spinbox_frames_per_stack.value())
+            self.n_frames_to_grab = self.n_timepoints * self.n_angles * self.n_tiles * self.n_frames_per_stack
             self.dev_cam.setup()
             self.ls_generator.setup()
             self.worker_grabbing.setup(self.n_frames_to_grab)
             self.worker_saving.setup(self.n_frames_to_grab, self.n_frames_per_stack,
-                                     self.n_angles, self.dev_cam.frame_height_px)
+                                     self.n_angles, self.n_tiles, self.dev_cam.frame_height_px)
             self.thread_frame_grabbing.start()
             self.thread_saving_files.start()
             if not self.dev_cam.config['simulation']:
@@ -594,24 +473,24 @@ class MainWindow(QtWidgets.QWidget):
 
     def create_folder(self):
         """Create new folder for acquisition."""
-        self.dir_path = self.root_folder + "/" + self.line_subfolder.text()
+        self.dir_path = self.root_folder + "/" + self.gui_expt.line_subfolder.text()
         i_dir = 0
         while os.path.exists(self.dir_path + f'_v{i_dir}'): i_dir += 1
         self.dir_path += f'_v{i_dir}'
         os.mkdir(self.dir_path)
-        self.file_path = self.dir_path + "/" + self.line_prefix.text()
+        self.file_path = self.dir_path + "/" + self.gui_expt.line_prefix.text()
         self.logger.info("Experiment folder: " + self.dir_path)
 
     def button_acquire_reset(self):
         if (not self.dev_cam.status == 'Running') and (not self.file_save_running):
-            self.button_cam_acquire.setText("Acquire and save")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: black;}')
+            self.gui_expt.button_cam_acquire.setText("Acquire and save")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: black;}')
         if (not self.dev_cam.status == 'Running') and self.file_save_running:
-            self.button_cam_acquire.setText("Saving...")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: blue;}')
+            self.gui_expt.button_cam_acquire.setText("Saving...")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: blue;}')
         if self.dev_cam.status == 'Running':
-            self.button_cam_acquire.setText("Abort")
-            self.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
+            self.gui_expt.button_cam_acquire.setText("Abort")
+            self.gui_expt.button_cam_acquire.setStyleSheet('QPushButton {color: red;}')
 
     def button_save_folder_clicked(self):
         file_dialog = QtWidgets.QFileDialog()
@@ -619,15 +498,9 @@ class MainWindow(QtWidgets.QWidget):
         folder = file_dialog.getExistingDirectory(self, "Save to folder", self.root_folder)
         if folder:
             self.root_folder = folder
-            self.button_save_folder.setText(get_dirname(folder))
+            self.gui_expt.button_save_folder.setText(get_dirname(folder))
             self.logger.info("Root folder for saving: " + self.root_folder)
 
-    def set_file_format(self, new_format):
-        self.file_format = new_format
-
-    # @QtCore.pyqtSlot()
-    # def dummy_receive(self):
-    #     self.logger.debug("dummy received")
 
     @QtCore.pyqtSlot(object)
     def append_new_data(self, obj_list):
@@ -670,9 +543,8 @@ class StageScanningWorker(QtCore.QObject):
         self.dev_stage = None
 
     @QtCore.pyqtSlot()
-    def setup(self, dev_stage, n_lines):
+    def setup(self, dev_stage):
         self.dev_stage = dev_stage
-        self.dev_stage.set_n_scan_lines(n_lines)
 
     @QtCore.pyqtSlot()
     def scan(self):
@@ -682,7 +554,7 @@ class StageScanningWorker(QtCore.QObject):
             response = self.dev_stage.write_with_response(b'/')
             while response[0] != 'N':
                 response = self.dev_stage.write_with_response(b'/')
-                time.sleep(0.05) # Todo: replace with Timer!!!
+                time.sleep(0.05) # Todo: replace with Timer!
             self.dev_stage.logger.debug(f"move complete")
             # return to scan start position
             self.dev_stage.move_abs((self.dev_stage.scan_limits_xx_yy[0], self.dev_stage.scan_limits_xx_yy[2]))
@@ -764,75 +636,119 @@ class SavingStacksWorker(QtCore.QObject):
         self.camera = camera
         self.logger = logger
         self.frame_queue = frame_queue
-        self.frames_to_save = self.frames_per_stack = self.n_angles = self.frames_saved = None
+        self.frames_to_save = self.frames_per_stack = self.n_angles = self.frame_counter = None
         self.stack_counter = self.angle_counter = self.bdv_writer = self.stack = self.cam_image_height = None
         self.sig_update_GUI.connect(self.parent_window.button_acquire_reset)
 
-    def setup(self, frames_to_save, frames_per_stack, n_angles, image_height):
+    def setup(self, frames_to_save, frames_per_stack, n_angles, n_tiles, image_height):
         self.frames_to_save = frames_to_save
         self.frames_per_stack = frames_per_stack
         self.n_angles = n_angles
-        self.frames_saved = 0
-        self.stack_counter = 0
-        self.angle_counter = 0
+        self.n_tiles = n_tiles
+        self.frame_counter = self.stack_counter = self.angle_counter = 0
+        self.tile_counter = self.tile_counter_new = 0
+        self.planes_interleaved = True if self.parent_window.plane_order == "interleaved" else False
         self.cam_image_height = image_height
         self.stack = np.empty((frames_per_stack, self.cam_image_height, 2048), 'uint16')
+        self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
+                                            nangles=self.n_angles, ntiles=self.n_tiles)
+        if not self.planes_interleaved:
+            z_voxel_size = self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
+        else:
+            z_voxel_size = 2 * self.parent_window.gui_stage.spinbox_stage_step_x.value() / np.sqrt(2)
+        z_anisotropy = z_voxel_size / config.microscope['um_per_px']
+        self.unshear_matrix_L = np.array(((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, -z_anisotropy, 0.0), (0.0, 0.0, 1.0, 0.0)))
+        self.unshear_matrix_R = np.array(((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, z_anisotropy, 0.0),  (0.0, 0.0, 1.0, 0.0)))
+        self.voxel_size = (config.microscope['um_per_px'], config.microscope['um_per_px'], z_voxel_size)
 
     @QtCore.pyqtSlot()
     def run(self):
         self.parent_window.file_save_running = True
-        if self.parent_window.file_format == "HDF5":
-            self.bdv_writer = npy2bdv.BdvWriter(self.parent_window.file_path + '.h5',
-                                                nangles=self.n_angles,
-                                                subsamp=((1, 1, 1),))
-        elif self.parent_window.file_format == "TIFF":
-            pass
+        while not self.parent_window.abort_pressed and self.frame_counter < self.frames_to_save:
+            if len(self.frame_queue) > 0:
+                plane = np.reshape(self.frame_queue.popleft(), (self.cam_image_height, 2048))
+                if not self.planes_interleaved:  # planes are from L,L,L,L..., R,R,R,.. views
+                    if self.frame_counter % self.frames_per_stack == 0:  # begin new stack
+                        time_index = int(self.stack_counter / self.n_angles / self.n_tiles)
+                        plane_index_L = plane_index_R = -1
+                        self.angle_counter = self.angle_counter % self.n_angles
+                        if self.tile_counter_new > self.tile_counter:
+                            self.tile_counter = self.tile_counter_new
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
+                                                    time=time_index,
+                                                    angle=self.angle_counter,
+                                                    tile=self.tile_counter,
+                                                    m_affine=self.unshear_matrix_L,
+                                                    name_affine="unshearing transformation",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.stack_counter += 1
+                        if self.n_tiles > 1:
+                            self.tile_counter_new = self.tile_counter + 1
+                else:  # planes interleaved, from L, R, L, R, .. views
+                    if self.frame_counter % (self.n_angles * self.frames_per_stack) == 0:  # begin 2 new stacks
+                        time_index = int(self.stack_counter / self.n_angles / self.n_tiles)
+                        plane_index_L = plane_index_R = -1
+                        if self.tile_counter_new > self.tile_counter:
+                            self.tile_counter = self.tile_counter_new
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
+                                                    time=time_index,
+                                                    angle=0,
+                                                    tile=self.tile_counter,
+                                                    m_affine=self.unshear_matrix_L, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        self.bdv_writer.append_view(None,
+                                                    virtual_stack_dim=(self.frames_per_stack, plane.shape[0], plane.shape[1]),
+                                                    time=time_index,
+                                                    angle=1,
+                                                    tile=self.tile_counter,
+                                                    m_affine=self.unshear_matrix_R, name_affine="unshearing",
+                                                    voxel_size_xyz=self.voxel_size,
+                                                    exposure_time=self.camera.exposure_ms
+                                                    )
+                        if self.n_tiles > 1:
+                            self.tile_counter_new = self.tile_counter + 1
+                        self.stack_counter += 2
 
-        while (self.frames_saved < self.frames_to_save) and not self.parent_window.abort_pressed:
-            if len(self.frame_queue) >= self.frames_per_stack:
-                for iframe in range(self.frames_per_stack):
-                    plane = self.frame_queue.popleft()
-                    self.stack[iframe, :, :] = np.reshape(plane, (self.cam_image_height, 2048))
-                    self.frames_saved += 1
-                #self.logger.debug(f"frames: {self.frames_saved} of {self.frames_to_save}")
-                if self.parent_window.file_format == "HDF5":
-                    z_voxel_size = self.parent_window.spinbox_stage_step_x.value() / np.sqrt(2)
-                    z_anisotropy = z_voxel_size / config.microscope['pixel_size_um']
-                    affine_matrix = np.array(((1.0, 0.0, 0.0, 0.0),
-                                              (0.0, 1.0, -z_anisotropy, 0.0),
-                                              (0.0, 0.0, 1.0, 0.0)))
-                    voxel_size = (config.microscope['pixel_size_um'], config.microscope['pixel_size_um'], z_voxel_size)
-                    self.bdv_writer.append_view(self.stack,
-                                                time=int(self.stack_counter / self.n_angles),
-                                                angle=self.angle_counter,
-                                                m_affine=affine_matrix,
-                                                name_affine="unshearing transformation",
-                                                calibration=(1, 1, 1),
-                                                voxel_size_xyz=voxel_size,
-                                                exposure_time=self.camera.exposure_ms
-                                                )
-                elif self.parent_window.file_format == "TIFF":
-                    file_name = self.parent_window.file_path + \
-                                "_t{:05d}a{:01d}.tiff".format(self.stack_counter, self.angle_counter)
-                    tifffile.imsave(file_name, self.stack)
+                    self.angle_counter = self.frame_counter % self.n_angles # -> angle 0/1 for even/odd plane
+                # common block for both plane interleave modes:
+                if self.angle_counter % self.n_angles == 0:
+                    plane_index_L += 1
+                    plane_index = plane_index_L
                 else:
-                    self.logger.error(f"unknown format:{self.parent_window.file_format}")
-
-                self.stack_counter += 1
-                self.angle_counter = (self.angle_counter + 1) % self.n_angles
+                    plane_index_R += 1
+                    plane_index = plane_index_R
+                #print(f"Debug: plane {plane_index}, time {time_index}, tile {self.tile_counter}/{self.n_tiles}, angle {self.angle_counter}")
+                self.bdv_writer.append_plane(plane=plane, z=plane_index, time=time_index,
+                                             tile=self.tile_counter, angle=self.angle_counter)
+                self.frame_counter += 1
             else:
-                time.sleep(0.02) # Todo: Replace with QTimer!!!
-        # clean-up:
-        if self.parent_window.file_format == "HDF5":
-            if not self.parent_window.abort_pressed:
-                self.bdv_writer.write_xml_file(ntimes=int(self.stack_counter / self.n_angles),
-                                               camera_name="Hamamatsu OrcaFlash 4.3")
-            self.bdv_writer.close()
-        elif self.parent_window.file_format == "TIFF":
-            pass
+                time.sleep(0.02)  # Todo: Replace with QTimer
+        # wrap-up:
+        ntimes = int(self.stack_counter / self.n_angles / self.n_tiles)
+        #print(f"Debug: ntimes {ntimes} stack counter {self.stack_counter} ntiles {self.n_tiles}")
+        self.bdv_writer.write_xml_file(ntimes=ntimes, camera_name="OrcaFlash 4.3")
+        # write tile coordinates into XML
+        for it in range(ntimes):
+            stage_sign = -1 if config.scanning['y_stage_flip'] else 1
+            tile_offset_px = stage_sign * self.parent_window.tile_step_um / config.microscope['um_per_px']
+            #print(f"Debug: tile_offset_px {tile_offset_px}")
+            for itile in range(self.n_tiles):
+                translation_angle0 = np.array(((1.0, 0, 0, tile_offset_px * itile), (0, 1.0, 0, 0),  (0, 0, 1.0, 0)))
+                translation_angle1 = np.array(((1.0, 0, 0, -tile_offset_px * itile), (0, 1.0, 0, 0),  (0, 0, 1.0, 0)))
+                self.bdv_writer.append_affine(m_affine=translation_angle0, time=it, tile=itile, angle=0)
+                self.bdv_writer.append_affine(m_affine=translation_angle1, time=it, tile=itile, angle=1)
+        # finalize
+        self.bdv_writer.close()
         self.frame_queue.clear()
         self.parent_window.file_save_running = False
-        self.logger.info(f"Saved {self.frames_saved} images in {self.stack_counter} stacks with {self.n_angles} angles")
+        self.logger.info(f"Saved {self.frame_counter} images: {ntimes} time points,"
+                         f" {self.stack_counter} stacks, {self.n_tiles} tiles.")
         self.sig_update_GUI.emit()
         self.sig_finished.emit()
 
