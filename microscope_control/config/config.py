@@ -8,7 +8,7 @@ camera = {
 
 scanning = {
     'step_x_um': 2.5,
-    'tile_overlap_ratio': 0.75,
+    'tile_overlap_ratio': 0.25,
     'y_stage_flip': True,
 }
 # deformable mirror
