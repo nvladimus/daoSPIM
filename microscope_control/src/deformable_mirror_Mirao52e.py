@@ -1,5 +1,4 @@
 """
-Todo: test on hardware. This version is not tested yet!
 Module for controlling deformable mirror Mirao 52e (Imaging Optics)
 License GPL-3.0
 by @nvladimus, 2020
