@@ -1,5 +1,8 @@
 # daoSPIM
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI](https://zenodo.org/badge/250773639.svg)](https://zenodo.org/badge/latestdoi/250773639)
+
 
 **D**ual-view **a**daptive **o**ptics **s**elected **p**lane **i**llumination **m**icroscope makes multiview light-sheet microscopy compatible with microfluidic devices, by correcting optical aberrations with a deformable mirror (DM). Its unique optical design allows correcting aberrations in two arms with a single DM simultaneously.
 ![Optical layout: chamber](/wiki/images/excitation-switching-w800.gif)
@@ -26,4 +29,8 @@ DM is optimized in a separate Jupyter [notebook](./dm_optimization/) using a flu
 If you use any code or materials from this repo in your work, please cite our work as
 
 **Dual-view light-sheet imaging through tilted glass interface using a deformable mirror** \
-Nikita Vladimirov, Friedrich Preusser, Jan Wisniewski, Ziv Yaniv, Ravi Anand Desai, Andrew Woehler, Stephan Preibisch. *bioRxiv 2020.10.20.345306;* doi: https://doi.org/10.1101/2020.10.20.345306
+Nikita Vladimirov, Friedrich Preusser, Jan Wisniewski, Ziv Yaniv, Ravi Anand Desai, Andrew Woehler, Stephan Preibisch. [Biomedical Optics Express, 2021](https://doi.org/10.1364/BOE.416737).
+
+To cite the code specifically, please use the following DOI:
+
+[![DOI](https://zenodo.org/badge/250773639.svg)](https://zenodo.org/badge/latestdoi/250773639)
